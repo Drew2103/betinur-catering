@@ -1020,7 +1020,7 @@ function initDatePicker() {
   const today = new Date();
   const { hour: ch, minute: cm } = getCutoff();
   const cutoffPassed = today.getHours() > ch || (today.getHours() === ch && today.getMinutes() >= cm);
-  const minDate = cutoffPassed ? new Date(today.getTime() + 86400000) : today;
+  const minDate = new Date(today.getTime() + (cutoffPassed ? 2 : 1) * 86400000);
   const maxDate = new Date(today.getTime() + 30 * 86400000);
   inp.min = minDate.toISOString().split('T')[0];
   inp.max = maxDate.toISOString().split('T')[0];
@@ -1392,9 +1392,10 @@ function placeOrder() {
   const odDate = new Date(currentOrderDate + 'T12:00:00');
   const { hour: ch, minute: cm } = getCutoff();
   const cutoffPassed = now.getHours() > ch || (now.getHours() === ch && now.getMinutes() >= cm);
-  if (odDate.toDateString() === now.toDateString() && cutoffPassed) {
+  const tomorrow = new Date(now.getTime() + 86400000);
+  if (odDate.toDateString() === tomorrow.toDateString() && cutoffPassed) {
     const cutoffLabel = `${String(ch).padStart(2,'0')}:${String(cm).padStart(2,'0')}`;
-    alert(`Maaf, batas pesan untuk hari ini sudah lewat jam ${cutoffLabel}!`); return;
+    alert(`Maaf, batas pesan antar besok sudah lewat jam ${cutoffLabel}. Pesanan kamu akan diantar lusa ya!`); return;
   }
   const MENU = getMenuForDate(currentOrderDate);
   const { keys, sub, ongkir, total } = cartTotals();
