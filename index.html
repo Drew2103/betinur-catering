@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <title>Beti Nur Catering</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <style>
 :root{--n:#0f1f3d;--n2:#1a3260;--g:#c9a84c;--gl:#e8c97a;--gp:#fdf6e3;--cr:#fefcf7;--tx:#1a1a2e;--mu:#6b7280;--bd:#e8dfc5;--sh:0 2px 12px rgba(15,31,61,.08);--sf:0 8px 32px rgba(15,31,61,.45);}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
@@ -816,7 +818,93 @@ const CAL_CATS = [
 //  STORAGE HELPERS
 // ═══════════════════════════════════════════
 function ls(k)        { try { return JSON.parse(localStorage.getItem(k)); } catch(e) { return null; } }
-function ss(k,v)      { try { localStorage.setItem(k, JSON.stringify(v)); } catch(e) {} }
+function ss(k,v)      { try { localStorage.setItem(k, JSON.stringify(v)); } catch(e) {} fsWrite(k,v); }
+
+// ═══════════════════════════════════════════
+//  FIREBASE / FIRESTORE
+// ═══════════════════════════════════════════
+const FB_CONFIG = {
+  apiKey: "AIzaSyBCiS2rRbHbhpOzpU5kRfHEtKDpMs24FsE",
+  authDomain: "homaderfood.firebaseapp.com",
+  projectId: "homaderfood",
+  storageBucket: "homaderfood.firebasestorage.app",
+  messagingSenderId: "92306876296",
+  appId: "1:92306876296:web:87060b2cc47cfd199a3c3d"
+};
+let db = null;
+try { firebase.initializeApp(FB_CONFIG); db = firebase.firestore(); } catch(e) { console.warn('Firebase init failed:', e); }
+
+// Keys that sync to Firestore /config/{doc}
+const FS_MAP = {
+  [SK.settings]:  'settings',
+  [SK.logo]:      'logo',
+  [SK.menu]:      'menu',
+  [SK.cal]:       'calendar',
+  [SK.mh]:        'menuHistory'
+};
+// orders handled separately per-document in /orders/{id}
+
+function fsWrite(k, v) {
+  const doc = FS_MAP[k];
+  if (!db || !doc) return;
+  db.collection('config').doc(doc).set({ data: v }).catch(e => console.warn('fsWrite:', e));
+}
+function fsGet(doc) {
+  if (!db) return Promise.resolve(null);
+  return db.collection('config').doc(doc).get()
+    .then(d => d.exists ? d.data().data : null).catch(() => null);
+}
+function fsListen(doc, cb) {
+  if (!db) return () => {};
+  return db.collection('config').doc(doc).onSnapshot(d => { if (d.exists) cb(d.data().data); }, () => {});
+}
+
+let _configUnsubs = [];
+let _ordersUnsub  = null;
+
+async function syncFromFirestore() {
+  if (!db) return;
+  const docs = ['settings','logo','menu','calendar','menuHistory'];
+  const keyMap = { settings:SK.settings, logo:SK.logo, menu:SK.menu, calendar:SK.cal, menuHistory:SK.mh };
+  try {
+    const results = await Promise.all(docs.map(d => fsGet(d)));
+    results.forEach((data, i) => {
+      if (data !== null) try { localStorage.setItem(keyMap[docs[i]], JSON.stringify(data)); } catch(e) {}
+    });
+    // also load orders
+    const snap = await db.collection('orders').get();
+    if (!snap.empty) {
+      const orders = snap.docs.map(d => d.data()).sort((a,b) => b.ts.localeCompare(a.ts));
+      try { localStorage.setItem(SK.orders, JSON.stringify(orders)); } catch(e) {}
+    }
+  } catch(e) { console.warn('syncFromFirestore:', e); }
+}
+
+function startConfigListeners() {
+  _configUnsubs.forEach(u => u());
+  _configUnsubs = [];
+  const update = (key, cb) => _configUnsubs.push(fsListen(key, data => {
+    try { localStorage.setItem(FS_MAP[SK[{ settings:'settings',logo:'logo',menu:'menu',cal:'cal',mh:'mh' }[Object.keys(SK).find(k=>SK[k]===key)]]], JSON.stringify(data)); } catch(e) {}
+    if (cb) cb(data);
+  }));
+  if (!db) return;
+  _configUnsubs.push(fsListen('menu',     d => { try{localStorage.setItem(SK.menu, JSON.stringify(d));}catch(e){} renderMenu(); }));
+  _configUnsubs.push(fsListen('calendar', d => { try{localStorage.setItem(SK.cal,  JSON.stringify(d));}catch(e){} renderMenu(); buildCal(); }));
+  _configUnsubs.push(fsListen('settings', d => { try{localStorage.setItem(SK.settings, JSON.stringify(d));}catch(e){} }));
+  _configUnsubs.push(fsListen('logo',     d => { try{localStorage.setItem(SK.logo, JSON.stringify(d));}catch(e){} updateLogos(); }));
+}
+
+function startOrdersListener() {
+  if (!db || _ordersUnsub) return;
+  _ordersUnsub = db.collection('orders').onSnapshot(snap => {
+    const orders = snap.docs.map(d => d.data()).sort((a,b) => b.ts.localeCompare(a.ts));
+    try { localStorage.setItem(SK.orders, JSON.stringify(orders)); } catch(e) {}
+    refreshOrders(); updateStats(); updateDapur();
+  }, () => {});
+}
+function stopOrdersListener() {
+  if (_ordersUnsub) { _ordersUnsub(); _ordersUnsub = null; }
+}
 function getMenu()    { return ls(SK.menu)    || DEF_MENU; }
 function getPh()      { return ls(SK.photos)  || {}; }
 function getOrders()  { return ls(SK.orders)  || []; }
@@ -911,8 +999,10 @@ function updateLogos() {
   });
 }
 
-window.addEventListener('DOMContentLoaded', () => {
+window.addEventListener('DOMContentLoaded', async () => {
   updateLogos();
+  await syncFromFirestore();
+  startConfigListeners();
   initDatePicker();
   setupTap(); renderMenu(); buildCal(); startClock(); checkReturning();
   const today = todayStr();
@@ -1011,10 +1101,12 @@ function enterAdmin() {
   loadSettings();
   renderAdminMenu(); refreshOrders(); updateStats(); updateDapur(); renderAnalytics();
   if (poll) clearInterval(poll);
-  poll = setInterval(() => { refreshOrders(); updateStats(); updateDapur(); }, 5000);
+  poll = setInterval(() => { refreshOrders(); updateStats(); updateDapur(); }, 30000);
+  startOrdersListener();
 }
 function adminLogout() {
   if (poll) { clearInterval(poll); poll = null; }
+  stopOrdersListener();
   currentStaff = null;
   showView('lv');
 }
@@ -1324,6 +1416,7 @@ function placeOrder() {
   };
 
   const orders = getOrders(); orders.unshift(order); ss(SK.orders, orders);
+  if (db) db.collection('orders').doc(order.id).set(order).catch(e => console.warn('order save:', e));
 
   // Build success receipt
   const ih = order.items
@@ -1780,6 +1873,7 @@ function deleteOrder(id) {
   if (!confirm('Hapus pesanan ini permanen?')) return;
   const orders = getOrders().filter(o => o.id !== id);
   ss(SK.orders, orders);
+  if (db) db.collection('orders').doc(id).delete().catch(() => {});
   checkedOrders.delete(id);
   refreshOrders(); updateStats();
   toast('🗑️ Pesanan dihapus!');
