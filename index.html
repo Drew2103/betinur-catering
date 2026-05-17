@@ -238,12 +238,14 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--cr);color:var(-
 .cal-row{display:flex;align-items:center;gap:5px;margin-bottom:5px;}
 .cal-row input[type=text]{flex:1;padding:7px 9px;border:1.5px solid var(--bd);border-radius:8px;font-size:11px;font-family:inherit;outline:none;color:var(--tx);}
 .cal-row input[type=text]:focus{border-color:var(--g);}
-.cal-row input[type=number]{width:75px;flex:none;padding:7px 9px;border:1.5px solid var(--bd);border-radius:8px;font-size:11px;font-family:inherit;outline:none;color:var(--tx);}
+.cal-row input[type=number]{width:80px;flex:none;padding:7px 9px;border:1.5px solid var(--bd);border-radius:8px;font-size:11px;font-family:inherit;outline:none;color:var(--tx);}
 .cal-row input[type=number]:focus{border-color:var(--g);}
-.sambal-lbl{display:flex;align-items:center;gap:3px;font-size:11px;font-weight:600;color:var(--mu);cursor:pointer;white-space:nowrap;user-select:none;}
-.sambal-lbl input[type=checkbox]{accent-color:#e53e3e;width:14px;height:14px;cursor:pointer;}
-.msambal{display:flex;align-items:center;gap:5px;padding:5px 0 0;font-size:11px;color:var(--mu);}
-.msambal input[type=checkbox]{accent-color:#e53e3e;width:14px;height:14px;cursor:pointer;}
+/* SAMBAL SUB-CATEGORY */
+.scard{background:white;border:1px solid var(--bd);border-radius:11px;margin:0 13px 7px;padding:11px 13px;box-shadow:var(--sh);}
+.scard-lbl{display:flex;align-items:center;gap:10px;cursor:pointer;user-select:none;}
+.scard-lbl input[type=checkbox]{accent-color:#e53e3e;width:20px;height:20px;cursor:pointer;flex-shrink:0;}
+.scard-name{font-size:13px;font-weight:600;color:var(--tx);}
+.scard-tag{font-size:10px;color:var(--mu);font-weight:500;margin-left:auto;}
 .btn-del-row{background:#fee2e2;border:none;border-radius:7px;padding:6px 8px;color:#dc2626;font-size:13px;cursor:pointer;flex-shrink:0;}
 .btn-add-row{background:none;border:1.5px dashed var(--bd);border-radius:8px;padding:6px;color:var(--mu);font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;width:100%;margin-top:2px;}
 .btn-add-row:hover{border-color:var(--g);color:var(--g);}
@@ -363,8 +365,14 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--cr);color:var(-
 /* ORDER STATUS CHIPS */
 .spending{background:#fff7ed;color:#c2410c;border:1px solid #fed7aa;}
 .sconfirmed{background:#f0fdf4;color:#166534;border:1px solid #bbf7d0;}
+.sdikirim{background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;}
+.sdone{background:#e8f5e9;color:#2e7d32;border:1px solid #c8e6c9;}
+/* PAID BADGES */
+.sbayar{background:#fef9c3;color:#854d0e;border:1px solid #fde68a;display:inline-block;font-size:9px;font-weight:800;padding:2px 8px;border-radius:20px;margin:3px 0 3px 5px;text-transform:uppercase;cursor:pointer;}
+.sbayar.paid{background:#dcfce7;color:#166534;border:1px solid #bbf7d0;}
 /* CONFIRM / EDIT BUTTONS */
 .btn-confirm{background:linear-gradient(135deg,var(--g),var(--gl));color:var(--n);border:none;border-radius:7px;padding:5px 11px;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;}
+.btn-dikirim{background:#dbeafe;color:#1d4ed8;border:none;border-radius:7px;padding:5px 9px;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;}
 .btn-edit-ord{background:#e0f2fe;color:#0369a1;border:none;border-radius:7px;padding:5px 9px;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;}
 /* MENU SUB-TABS */
 .mtabs{display:flex;gap:8px;margin-bottom:12px;}
@@ -606,6 +614,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--cr);color:var(-
         <div class="sbox gold"><div class="sval" id="stat-ord">0</div><div class="slbl">Pesanan Hari Ini</div></div>
         <div class="sbox gold"><div class="sval" id="stat-rev">0</div><div class="slbl">Pendapatan (Rp)</div></div>
         <div class="sbox"><div class="sval" id="stat-new">0</div><div class="slbl">Baru Masuk</div></div>
+        <div class="sbox"><div class="sval" id="stat-dikirim">0</div><div class="slbl">Dikirim</div></div>
         <div class="sbox"><div class="sval" id="stat-done">0</div><div class="slbl">Selesai</div></div>
       </div>
       <div class="clkcard">
@@ -871,6 +880,7 @@ const CAL_CATS = [
   {key:'sarapan', lbl:'🍱 Sarapan'},   {key:'nasi',   lbl:'🍚 Nasi'},
   {key:'lauk',    lbl:'🍗 Lauk'},      {key:'sayur',  lbl:'🥦 Sayur / Pelengkap'},
   {key:'goreng',  lbl:'🥟 Gorengan'},
+  {key:'sambal',  lbl:'🌶️ Sambal (pilihan customer — tanpa harga)'},
 ];
 
 // ═══════════════════════════════════════════
@@ -1013,6 +1023,23 @@ function localDateStr(d) {
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 }
 function todayStr() { return localDateStr(); }
+
+// ═══════════════════════════════════════════
+//  INPUT STANDARDIZATION
+// ═══════════════════════════════════════════
+// Normalize phone → 628xxxxxxxxxx (Indonesian E.164 style, no +)
+function normalizePhone(input) {
+  let p = (input || '').replace(/\D/g, '');
+  if (!p) return '';
+  if (p.startsWith('0'))      p = '62' + p.substring(1);
+  else if (p.startsWith('8')) p = '62' + p;
+  else if (!p.startsWith('62')) p = '62' + p;
+  return p;
+}
+// Proper Case ("budi santoso" → "Budi Santoso")
+function properCase(s) {
+  return (s || '').trim().toLowerCase().replace(/(^|[\s\-'"\(\.])(\p{L})/gu, (m, sep, ch) => sep + ch.toUpperCase());
+}
 function fmtDateLabel(ds) {
   if (!ds) return '';
   const d = new Date(ds + 'T12:00:00');
@@ -1223,11 +1250,17 @@ function clearFresh() {
 }
 function doLogin() {
   const s = loadUser();
-  const n = document.getElementById('ln').value.trim();
-  const p = document.getElementById('lp').value.trim();
-  const a = document.getElementById('la').value.trim();
-  if (!n && !p && !a && s) { useSaved(); return; }
-  if (!n || !p || !a) { document.getElementById('lerr').style.display = 'block'; return; }
+  const rawN = document.getElementById('ln').value.trim();
+  const rawP = document.getElementById('lp').value.trim();
+  const rawA = document.getElementById('la').value.trim();
+  if (!rawN && !rawP && !rawA && s) { useSaved(); return; }
+  if (!rawN || !rawP || !rawA) { document.getElementById('lerr').style.display = 'block'; return; }
+  const n = properCase(rawN);
+  const p = normalizePhone(rawP);
+  const a = rawA;
+  // Reflect normalised values back into fields so customer sees what's stored
+  document.getElementById('ln').value = n;
+  document.getElementById('lp').value = p;
   user = { name:n, phone:p, addr:a };
   saveUser(n, p, a);
   finalLogin();
@@ -1266,7 +1299,7 @@ function getMenuForDate(dateStr) {
   const calCat = (key, emoji, sec, sub) => {
     if (calDay[key] && calDay[key].length) {
       calDay[key].forEach((ci, i) =>
-        items.push({ id:`cal_${key}_${i}`, name:ci.name, desc:'', price:ci.price||0, emoji, sec, sub, sambal:!!ci.sambal })
+        items.push({ id:`cal_${key}_${i}`, name:ci.name, desc:'', price:ci.price||0, emoji, sec, sub, isSambal: key === 'sambal' })
       );
     } else {
       MENU.filter(m => sub ? (m.sub === sub) : (m.sec === sec && !m.sub))
@@ -1278,6 +1311,12 @@ function getMenuForDate(dateStr) {
   calCat('lauk',    '🍗', 'siang',   'lauk');
   calCat('sayur',   '🥦', 'siang',   'sayur');
   calCat('goreng',  '🥟', 'siang',   'goreng');
+  // Sambal — calendar only, no default fallback
+  if (calDay.sambal && calDay.sambal.length) {
+    calDay.sambal.forEach((ci, i) =>
+      items.push({ id:`cal_sambal_${i}`, name:ci.name, desc:'', price:0, emoji:'🌶️', sec:'siang', sub:'sambal', isSambal:true })
+    );
+  }
   return items;
 }
 
@@ -1298,6 +1337,7 @@ function renderMenu() {
       {key:'lauk',   lbl:'🍗 Lauk'},
       {key:'sayur',  lbl:'🥦 Sayur / Pelengkap'},
       {key:'goreng', lbl:'🥟 Gorengan'},
+      {key:'sambal', lbl:'🌶️ Sambal (gratis — pilih satu / lebih)'},
     ]},
   ];
   let h = '';
@@ -1308,8 +1348,12 @@ function renderMenu() {
       g.items.forEach(m => { h += mcard(m, ph); });
     } else {
       g.subs.forEach(s => {
+        const subItems = MENU.filter(m => m.sec === 'siang' && m.sub === s.key);
+        if (!subItems.length) return;
         h += `<div class="sublbl"><span>${s.lbl}</span></div>`;
-        MENU.filter(m => m.sec === 'siang' && m.sub === s.key).forEach(m => { h += mcard(m, ph); });
+        subItems.forEach(m => {
+          h += s.key === 'sambal' ? sambalCard(m) : mcard(m, ph);
+        });
       });
     }
   });
@@ -1322,13 +1366,6 @@ function mcard(m, ph) {
   const hasImg = !!ph[m.id];
   const imgH   = hasImg ? `<img src="${ph[m.id]}" alt="">` : '';
   const emjH   = hasImg ? '' : `<span>${m.emoji}</span>`;
-  const qty    = cart[m.id] ? cart[m.id].qty : 0;
-  const sambalRow = m.sambal
-    ? `<div class="msambal" id="msbl-${m.id}" style="display:${qty>0?'flex':'none'};">
-        <input type="checkbox" id="sblcb-${m.id}" onchange="setSambal('${m.id}',this.checked)" ${cart[m.id]?.sambal?'checked':''}>
-        <label for="sblcb-${m.id}">🌶️ Pakai Sambal?</label>
-       </div>`
-    : '';
   return `<div class="mcard"><div class="mcinner">
     <div class="mebox">${imgH}${emjH}</div>
     <div class="minfo">
@@ -1338,13 +1375,22 @@ function mcard(m, ph) {
         <div class="mprice"><span class="cur">Rp </span>${fmt(m.price)}</div>
         <div class="qctrl">
           <button class="qbtn minus" onclick="chg('${m.id}',-1,${m.price})">&#8722;</button>
-          <span class="qnum" id="q-${m.id}">${qty}</span>
+          <span class="qnum" id="q-${m.id}">${cart[m.id] ? cart[m.id].qty : 0}</span>
           <button class="qbtn" onclick="chg('${m.id}',1,${m.price})">+</button>
         </div>
       </div>
-      ${sambalRow}
     </div>
   </div></div>`;
+}
+function sambalCard(m) {
+  const checked = !!cart[m.id];
+  return `<div class="scard">
+    <label class="scard-lbl" for="sblcb-${m.id}">
+      <input type="checkbox" id="sblcb-${m.id}" ${checked?'checked':''} onchange="toggleSambal('${m.id}', this.checked, '${escHTML(m.name).replace(/'/g,'&#39;')}')">
+      <span class="scard-name">🌶️ ${escHTML(m.name)}</span>
+      <span class="scard-tag">Gratis</span>
+    </label>
+  </div>`;
 }
 
 // ═══════════════════════════════════════════
@@ -1432,17 +1478,17 @@ function saveIM() {
 //  CART
 // ═══════════════════════════════════════════
 function chg(id, d, price) {
-  if (!cart[id]) cart[id] = { qty:0, price, sambal:false };
+  if (!cart[id]) cart[id] = { qty:0, price };
   cart[id].qty = Math.max(0, cart[id].qty + d);
   if (cart[id].qty === 0) delete cart[id];
   const el = document.getElementById('q-' + id);
   if (el) el.textContent = cart[id] ? cart[id].qty : 0;
-  const sblRow = document.getElementById('msbl-' + id);
-  if (sblRow) sblRow.style.display = (cart[id]?.qty||0) > 0 ? 'flex' : 'none';
   updateFloat();
 }
-function setSambal(id, val) {
-  if (cart[id]) cart[id].sambal = val;
+function toggleSambal(id, checked, name) {
+  if (checked) cart[id] = { qty: 1, price: 0, isSambal: true, name: name };
+  else delete cart[id];
+  updateFloat();
 }
 function cartTotals() {
   const MENU = getMenuForDate(currentOrderDate);
@@ -1473,8 +1519,15 @@ function renderCart() {
   } else {
     w.innerHTML = keys.map(k => {
       const m = MENU.find(x => x.id === k);
-      const n = m ? m.name : k;
+      const n = m ? m.name : (cart[k].name || k);
       const p = m ? m.price : (cart[k].price || 0);
+      const isSb = !!(cart[k].isSambal || (m && m.isSambal));
+      if (isSb) {
+        return `<div class="citem">
+          <div><div class="cin">🌶️ ${escHTML(n)}</div><div class="cis" style="color:var(--mu);">Pilihan sambal — gratis</div></div>
+          <div class="cir"><div class="cip" style="font-size:11px;color:var(--mu);">Gratis</div></div>
+        </div>`;
+      }
       return `<div class="citem">
         <div><div class="cin">${escHTML(n)}</div><div class="cis">${cart[k].qty} &times; ${rp(p)}</div></div>
         <div class="cir"><div class="cip">${rp(p * cart[k].qty)}</div><div class="ciq">&times;${cart[k].qty}</div></div>
@@ -1506,23 +1559,29 @@ function placeOrder() {
     id:        'ord_' + Date.now(),
     ts:        new Date().toISOString(),
     orderDate: currentOrderDate,
-    name:      document.getElementById('on').value.trim() || user.name,
-    phone:     document.getElementById('op').value.trim() || user.phone,
-    addr:      document.getElementById('oa').value.trim() || user.addr,
+    name:      properCase(document.getElementById('on').value.trim() || user.name || ''),
+    phone:     normalizePhone(document.getElementById('op').value.trim() || user.phone || ''),
+    addr:      (document.getElementById('oa').value.trim() || user.addr || '').trim(),
     notes:     document.getElementById('ocat').value.trim(),
     items:     keys.map(k => {
       const m = MENU.find(x => x.id === k);
-      return { id:k, name: m ? m.name : k, price: m ? m.price : (cart[k].price || 0), qty: cart[k].qty, sambal: !!cart[k].sambal };
+      return { id:k, name: m ? m.name : (cart[k].name || k), price: m ? m.price : (cart[k].price || 0), qty: cart[k].qty, isSambal: !!(cart[k].isSambal || (m && m.isSambal)) };
     }),
-    subtotal: sub, ongkir, total, status:'pending'
+    subtotal: sub, ongkir, total, status:'pending', paid: false
   };
 
   const orders = getOrders(); orders.unshift(order); ss(SK.orders, orders);
   if (db) db.collection('orders').doc(order.id).set(order).catch(e => console.warn('order save:', e));
 
+  // Persist normalised customer details
+  user = { name: order.name, phone: order.phone, addr: order.addr };
+  saveUser(order.name, order.phone, order.addr);
+
   // Build success receipt
   const ih = order.items
-    .map(it => `<div class="ritem"><span>${escHTML(it.name)} &times;${it.qty}</span><span>${rp(it.price * it.qty)}</span></div>`)
+    .map(it => it.isSambal
+      ? `<div class="ritem"><span>🌶️ ${escHTML(it.name)}</span><span style="color:var(--mu);">Gratis</span></div>`
+      : `<div class="ritem"><span>${escHTML(it.name)} &times;${it.qty}</span><span>${rp(it.price * it.qty)}</span></div>`)
     .join('');
   const oh = ongkir ? `<div class="ritem" style="color:var(--mu)"><span>Ongkir</span><span>${rp(ongkir)}</span></div>` : '';
   document.getElementById('srec').innerHTML    = ih + oh;
@@ -1575,11 +1634,16 @@ function refreshOrders() {
       ? '<span class="schip spending">🔔 Menunggu</span>'
       : st === 'confirmed'
       ? '<span class="schip sconfirmed">✅ Dikonfirmasi</span>'
+      : st === 'dikirim'
+      ? '<span class="schip sdikirim">📦 Dikirim</span>'
       : '<span class="schip sdone">✔️ Selesai</span>';
-    const items = o.items.map(it => `${escHTML(it.name)}${it.sambal?' 🌶️':''}&times;${it.qty}`).join(', ');
+    const paidChip = `<span class="sbayar${o.paid?' paid':''}" onclick="togglePaid('${o.id}')">${o.paid?'💰 Sudah Bayar':'⏳ Belum Bayar'}</span>`;
+    const items = o.items.map(it => `${it.isSambal?'🌶️ ':''}${escHTML(it.name)}&times;${it.qty}`).join(', ');
     const confBtn = (st === 'pending' || st === 'new')
       ? `<button class="btn-confirm" onclick="confirmOrder('${o.id}')">✅ Konfirmasi</button>` : '';
-    const dBtn = st === 'confirmed'
+    const dkirimBtn = st === 'confirmed'
+      ? `<button class="btn-dikirim" onclick="markDikirim('${o.id}')">📦 Dikirim</button>` : '';
+    const dBtn = st === 'dikirim'
       ? `<button class="btn-done" onclick="markDone('${o.id}')">✔️ Selesai</button>` : '';
     const editBtn = role === 'super'
       ? `<button class="btn-edit-ord" onclick="openEditOrder('${o.id}')">✏️</button>` : '';
@@ -1609,8 +1673,8 @@ function refreshOrders() {
         <button class="btn-po" onclick="printOrder('${o.id}')">🖨️</button>
       </div>
       <div style="font-size:10px;color:var(--mu);margin:3px 0 2px;">${items}</div>
-      ${chip}
-      <div class="oact"><div class="otot">${rp(o.total)}</div>${confBtn}${dBtn}${waOrdBtn}${editBtn}${delBtn}</div>
+      <div>${chip}${paidChip}</div>
+      <div class="oact"><div class="otot">${rp(o.total)}</div>${confBtn}${dkirimBtn}${dBtn}${waOrdBtn}${editBtn}${delBtn}</div>
       ${notesH}
     </div>`;
   }).join('');
@@ -1627,6 +1691,14 @@ function toggleSelectAll() {
   else filtered.forEach(o => checkedOrders.add(o.id));
   refreshOrders();
 }
+function markDikirim(id) {
+  const orders = getOrders(), idx = orders.findIndex(o => o.id === id);
+  if (idx >= 0) {
+    orders[idx].status = 'dikirim'; ss(SK.orders, orders);
+    if (db) db.collection('orders').doc(id).update({status:'dikirim'}).catch(()=>{});
+  }
+  refreshOrders(); updateStats(); toast('📦 Pesanan dikirim!');
+}
 function markDone(id) {
   const orders = getOrders(), idx = orders.findIndex(o => o.id === id);
   if (idx >= 0) {
@@ -1634,6 +1706,15 @@ function markDone(id) {
     if (db) db.collection('orders').doc(id).update({status:'done'}).catch(()=>{});
   }
   refreshOrders(); updateStats(); toast('✔️ Pesanan selesai!');
+}
+function togglePaid(id) {
+  const orders = getOrders(), idx = orders.findIndex(o => o.id === id);
+  if (idx >= 0) {
+    orders[idx].paid = !orders[idx].paid; ss(SK.orders, orders);
+    if (db) db.collection('orders').doc(id).update({paid: orders[idx].paid}).catch(()=>{});
+    toast(orders[idx].paid ? '💰 Sudah Bayar!' : '⏳ Ditandai Belum Bayar');
+  }
+  refreshOrders();
 }
 function batchPrint() {
   if (!checkedOrders.size) { toast('Pilih pesanan dulu!'); return; }
@@ -1656,6 +1737,7 @@ function updateStats() {
   set('stat-rev',  rev >= 1000 ? (rev/1000).toFixed(0)+'k' : rev);
   set('stat-new',  tod.filter(o => o.status === 'pending' || o.status === 'new').length);
   set('stat-done', tod.filter(o => o.status === 'done').length);
+  set('stat-dikirim', tod.filter(o => o.status === 'dikirim').length);
 
   const ic = {};
   tod.forEach(o => o.items.forEach(it => { ic[it.name] = (ic[it.name]||0) + it.qty; }));
@@ -1751,7 +1833,7 @@ function openCalE(d) {
   let body = '';
   CAL_CATS.forEach(cat => {
     body += `<div class="cas-lbl">${cat.lbl}</div><div id="calrows-${cat.key}">`;
-    (dd[cat.key]||[]).forEach((item,i) => { body += calRowH(cat.key, i, item.name, item.price, item.sambal); });
+    (dd[cat.key]||[]).forEach((item,i) => { body += calRowH(cat.key, i, item.name, item.price); });
     body += `</div><button class="btn-add-row" onclick="addCalRow('${cat.key}')">+ Tambah item</button>`;
   });
   document.getElementById('cae-body').innerHTML = body;
@@ -1759,11 +1841,16 @@ function openCalE(d) {
   ed.style.display = 'block';
   ed.scrollIntoView({behavior:'smooth', block:'nearest'});
 }
-function calRowH(cat, idx, name, price, sambal) {
+function calRowH(cat, idx, name, price) {
+  if (cat === 'sambal') {
+    return `<div class="cal-row" id="crow-${cat}-${idx}">
+      <input type="text" placeholder="Nama sambal..." value="${escHTML(name||'')}" style="flex:1;">
+      <button class="btn-del-row" onclick="this.closest('.cal-row').remove()">&#215;</button>
+    </div>`;
+  }
   return `<div class="cal-row" id="crow-${cat}-${idx}">
     <input type="text" placeholder="Nama item..." value="${escHTML(name||'')}">
     <input type="number" placeholder="Harga" value="${price||''}">
-    <label class="sambal-lbl" title="Tersedia pilihan sambal untuk customer"><input type="checkbox" class="sambal-cb" ${sambal?'checked':''}> 🌶️</label>
     <button class="btn-del-row" onclick="this.closest('.cal-row').remove()">&#215;</button>
   </div>`;
 }
@@ -1783,9 +1870,13 @@ function saveCalMenu() {
     rows.forEach(row => {
       const ins = row.querySelectorAll('input');
       const nm  = ins[0] ? ins[0].value.trim() : '';
-      const pr  = ins[1] ? parseInt(ins[1].value)||0 : 0;
-      const sb  = !!(row.querySelector('.sambal-cb') && row.querySelector('.sambal-cb').checked);
-      if (nm) items.push({name:nm, price:pr, sambal:sb});
+      if (!nm) return;
+      if (cat.key === 'sambal') {
+        items.push({name:nm});
+      } else {
+        const pr = ins[1] ? parseInt(ins[1].value)||0 : 0;
+        items.push({name:nm, price:pr});
+      }
     });
     if (items.length) dd[cat.key] = items;
   });
@@ -1901,7 +1992,7 @@ function censorPhone(phone) {
 }
 function buildOrderPrintHTML(o) {
   const t  = new Date(o.ts).toLocaleTimeString('id-ID', {hour:'2-digit',minute:'2-digit'});
-  const ih = o.items.map(it => `<div class="pirow"><span>${escHTML(it.name)}${it.sambal?' 🌶️':''} x${it.qty}</span><span>${rp(it.price*it.qty)}</span></div>`).join('');
+  const ih = o.items.map(it => `<div class="pirow"><span>${it.isSambal?'🌶️ ':''}${escHTML(it.name)}${it.isSambal?'':' x'+it.qty}</span><span>${it.isSambal?'-':rp(it.price*it.qty)}</span></div>`).join('');
   const oh = o.ongkir ? `<div class="pirow"><span>Ongkir</span><span>${rp(o.ongkir)}</span></div>` : '';
   const nh = o.notes  ? `<div style="font-size:8px;color:#666;margin-top:4px;font-family:monospace;">Catatan: ${escHTML(o.notes)}</div>` : '';
   const odLabel = o.orderDate ? `<div class="pmr"><span class="pml">Antar</span><span class="pmv">${fmtDateLabel(o.orderDate)}</span></div>` : '';
@@ -1939,47 +2030,104 @@ function getExportData() {
     .filter(o => { const d = o.orderDate||o.ts.split('T')[0]; return d >= s && d <= e; })
     .sort((a,b) => a.ts.localeCompare(b.ts));
 }
+// ─── Helpers ───────────────────────────────
+function statusLabel(s) {
+  return (s === 'pending' || s === 'new') ? 'Menunggu'
+       :  s === 'confirmed' ? 'Dikonfirmasi'
+       :  s === 'dikirim'   ? 'Dikirim'
+       :                      'Selesai';
+}
+function csvEscape(v) { return `"${String(v == null ? '' : v).replace(/"/g,'""')}"`; }
+function toCSV(headers, rows) {
+  return [headers, ...rows].map(r => r.map(csvEscape).join(',')).join('\n');
+}
+function downloadBlob(content, filename) {
+  const blob = new Blob(['﻿' + content], { type: 'text/csv;charset=utf-8;' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 300);
+}
+
+// ─── 1. Order table  (1 row per order) ─────
+function buildOrderRows(data) {
+  return data.map(o => [
+    o.id,
+    o.orderDate || o.ts.split('T')[0],
+    new Date(o.ts).toLocaleTimeString('id-ID', {hour:'2-digit',minute:'2-digit'}),
+    o.name || '', o.phone || '', o.addr || '',
+    o.ongkir || 0, o.total || 0,
+    statusLabel(o.status),
+    o.paid ? 'Sudah Bayar' : 'Belum Bayar',
+    o.notes || ''
+  ]);
+}
+const ORDER_HEADERS = ['Order ID','Tanggal','Waktu','Nama','No HP','Alamat','Ongkir','Grand Total','Status','Pembayaran','Catatan'];
+
+// ─── 2. Order items table (N rows per order, FK = Order ID) ─
+function buildItemRows(data) {
+  return data.flatMap(o => o.items.map(it => [
+    o.id,
+    (it.isSambal ? '[Sambal] ' : '') + (it.name || ''),
+    it.qty || 0,
+    it.price || 0,
+    (it.price || 0) * (it.qty || 0)
+  ]));
+}
+const ITEM_HEADERS = ['Order ID','Menu Item','Qty','Harga Satuan','Total Item'];
+
 function previewExport() {
   const data = getExportData();
   const el = document.getElementById('exp-preview'); if (!el) return;
-  if (!data.length) { el.innerHTML = '<p style="color:var(--mu);font-size:12px;margin-top:10px;">Tidak ada data untuk rentang tanggal ini.</p>'; return; }
-  const rows = data.flatMap(o => o.items.map(it => ({
-    tgl:   o.orderDate||o.ts.split('T')[0],
-    waktu: new Date(o.ts).toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'}),
-    nama: o.name, hp: o.phone, alamat: o.addr,
-    item: it.name, qty: it.qty,
-    harga: it.price, total_item: it.price*it.qty,
-    subtotal: o.subtotal, ongkir: o.ongkir, total: o.total,
-    status: o.status==='new'?'Baru':'Selesai', catatan: o.notes||''
-  })));
-  el.innerHTML = `<p style="font-size:11px;color:var(--mu);margin:9px 0 7px;">${rows.length} baris data</p>
-    <table class="exp-table">
-      <tr><th>Tgl</th><th>Waktu</th><th>Nama</th><th>HP</th><th>Item</th><th>Qty</th><th>Harga</th><th>Total</th><th>Status</th></tr>
-      ${rows.slice(0,20).map(r=>`<tr>
-        <td>${r.tgl}</td><td>${r.waktu}</td><td>${escHTML(r.nama)}</td><td>${escHTML(r.hp)}</td>
-        <td>${escHTML(r.item)}</td><td>${r.qty}</td><td>${rp(r.harga)}</td><td>${rp(r.total_item)}</td><td>${r.status}</td>
-      </tr>`).join('')}
-    </table>${rows.length>20?`<p style="font-size:11px;color:var(--mu);margin-top:6px;">...dan ${rows.length-20} baris lagi. Download untuk lihat semua.</p>`:''}`;
+  if (!data.length) {
+    el.innerHTML = '<p style="color:var(--mu);font-size:12px;margin-top:10px;">Tidak ada data untuk rentang tanggal ini.</p>';
+    return;
+  }
+  const ordRows  = buildOrderRows(data);
+  const itemRows = buildItemRows(data);
+
+  const renderRows = (rows, max) =>
+    rows.slice(0, max).map(r =>
+      `<tr>${r.map(c => `<td>${escHTML(String(c))}</td>`).join('')}</tr>`
+    ).join('');
+
+  el.innerHTML = `
+    <p style="font-size:11px;color:var(--mu);margin:9px 0 5px;">📋 Dua tabel relasional terhubung via <b>Order ID</b>.</p>
+
+    <div style="font-size:11px;font-weight:800;color:var(--n);margin:11px 0 5px;">📄 1. Tabel Pesanan (${ordRows.length} baris)</div>
+    <div style="overflow-x:auto;border:1px solid var(--bd);border-radius:8px;max-height:200px;">
+      <table class="exp-table" style="min-width:700px;">
+        <tr>${ORDER_HEADERS.map(h => `<th>${h}</th>`).join('')}</tr>
+        ${renderRows(ordRows, 5)}
+      </table>
+    </div>
+    ${ordRows.length > 5 ? `<p style="font-size:10px;color:var(--mu);margin-top:4px;">...${ordRows.length - 5} pesanan lain di file CSV.</p>` : ''}
+
+    <div style="font-size:11px;font-weight:800;color:var(--n);margin:14px 0 5px;">📄 2. Tabel Detail Item (${itemRows.length} baris)</div>
+    <div style="overflow-x:auto;border:1px solid var(--bd);border-radius:8px;max-height:200px;">
+      <table class="exp-table" style="min-width:500px;">
+        <tr>${ITEM_HEADERS.map(h => `<th>${h}</th>`).join('')}</tr>
+        ${renderRows(itemRows, 8)}
+      </table>
+    </div>
+    ${itemRows.length > 8 ? `<p style="font-size:10px;color:var(--mu);margin-top:4px;">...${itemRows.length - 8} item lain di file CSV.</p>` : ''}
+  `;
 }
+
 function downloadCSV() {
   const data = getExportData();
-  if (!data.length) { toast('Tidak ada data!'); return; }
-  const rows = data.flatMap(o => o.items.map(it => [
-    o.orderDate||o.ts.split('T')[0],
-    new Date(o.ts).toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'}),
-    o.id, o.name, o.phone, o.addr, it.name, it.qty, it.price, it.price*it.qty,
-    o.subtotal, o.ongkir, o.total,
-    (o.status==='pending'||o.status==='new')?'Menunggu':o.status==='confirmed'?'Dikonfirmasi':'Selesai',
-    o.notes||''
-  ]));
-  const headers = ['Tanggal','Waktu','ID','Nama','No HP','Alamat','Menu Item','Qty','Harga Satuan','Total Item','Subtotal','Ongkir','Grand Total','Status','Catatan'];
-  const csv = [headers, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
-  const blob = new Blob(['﻿'+csv], {type:'text/csv;charset=utf-8;'});
-  const url  = URL.createObjectURL(blob);
-  const a    = document.createElement('a');
-  a.href = url; a.download = `betinur_${document.getElementById('exp-start').value}_sd_${document.getElementById('exp-end').value}.csv`;
-  a.click(); URL.revokeObjectURL(url);
-  toast('✅ File CSV didownload!');
+  if (!data.length) { toast('Tidak ada data untuk rentang ini!'); return; }
+  const start = document.getElementById('exp-start').value;
+  const end   = document.getElementById('exp-end').value;
+
+  const orderCsv = toCSV(ORDER_HEADERS, buildOrderRows(data));
+  const itemCsv  = toCSV(ITEM_HEADERS,  buildItemRows(data));
+
+  downloadBlob(orderCsv, `betinur_pesanan_${start}_sd_${end}.csv`);
+  setTimeout(() => downloadBlob(itemCsv, `betinur_items_${start}_sd_${end}.csv`), 250);
+  toast('✅ 2 file CSV didownload!');
 }
 
 // ═══════════════════════════════════════════
@@ -2339,6 +2487,7 @@ function renderMyOrders() {
     const chip = (st === 'pending' || st === 'new')
       ? '<span class="schip spending">🔔 Menunggu</span>'
       : st === 'confirmed' ? '<span class="schip sconfirmed">✅ Dikonfirmasi</span>'
+      : st === 'dikirim'   ? '<span class="schip sdikirim">📦 Dikirim</span>'
       : '<span class="schip sdone">✔️ Selesai</span>';
     const t     = new Date(o.ts).toLocaleTimeString('id-ID', {hour:'2-digit',minute:'2-digit'});
     const items = o.items.map(it => `${escHTML(it.name)} ×${it.qty}`).join(', ');
