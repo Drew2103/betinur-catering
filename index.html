@@ -503,7 +503,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--cr);color:var(-
     <div class="qcard">
       <h4>💳 Pembayaran via QRIS</h4>
       <p class="qsub">Scan QR code untuk membayar</p>
-      <div class="qbox">🔲</div>
+      <div class="qbox" id="qris-box">🔲</div>
       <div class="qname">Beti Nur Catering · by Homader</div>
       <div class="qamt">Total: <strong id="qtot">Rp 0</strong></div>
     </div>
@@ -603,6 +603,24 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--cr);color:var(-
           <button class="btn-set-save" onclick="saveSettings()">💾 Simpan</button>
         </div>
         <p class="set-hint">Default: 22:00 (jam 10 malam).</p>
+        <!-- QRIS Upload -->
+        <div style="font-size:10px;font-weight:800;color:var(--mu);text-transform:uppercase;letter-spacing:.5px;margin:11px 0 7px;">QR Code Pembayaran (QRIS)</div>
+        <div style="font-size:11px;color:var(--mu);margin-bottom:7px;">Tampil di halaman checkout customer saat mau bayar.</div>
+        <div class="logo-upload-wrap">
+          <div class="logo-preview" onclick="trigQrisUpload()" style="background:#f5f5f5;display:flex;align-items:center;justify-content:center;font-size:28px;overflow:hidden;">
+            <img id="set-qris-preview" alt="QRIS" style="width:100%;display:none;">
+            <span id="set-qris-placeholder">🔲</span>
+          </div>
+          <div class="logo-upload-info">
+            <p>QRIS Beti Nur Catering</p>
+            <small>Upload foto/screenshot QRIS lo.<br>Format JPG/PNG, max 500KB.</small>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:5px;">
+            <button class="btn-logo-upload" onclick="trigQrisUpload()">📷 Upload</button>
+            <button class="btn-logo-reset" onclick="resetQris()">↺ Hapus</button>
+          </div>
+        </div>
+        <input type="file" id="qris-file-inp" accept="image/*" style="display:none" onchange="handleQrisUpload(event)">
       </div>
     </div>
 
@@ -778,7 +796,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--cr);color:var(-
 // ═══════════════════════════════════════════
 const LOGO_SRC = 'data:image/jpeg;base64,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Vjp0FkrCPLFjksxySasvGoTap6UoCqoHpS4AHFZLcllVrbL59cVSmtVlYjOcVpFCR1qrJGU6daYiuluqjgVRXRbWa4llEQDPjIJ6HFajrxjFVDGc8mgBsWj2YBIXH4mklgghXCqKvoMRkVWkXcMHpQBBJPCrBWJ49qS1tUdQwdTntmlCq/UAH1pqiNFwPloAu7WVc560pUev8AjUJdgh5xzUgIx60gHxBec0r8nng+lNWnjn/9dMBpOBjNNHQdTSsc9DxmjpyeaYCelI3WlJGOM0hPGDigBOTxTcY61IWyuCahJ+XjHFABuHc01uh6c04jPSkII60AIen1pOtGO/40o5oAaeTRSmigoASnClFKBQAoGaBQDg1IOlAhKO9FA5oAKXpSUUAFA96KXNABnikzRnIoxSAUHmjOaKBxQApGaTNLmkFACkUlL3pKAFoooHSgApfpRQKAA0UUCgBC3SkLGjbk5pajqA0k0lLijFABRRQKACkopaMgUAFGaSimAbqM0maUUAGaKTNGaAEoPSloBFABilHWkp1ACikpaO1ACUUtFABRSClHSgA7UUvWigBM0ZxRRQAmcUUGjpQAuaUUlHNADhzRnikHWloAUUuaQGjPFAC54zSE0daMUAISMU0mpD3NMoAZQKdijFAChacDmkpaBCkE9aTNHfpS0AJijNKKAKACig0UAJilooFABRRSZoAWiiigAooooAKKKKADNGaKKACiiigAooooA//2Q==';
 const ONGKIR_MIN = 20000, ONGKIR_FEE = 2000;
-const SK = { user:'bn_u', orders:'bn_ord', cal:'bn_cal', photos:'bn_ph', menu:'bn_mn', role:'bn_role', settings:'bn_set', staff:'bn_staff', logo:'bn_logo', mh:'bn_mh' };
+const SK = { user:'bn_u', orders:'bn_ord', cal:'bn_cal', photos:'bn_ph', menu:'bn_mn', role:'bn_role', settings:'bn_set', staff:'bn_staff', logo:'bn_logo', mh:'bn_mh', qris:'bn_qris' };
 const WA_DEFAULT = '6281234567890';
 
 // Default staff — super admin awal, PIN bisa diubah di CMS
@@ -838,6 +856,7 @@ try { firebase.initializeApp(FB_CONFIG); db = firebase.firestore(); } catch(e) {
 const FS_MAP = {
   [SK.settings]:  'settings',
   [SK.logo]:      'logo',
+  [SK.qris]:      'qris',
   [SK.menu]:      'menu',
   [SK.cal]:       'calendar',
   [SK.mh]:        'menuHistory'
@@ -892,6 +911,7 @@ function startConfigListeners() {
   _configUnsubs.push(fsListen('calendar', d => { try{localStorage.setItem(SK.cal,  JSON.stringify(d));}catch(e){} renderMenu(); buildCal(); }));
   _configUnsubs.push(fsListen('settings', d => { try{localStorage.setItem(SK.settings, JSON.stringify(d));}catch(e){} }));
   _configUnsubs.push(fsListen('logo',     d => { try{localStorage.setItem(SK.logo, JSON.stringify(d));}catch(e){} updateLogos(); }));
+  _configUnsubs.push(fsListen('qris',     d => { try{localStorage.setItem(SK.qris, JSON.stringify(d));}catch(e){} updateQRIS(); }));
 }
 
 function startOrdersListener() {
@@ -917,6 +937,15 @@ function getCutoff() {
 function getMenuHistory() { return ls(SK.mh) || []; }
 function getStaff()   { return ls(SK.staff)   || DEF_STAFF; }
 function getLogo()    { return ls(SK.logo)    || LOGO_SRC; }
+function getQRIS()    { return ls(SK.qris)    || null; }
+function updateQRIS() {
+  const src = getQRIS();
+  const box = document.getElementById('qris-box');
+  const prev = document.getElementById('set-qris-preview');
+  if (box)  { box.innerHTML  = src ? `<img src="${src}" alt="QRIS" style="width:100%;border-radius:8px;">` : '🔲'; }
+  if (prev) { prev.src = src || ''; prev.style.display = src ? 'block' : 'none'; }
+  const ph = document.getElementById('set-qris-placeholder'); if (ph) ph.style.display = src ? 'none' : 'block';
+}
 
 // ═══════════════════════════════════════════
 //  UTILITY
@@ -1000,8 +1029,9 @@ function updateLogos() {
 }
 
 window.addEventListener('DOMContentLoaded', async () => {
-  updateLogos();
+  updateLogos(); updateQRIS();
   await syncFromFirestore();
+  updateLogos(); updateQRIS();
   startConfigListeners();
   initDatePicker();
   setupTap(); renderMenu(); buildCal(); startClock(); checkReturning();
@@ -1899,8 +1929,23 @@ function handleLogoUpload(ev) {
 function resetLogo() {
   if (!confirm('Reset logo ke default?')) return;
   try { localStorage.removeItem(SK.logo); } catch(e) {}
+  if (db) db.collection('config').doc('logo').delete().catch(()=>{});
   updateLogos();
   toast('↺ Logo direset ke default.');
+}
+function trigQrisUpload()  { document.getElementById('qris-file-inp').click(); }
+function handleQrisUpload(ev) {
+  const f = ev.target.files[0]; if (!f) return;
+  if (f.size > 500 * 1024) { toast('⚠️ Ukuran max 500KB!'); return; }
+  const r = new FileReader();
+  r.onload = e => { ss(SK.qris, e.target.result); updateQRIS(); toast('✅ QRIS berhasil diupload!'); };
+  r.readAsDataURL(f); ev.target.value = '';
+}
+function resetQris() {
+  if (!confirm('Hapus gambar QRIS?')) return;
+  try { localStorage.removeItem(SK.qris); } catch(e) {}
+  if (db) db.collection('config').doc('qris').delete().catch(()=>{});
+  updateQRIS(); toast('↺ QRIS dihapus.');
 }
 
 // ═══════════════════════════════════════════
