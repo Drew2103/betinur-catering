@@ -595,14 +595,18 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--cr);color:var(-
           <input type="tel" id="set-wa" placeholder="628xxxxxxxxxx" inputmode="numeric">
         </div>
         <p class="set-hint">Format: 628xxx (tanpa +, tanpa spasi). Contoh: 6281234567890</p>
-        <!-- Cutoff Time -->
-        <div style="font-size:10px;font-weight:800;color:var(--mu);text-transform:uppercase;letter-spacing:.5px;margin:11px 0 7px;">Batas Waktu Pemesanan</div>
-        <div style="font-size:11px;color:var(--mu);margin-bottom:7px;">Setelah jam ini, customer tidak bisa pesan untuk hari yang sama.</div>
+        <!-- Order Window -->
+        <div style="font-size:10px;font-weight:800;color:var(--mu);text-transform:uppercase;letter-spacing:.5px;margin:11px 0 7px;">Jam Tutup Pesanan (pagi)</div>
+        <div style="font-size:11px;color:var(--mu);margin-bottom:7px;">Setelah jam ini pesanan ditutup sampai jam buka siang. Default: 07:00.</div>
         <div class="set-row">
-          <input type="time" id="set-cutoff" value="22:00" style="flex:1;">
+          <input type="time" id="set-close-time" value="07:00" style="flex:1;">
+        </div>
+        <div style="font-size:10px;font-weight:800;color:var(--mu);text-transform:uppercase;letter-spacing:.5px;margin:11px 0 7px;">Jam Buka Pesanan (siang)</div>
+        <div style="font-size:11px;color:var(--mu);margin-bottom:7px;">Mulai jam ini menu besok tampil dan bisa dipesan. Default: 12:00.</div>
+        <div class="set-row">
+          <input type="time" id="set-open-time" value="12:00" style="flex:1;">
           <button class="btn-set-save" onclick="saveSettings()">💾 Simpan</button>
         </div>
-        <p class="set-hint">Default: 22:00 (jam 10 malam).</p>
         <!-- QRIS Upload -->
         <div style="font-size:10px;font-weight:800;color:var(--mu);text-transform:uppercase;letter-spacing:.5px;margin:11px 0 7px;">QR Code Pembayaran (QRIS)</div>
         <div style="font-size:11px;color:var(--mu);margin-bottom:7px;">Tampil di halaman checkout customer saat mau bayar.</div>
@@ -929,10 +933,19 @@ function getMenu()    { return ls(SK.menu)    || DEF_MENU; }
 function getPh()      { return ls(SK.photos)  || {}; }
 function getOrders()  { return ls(SK.orders)  || []; }
 function getCal()     { return ls(SK.cal)     || {}; }
-function getSettings(){ return ls(SK.settings) || { waNumber: WA_DEFAULT, cutoff: '22:00' }; }
-function getCutoff() {
-  const t = (getSettings().cutoff || '22:00').split(':');
-  return { hour: parseInt(t[0])||22, minute: parseInt(t[1])||0 };
+function getSettings(){ return ls(SK.settings) || { waNumber: WA_DEFAULT, closeTime: '07:00', openTime: '12:00' }; }
+function getOrderWindow() {
+  const s = getSettings();
+  const [cH,cM] = (s.closeTime || '07:00').split(':').map(Number);
+  const [oH,oM] = (s.openTime  || '12:00').split(':').map(Number);
+  const now = new Date(), h = now.getHours(), m = now.getMinutes();
+  const afterClose = h > cH || (h === cH && m >= cM);
+  const afterOpen  = h > oH || (h === oH && m >= oM);
+  const today    = now.toISOString().split('T')[0];
+  const tomorrow = new Date(now.getTime() + 86400000).toISOString().split('T')[0];
+  if (!afterClose)         return { isOpen:true,  deliveryDate:today,    state:'early',  cH,cM,oH,oM };
+  else if (!afterOpen)     return { isOpen:false,  deliveryDate:null,     state:'closed', cH,cM,oH,oM };
+  else                     return { isOpen:true,   deliveryDate:tomorrow, state:'open',   cH,cM,oH,oM };
 }
 function getMenuHistory() { return ls(SK.mh) || []; }
 function getStaff()   { return ls(SK.staff)   || DEF_STAFF; }
@@ -1006,16 +1019,19 @@ function setWALink(order) {
 function saveSettings() {
   const wa = (document.getElementById('set-wa').value || '').replace(/\D/g, '');
   if (!wa || wa.length < 10) { toast('Nomor WA tidak valid!'); return; }
-  const cutoff = document.getElementById('set-cutoff').value || '22:00';
-  ss(SK.settings, { ...getSettings(), waNumber: wa, cutoff });
+  const closeTime = document.getElementById('set-close-time').value || '07:00';
+  const openTime  = document.getElementById('set-open-time').value  || '12:00';
+  ss(SK.settings, { ...getSettings(), waNumber: wa, closeTime, openTime });
   toast('✅ Pengaturan disimpan!');
 }
 function loadSettings() {
   const s = getSettings();
   const el = document.getElementById('set-wa');
   if (el) el.value = s.waNumber || WA_DEFAULT;
-  const ec = document.getElementById('set-cutoff');
-  if (ec) ec.value = s.cutoff || '22:00';
+  const ec = document.getElementById('set-close-time');
+  if (ec) ec.value = s.closeTime || '07:00';
+  const eo = document.getElementById('set-open-time');
+  if (eo) eo.value = s.openTime || '12:00';
 }
 
 // ═══════════════════════════════════════════
@@ -1047,18 +1063,16 @@ window.addEventListener('DOMContentLoaded', async () => {
 // ═══════════════════════════════════════════
 function initDatePicker() {
   const inp = document.getElementById('order-date'); if (!inp) return;
-  const today = new Date();
-  const { hour: ch, minute: cm } = getCutoff();
-  const cutoffPassed = today.getHours() > ch || (today.getHours() === ch && today.getMinutes() >= cm);
-  const minDate = new Date(today.getTime() + (cutoffPassed ? 2 : 1) * 86400000);
-  const maxDate = new Date(today.getTime() + 30 * 86400000);
-  inp.min = minDate.toISOString().split('T')[0];
-  inp.max = maxDate.toISOString().split('T')[0];
-  inp.value = minDate.toISOString().split('T')[0];
-  currentOrderDate = inp.value;
+  const { isOpen, deliveryDate } = getOrderWindow();
+  if (!isOpen || !deliveryDate) {
+    inp.value = ''; currentOrderDate = ''; updateMenuDate(); renderMenu(); return;
+  }
+  inp.value = deliveryDate; inp.min = deliveryDate; inp.max = deliveryDate;
+  inp.readOnly = true;
+  currentOrderDate = deliveryDate;
   updateMenuDate();
 }
-function resetToToday()   { initDatePicker(); renderMenu(); }
+function resetToToday() { initDatePicker(); renderMenu(); }
 function onOrderDateChange() {
   const inp = document.getElementById('order-date');
   currentOrderDate = inp ? inp.value : todayStr();
@@ -1229,6 +1243,11 @@ function getMenuForDate(dateStr) {
 //  RENDER CUSTOMER MENU
 // ═══════════════════════════════════════════
 function renderMenu() {
+  const { isOpen, oH, oM } = getOrderWindow();
+  if (!isOpen) {
+    document.getElementById('mscroll').innerHTML = `<div class="emp" style="padding:50px 20px;"><div class="ee">🔴</div><p style="font-weight:800;color:var(--tx);font-size:15px;margin-bottom:8px;">Pesanan Sedang Tutup</p><p style="font-size:12px;color:var(--mu);">Pemesanan dibuka kembali pukul<br><strong>${String(oH).padStart(2,'0')}:${String(oM).padStart(2,'0')} WIB</strong> siang ini.</p></div>`;
+    return;
+  }
   const MENU = getMenuForDate(currentOrderDate), ph = getPh();
   const G = [
     { lbl:'🍱', title:'Sarapan', pill:'Pagi',  items: MENU.filter(m => m.sec === 'sarapan') },
@@ -1420,12 +1439,9 @@ function renderCart() {
 function placeOrder() {
   const now   = new Date();
   const odDate = new Date(currentOrderDate + 'T12:00:00');
-  const { hour: ch, minute: cm } = getCutoff();
-  const cutoffPassed = now.getHours() > ch || (now.getHours() === ch && now.getMinutes() >= cm);
-  const tomorrow = new Date(now.getTime() + 86400000);
-  if (odDate.toDateString() === tomorrow.toDateString() && cutoffPassed) {
-    const cutoffLabel = `${String(ch).padStart(2,'0')}:${String(cm).padStart(2,'0')}`;
-    alert(`Maaf, batas pesan antar besok sudah lewat jam ${cutoffLabel}. Pesanan kamu akan diantar lusa ya!`); return;
+  const { isOpen, oH, oM } = getOrderWindow();
+  if (!isOpen) {
+    alert(`Maaf, pesanan sedang tutup. Buka lagi jam ${String(oH).padStart(2,'0')}:${String(oM).padStart(2,'0')} siang.`); return;
   }
   const MENU = getMenuForDate(currentOrderDate);
   const { keys, sub, ongkir, total } = cartTotals();
@@ -2125,17 +2141,31 @@ function stab(btn, pid) {
 //  CLOCK
 // ═══════════════════════════════════════════
 function startClock() {
+  let lastState = null;
   function tick() {
-    const now = new Date(), c = new Date();
-    const { hour: ch, minute: cm } = getCutoff();
-    c.setHours(ch, cm, 0, 0);
-    if (now > c) c.setDate(c.getDate() + 1);
-    const diff = Math.max(0, Math.floor((c - now) / 1000));
-    const h = String(Math.floor(diff/3600)).padStart(2,'0');
-    const m = String(Math.floor((diff%3600)/60)).padStart(2,'0');
-    const s = String(diff%60).padStart(2,'0');
-    const el = document.getElementById('clkc');
-    if (el) el.textContent = diff > 0 ? `Sisa ${h}:${m}:${s}` : '🔴 Pesanan DITUTUP';
+    const { isOpen, state, cH, cM, oH, oM } = getOrderWindow();
+    // Auto-refresh UI when window state changes
+    if (lastState !== null && lastState !== state) { initDatePicker(); renderMenu(); }
+    lastState = state;
+    const now = new Date(), target = new Date();
+    if (isOpen) { target.setHours(cH, cM, 0, 0); if (target <= now) target.setDate(target.getDate() + 1); }
+    else        { target.setHours(oH, oM, 0, 0); if (target <= now) target.setDate(target.getDate() + 1); }
+    const diff = Math.max(0, Math.floor((target - now) / 1000));
+    const hh = String(Math.floor(diff/3600)).padStart(2,'0');
+    const mm = String(Math.floor((diff%3600)/60)).padStart(2,'0');
+    const ss = String(diff%60).padStart(2,'0');
+    const lbl  = document.querySelector('.clklbl');
+    const clkt = document.getElementById('clkt');
+    const clkc = document.getElementById('clkc');
+    if (isOpen) {
+      if (lbl)  lbl.textContent  = '🟢 Pesanan BUKA';
+      if (clkt) clkt.textContent = `${String(cH).padStart(2,'0')}:${String(cM).padStart(2,'0')}`;
+      if (clkc) clkc.textContent = `Tutup: ${hh}:${mm}:${ss}`;
+    } else {
+      if (lbl)  lbl.textContent  = '🔴 Pesanan TUTUP';
+      if (clkt) clkt.textContent = `${String(oH).padStart(2,'0')}:${String(oM).padStart(2,'0')}`;
+      if (clkc) clkc.textContent = `Buka: ${hh}:${mm}:${ss}`;
+    }
   }
   tick(); setInterval(tick, 1000);
 }
