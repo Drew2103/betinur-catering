@@ -713,6 +713,15 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--cr);color:var(-
         <button class="mtab" id="mtab-preview" onclick="switchMenuTab('preview')">👁️ Preview Customer</button>
       </div>
       <div id="tm-kelola">
+        <div class="ac" style="background:var(--gp);border-color:rgba(201,168,76,.4);">
+          <div class="act">📅 Edit Menu per Tanggal</div>
+          <div style="font-size:11px;color:var(--mu);margin-bottom:9px;">Pilih tanggal untuk langsung edit menu harian di Kalender.</div>
+          <div style="display:flex;gap:8px;">
+            <input type="date" id="kelola-date-jump" style="flex:1;padding:8px 10px;border:1.5px solid var(--bd);border-radius:8px;font-size:13px;font-family:inherit;">
+            <button onclick="jumpToCalDate()" style="padding:8px 14px;background:var(--n);color:white;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;">Edit Tanggal →</button>
+          </div>
+          <div style="font-size:10px;color:var(--mu);margin-top:7px;">💡 Item di bawah adalah database master — tambah item baru di sini, lalu atur per tanggal via Kalender.</div>
+        </div>
         <div class="ac"><div class="act"><span>🍱 Sarapan</span></div><div id="adm-sarapan"></div><button class="btn-add-i" onclick="openAdd('sarapan')">＋ Tambah Item Sarapan</button></div>
         <div class="ac"><div class="act"><span>🍗 Lauk</span></div><div id="adm-lauk"></div><button class="btn-add-i" onclick="openAdd('lauk')">＋ Tambah Lauk</button></div>
         <div class="ac"><div class="act"><span>🥦 Sayur &amp; Pelengkap</span></div><div id="adm-sayur"></div><button class="btn-add-i" onclick="openAdd('sayur')">＋ Tambah Sayur</button></div>
@@ -1000,8 +1009,9 @@ function getOrderWindow() {
   const now = new Date(), h = now.getHours(), m = now.getMinutes();
   const afterClose = h > cH || (h === cH && m >= cM);
   const afterOpen  = h > oH || (h === oH && m >= oM);
-  const today    = now.toISOString().split('T')[0];
-  const tomorrow = new Date(now.getTime() + 86400000).toISOString().split('T')[0];
+  const today    = localDateStr(now);
+  const tmrw     = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+  const tomorrow = localDateStr(tmrw);
   if (!afterClose)         return { isOpen:true,  deliveryDate:today,    state:'early',  cH,cM,oH,oM };
   else if (!afterOpen)     return { isOpen:false,  deliveryDate:null,     state:'closed', cH,cM,oH,oM };
   else                     return { isOpen:true,   deliveryDate:tomorrow, state:'open',   cH,cM,oH,oM };
@@ -1029,7 +1039,11 @@ function escHTML(s) {
 }
 function fmt(n) { return Number(n).toLocaleString('id-ID'); }
 function rp(n)  { return 'Rp ' + fmt(n); }
-function todayStr() { const d = new Date(); return d.toISOString().split('T')[0]; }
+function localDateStr(d) {
+  d = d || new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+function todayStr() { return localDateStr(); }
 function fmtDateLabel(ds) {
   if (!ds) return '';
   const d = new Date(ds + 'T12:00:00');
@@ -1676,8 +1690,8 @@ function updateStats() {
 function renderAnalytics() { renderRevenueChart(); renderBestseller(); renderAllStats(); }
 function getLast7Days() {
   return Array.from({length:7}, (_,i) => {
-    const d = new Date(); d.setDate(d.getDate() - (6-i));
-    return d.toISOString().split('T')[0];
+    const n = new Date(); n.setDate(n.getDate() - (6-i));
+    return localDateStr(n);
   });
 }
 function renderRevenueChart() {
@@ -2326,7 +2340,8 @@ function renderMyOrders() {
   }
   const norm = p => (p||'').replace(/\D/g,'');
   const uPhone = norm(user.phone);
-  const since = new Date(Date.now() - 7 * 86400000).toISOString().split('T')[0];
+  const s7 = new Date(); s7.setDate(s7.getDate() - 7);
+  const since = localDateStr(s7);
   const myOrders = getOrders().filter(o => {
     const op = norm(o.phone);
     const d  = o.orderDate || o.ts.split('T')[0];
@@ -2358,6 +2373,14 @@ function renderMyOrders() {
 // ═══════════════════════════════════════════
 //  ADMIN MENU PREVIEW
 // ═══════════════════════════════════════════
+function jumpToCalDate() {
+  const v = document.getElementById('kelola-date-jump').value;
+  if (!v) { toast('Pilih tanggal dulu!'); return; }
+  const d = parseInt(v.split('-')[2]);
+  const calTab = Array.from(document.querySelectorAll('.atab')).find(t => t.textContent.includes('Kalender'));
+  if (calTab) stab(calTab, 'tc');
+  setTimeout(() => selCal(d), 150);
+}
 function switchMenuTab(tab) {
   ['kelola','preview'].forEach(t => {
     document.getElementById('mtab-' + t).classList.toggle('active', t === tab);
