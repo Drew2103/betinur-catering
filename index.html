@@ -719,7 +719,15 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--cr);color:var(-
         <div class="ac"><div class="act"><span>🥟 Gorengan</span></div><div id="adm-goreng"></div><button class="btn-add-i" onclick="openAdd('goreng')">＋ Tambah Gorengan</button></div>
       </div>
       <div id="tm-preview" style="display:none;">
-        <div id="menu-preview-content"></div>
+        <div class="ac">
+          <div class="act">👁️ Tampilan Customer Saat Ini</div>
+          <div style="font-size:11px;color:var(--mu);margin-bottom:9px;" id="preview-status-line">—</div>
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
+            <label style="font-size:10px;font-weight:700;color:var(--mu);text-transform:uppercase;white-space:nowrap;">Lihat Tanggal:</label>
+            <input type="date" id="preview-date-picker" style="flex:1;padding:7px 10px;border:1.5px solid var(--bd);border-radius:8px;font-size:12px;font-family:inherit;" onchange="renderMenuPreview()">
+          </div>
+          <div id="menu-preview-items"></div>
+        </div>
       </div>
     </div>
 
@@ -1910,6 +1918,7 @@ function buildOrderPrintHTML(o) {
     <div class="pmr"><span class="pml">Alamat</span><span class="pmv">${escHTML(o.addr)}</span></div>
     ${odLabel}
     <div class="pmr"><span class="pml">Pesan</span><span class="pmv">${t} WIB</span></div>
+    <div class="pmr"><span class="pml">Status</span><span class="pmv">${(o.status==='pending'||o.status==='new')?'Menunggu Konfirmasi':o.status==='confirmed'?'✓ Dikonfirmasi':'✓ Selesai'}</span></div>
     <hr class="phr"><div class="pitlbl">Pesanan</div>${ih}${oh}
     <div class="ptrow"><span>TOTAL</span><span>${rp(o.total)}</span></div>
     ${nh}<div class="pfoot">Terima kasih! Pembayaran via QRIS</div>
@@ -2219,30 +2228,59 @@ function openEditOrder(id) {
   const o = getOrders().find(x => x.id === id); if (!o) return;
   editOrdId = id;
   editOrdCart = {};
-  o.items.forEach(it => { editOrdCart[it.id] = { qty: it.qty, price: it.price, name: it.name }; });
-  document.getElementById('edit-ord-info').textContent = `${o.name} · ${fmtDateLabel(o.orderDate||o.ts.split('T')[0])}`;
-  renderEditOrdItems(o.orderDate||o.ts.split('T')[0]);
+  const dateStr = o.orderDate || o.ts.split('T')[0];
+
+  // Get the menu for this date; fall back to default menu
+  let MENU = getMenuForDate(dateStr);
+  if (!MENU.length) MENU = getMenu();
+
+  // Map existing order items → current menu IDs (match by name first, then by ID)
+  o.items.forEach(it => {
+    const match = MENU.find(m => m.id === it.id) ||
+                  MENU.find(m => m.name.toLowerCase() === it.name.toLowerCase());
+    const key   = match ? match.id   : it.id;
+    const price = match ? match.price : it.price;
+    const name  = match ? match.name  : it.name;
+    if (editOrdCart[key]) editOrdCart[key].qty += it.qty; // merge dupes
+    else editOrdCart[key] = { qty: it.qty, price, name };
+  });
+
+  document.getElementById('edit-ord-info').textContent = `${o.name} · ${fmtDateLabel(dateStr)}`;
+  renderEditOrdItems(dateStr);
   document.getElementById('edit-order-modal').classList.add('open');
 }
 function renderEditOrdItems(dateStr) {
-  const MENU = getMenuForDate(dateStr||currentOrderDate);
   const el = document.getElementById('edit-ord-items'); if (!el) return;
-  const allIds = new Set([...Object.keys(editOrdCart), ...MENU.map(m => m.id)]);
-  el.innerHTML = Array.from(allIds).map(id => {
-    const m = MENU.find(x => x.id === id);
-    const name  = m ? m.name : (editOrdCart[id]?.name || id);
-    const price = m ? m.price : (editOrdCart[id]?.price || 0);
-    const qty   = editOrdCart[id]?.qty || 0;
-    const safeN = escHTML(name).replace(/'/g, '&#39;');
-    return `<div class="citem" style="padding:7px 0;border-bottom:1px solid var(--bd);">
-      <div><div class="cin">${escHTML(name)}</div><div class="cis">${rp(price)}</div></div>
-      <div style="display:flex;align-items:center;gap:7px;">
-        <button style="width:26px;height:26px;border-radius:6px;border:1px solid var(--bd);background:white;font-size:15px;font-weight:700;cursor:pointer;" onclick="editOrdChg('${id}',-1,${price},'${safeN}')">-</button>
-        <span style="min-width:22px;text-align:center;font-weight:700;font-size:13px;" id="eq-${id}">${qty}</span>
-        <button style="width:26px;height:26px;border-radius:6px;border:1px solid var(--bd);background:white;font-size:15px;font-weight:700;cursor:pointer;" onclick="editOrdChg('${id}',1,${price},'${safeN}')">+</button>
-      </div>
-    </div>`;
-  }).join('');
+  let MENU = getMenuForDate(dateStr || currentOrderDate);
+  if (!MENU.length) MENU = getMenu();
+
+  // Show full menu — pre-fill qty from editOrdCart (matched by ID now that we normalised above)
+  const cats = [
+    {lbl:'🍱 Sarapan',    filter: m => m.sec === 'sarapan'},
+    {lbl:'🍚 Nasi Putih', filter: m => m.sub  === 'nasi'},
+    {lbl:'🍗 Lauk',       filter: m => m.sub  === 'lauk'},
+    {lbl:'🥦 Sayur',      filter: m => m.sub  === 'sayur'},
+    {lbl:'🥟 Gorengan',   filter: m => m.sub  === 'goreng'},
+  ];
+  let html = '';
+  cats.forEach(c => {
+    const items = MENU.filter(c.filter);
+    if (!items.length) return;
+    html += `<div style="font-size:10px;font-weight:800;color:var(--mu);text-transform:uppercase;letter-spacing:.5px;margin:9px 0 5px;">${c.lbl}</div>`;
+    items.forEach(m => {
+      const qty   = editOrdCart[m.id]?.qty || 0;
+      const safeN = escHTML(m.name).replace(/'/g, '&#39;');
+      html += `<div class="citem" style="padding:6px 0;border-bottom:1px solid var(--bd);">
+        <div><div class="cin">${escHTML(m.emoji||m.emj||'')} ${escHTML(m.name)}</div><div class="cis">${rp(m.price)}</div></div>
+        <div style="display:flex;align-items:center;gap:7px;">
+          <button style="width:26px;height:26px;border-radius:6px;border:1px solid var(--bd);background:white;font-size:15px;font-weight:700;cursor:pointer;" onclick="editOrdChg('${m.id}',-1,${m.price},'${safeN}')">-</button>
+          <span style="min-width:22px;text-align:center;font-weight:700;font-size:13px;" id="eq-${m.id}">${qty}</span>
+          <button style="width:26px;height:26px;border-radius:6px;border:1px solid var(--bd);background:white;font-size:15px;font-weight:700;cursor:pointer;" onclick="editOrdChg('${m.id}',1,${m.price},'${safeN}')">+</button>
+        </div>
+      </div>`;
+    });
+  });
+  el.innerHTML = html;
   updateEditOrdTotal();
 }
 function editOrdChg(id, d, price, name) {
@@ -2325,34 +2363,49 @@ function switchMenuTab(tab) {
     document.getElementById('mtab-' + t).classList.toggle('active', t === tab);
     document.getElementById('tm-' + t).style.display = t === tab ? 'block' : 'none';
   });
-  if (tab === 'preview') renderMenuPreview();
+  if (tab === 'preview') {
+    const picker = document.getElementById('preview-date-picker');
+    if (picker && !picker.value) {
+      const { deliveryDate } = getOrderWindow();
+      picker.value = selCalDate || deliveryDate || todayStr();
+    }
+    renderMenuPreview();
+  }
 }
 function renderMenuPreview() {
   const { isOpen, deliveryDate, oH, oM } = getOrderWindow();
-  const el = document.getElementById('menu-preview-content'); if (!el) return;
-  const statusLine = isOpen
-    ? `🟢 Pesanan <b>BUKA</b> — Menu untuk <b>${fmtDateLabel(deliveryDate)}</b>`
-    : `🔴 Pesanan <b>TUTUP</b> — Buka jam ${String(oH).padStart(2,'0')}:${String(oM).padStart(2,'0')}`;
-  let html = `<div class="ac" style="margin-bottom:10px;">
-    <div class="act">👁️ Tampilan Customer Saat Ini</div>
-    <div style="font-size:11px;color:var(--mu);margin-bottom:10px;">${statusLine}</div>`;
-  if (!isOpen) {
-    html += `<div class="emp" style="padding:18px 0;">🔴 Pesanan Sedang Tutup</div></div>`;
-    el.innerHTML = html; return;
+  const picker = document.getElementById('preview-date-picker');
+  const previewDate = (picker && picker.value) ? picker.value : (deliveryDate || todayStr());
+
+  const statusEl = document.getElementById('preview-status-line');
+  if (statusEl) {
+    statusEl.innerHTML = isOpen
+      ? `🟢 Pesanan <b>BUKA</b> — Delivery: <b>${fmtDateLabel(deliveryDate||'')}</b>`
+      : `🔴 Pesanan <b>TUTUP</b> — Buka jam ${String(oH).padStart(2,'0')}:${String(oM).padStart(2,'0')}`;
   }
-  const menu = getMenuForDate(deliveryDate);
+
+  const el = document.getElementById('menu-preview-items'); if (!el) return;
+  const menu = getMenuForDate(previewDate);
   if (!menu.length) {
-    html += `<div class="emp" style="padding:18px 0;">📋 Menu Belum Tersedia<br><small style="font-size:11px;">Belum ada menu untuk ${fmtDateLabel(deliveryDate)}</small></div></div>`;
-    el.innerHTML = html; return;
+    el.innerHTML = `<div class="emp" style="padding:18px 0;">📋 Menu Belum Tersedia<br><small style="font-size:11px;">Belum ada menu untuk ${fmtDateLabel(previewDate)}</small></div>`;
+    return;
   }
-  [{key:'sarapan',lbl:'🍱 Sarapan'},{key:'lauk',lbl:'🍗 Lauk'},{key:'sayur',lbl:'🥦 Sayur & Pelengkap'},{key:'goreng',lbl:'🥟 Gorengan'}].forEach(c => {
-    const items = menu.filter(m => m.cat === c.key);
+  const cats = [
+    {lbl:'🍱 Sarapan',   filter: m => m.sec === 'sarapan'},
+    {lbl:'🍚 Nasi Putih', filter: m => m.sub === 'nasi'},
+    {lbl:'🍗 Lauk',       filter: m => m.sub === 'lauk'},
+    {lbl:'🥦 Sayur & Pelengkap', filter: m => m.sub === 'sayur'},
+    {lbl:'🥟 Gorengan',   filter: m => m.sub === 'goreng'},
+  ];
+  let html = '';
+  cats.forEach(c => {
+    const items = menu.filter(c.filter);
     if (!items.length) return;
     html += `<div style="margin-bottom:9px;"><div style="font-size:11px;font-weight:800;color:var(--n);margin-bottom:5px;">${c.lbl}</div>`;
     items.forEach(m => {
       html += `<div class="mi" style="pointer-events:none;opacity:.85;">
         <div class="mitxt">
-          <div class="min">${m.emj||'🍽️'} ${escHTML(m.name)}</div>
+          <div class="min">${m.emoji||m.emj||'🍽️'} ${escHTML(m.name)}</div>
           ${m.desc ? `<div class="mid">${escHTML(m.desc)}</div>` : ''}
           <div class="mip">${rp(m.price)}</div>
         </div>
@@ -2360,8 +2413,7 @@ function renderMenuPreview() {
     });
     html += '</div>';
   });
-  html += '</div>';
-  el.innerHTML = html;
+  el.innerHTML = html || `<div class="emp" style="padding:18px 0;">📋 Menu Belum Tersedia</div>`;
 }
 
 // ═══════════════════════════════════════════
