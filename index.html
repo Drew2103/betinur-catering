@@ -356,6 +356,18 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--cr);color:var(-
 .btn-mh-del{padding:6px 10px;background:#fff0f0;color:#e53e3e;border:1px solid #fecaca;border-radius:8px;font-size:13px;cursor:pointer;}
 .emp{text-align:center;padding:40px 18px;color:var(--mu);}
 .ee{font-size:48px;margin-bottom:10px;}
+/* ORDER STATUS CHIPS */
+.spending{background:#fff7ed;color:#c2410c;border:1px solid #fed7aa;}
+.sconfirmed{background:#f0fdf4;color:#166534;border:1px solid #bbf7d0;}
+/* CONFIRM / EDIT BUTTONS */
+.btn-confirm{background:linear-gradient(135deg,var(--g),var(--gl));color:var(--n);border:none;border-radius:7px;padding:5px 11px;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;}
+.btn-edit-ord{background:#e0f2fe;color:#0369a1;border:none;border-radius:7px;padding:5px 9px;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;}
+/* MENU SUB-TABS */
+.mtabs{display:flex;gap:8px;margin-bottom:12px;}
+.mtab{flex:1;padding:9px;border:1.5px solid var(--bd);border-radius:10px;background:white;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;color:var(--mu);}
+.mtab.active{background:var(--n);color:white;border-color:var(--n);}
+/* CUSTOMER ORDER HISTORY BUTTON */
+.btn-myord{padding:7px 11px;background:rgba(15,31,61,.08);border:1px solid rgba(15,31,61,.12);border-radius:9px;color:var(--n);font-size:13px;cursor:pointer;font-family:inherit;}
 .toast{position:fixed;top:18px;left:50%;transform:translateX(-50%) translateY(-70px);background:var(--n);color:white;padding:9px 18px;border-radius:20px;font-size:12px;font-weight:600;z-index:9999;transition:transform .3s ease;border:1px solid rgba(201,168,76,.4);white-space:nowrap;}
 .toast.show{transform:translateX(-50%) translateY(0);}
 @keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
@@ -421,6 +433,22 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--cr);color:var(-
   </div>
 </div>
 
+<!-- ═══ EDIT ORDER MODAL ═══ -->
+<div class="mbg" id="edit-order-modal">
+  <div class="ibox">
+    <h3>✏️ Edit Pesanan</h3>
+    <p id="edit-ord-info">—</p>
+    <div style="margin:12px 0;max-height:52vh;overflow-y:auto;" id="edit-ord-items"></div>
+    <div style="display:flex;justify-content:space-between;padding:9px 0;border-top:1px solid var(--bd);font-size:13px;font-weight:800;color:var(--n);">
+      <span>Total Baru</span><span id="edit-ord-total">Rp 0</span>
+    </div>
+    <div class="ibtns">
+      <button class="ibtn-c" onclick="closeEditOrder()">Batal</button>
+      <button class="ibtn-s" onclick="saveEditOrder()">💾 Simpan</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast">✅</div>
 
 <!-- ═══ LOGIN ═══ -->
@@ -455,7 +483,10 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--cr);color:var(-
       <div class="hlogo"><img id="logo-hdr" alt="logo"></div>
       <div><h2>Beti Nur Catering</h2><small>Halo, <span id="uname">—</span>! 👋</small></div>
     </div>
-    <button class="ibtn2" onclick="showView('lv')">🚪</button>
+    <div style="display:flex;gap:6px;">
+      <button class="btn-myord" onclick="showMyOrders()" title="Pesanan Saya">📦</button>
+      <button class="ibtn2" onclick="showView('lv')">🚪</button>
+    </div>
   </div>
   <div class="dbanner">
     <div><h3 id="mdtitle">—</h3><p>Pilih menu &amp; tanggal pesanan</p></div>
@@ -528,6 +559,16 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--cr);color:var(-
   </a>
   <p class="btn-wa-note">Tap untuk buka WhatsApp — pesanan sudah terisi otomatis, tinggal kirim! 🙏</p>
   <button class="btn-home" onclick="resetHome()">🏠 Kembali ke Menu</button>
+</div>
+
+<!-- ═══ PESANAN SAYA ═══ -->
+<div id="hv" class="view">
+  <div class="subhdr">
+    <button class="backbtn" onclick="showView('mv')">&#8249;</button>
+    <h2>Pesanan Saya</h2>
+    <span></span>
+  </div>
+  <div style="padding:12px 14px;" id="my-orders-list"></div>
 </div>
 
 <!-- ═══ ADMIN ═══ -->
@@ -667,10 +708,19 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--cr);color:var(-
 
     <!-- MENU MANAGEMENT -->
     <div class="apanel" id="tm">
-      <div class="ac"><div class="act"><span>🍱 Sarapan</span></div><div id="adm-sarapan"></div><button class="btn-add-i" onclick="openAdd('sarapan')">＋ Tambah Item Sarapan</button></div>
-      <div class="ac"><div class="act"><span>🍗 Lauk</span></div><div id="adm-lauk"></div><button class="btn-add-i" onclick="openAdd('lauk')">＋ Tambah Lauk</button></div>
-      <div class="ac"><div class="act"><span>🥦 Sayur &amp; Pelengkap</span></div><div id="adm-sayur"></div><button class="btn-add-i" onclick="openAdd('sayur')">＋ Tambah Sayur</button></div>
-      <div class="ac"><div class="act"><span>🥟 Gorengan</span></div><div id="adm-goreng"></div><button class="btn-add-i" onclick="openAdd('goreng')">＋ Tambah Gorengan</button></div>
+      <div class="mtabs">
+        <button class="mtab active" id="mtab-kelola" onclick="switchMenuTab('kelola')">⚙️ Kelola Menu</button>
+        <button class="mtab" id="mtab-preview" onclick="switchMenuTab('preview')">👁️ Preview Customer</button>
+      </div>
+      <div id="tm-kelola">
+        <div class="ac"><div class="act"><span>🍱 Sarapan</span></div><div id="adm-sarapan"></div><button class="btn-add-i" onclick="openAdd('sarapan')">＋ Tambah Item Sarapan</button></div>
+        <div class="ac"><div class="act"><span>🍗 Lauk</span></div><div id="adm-lauk"></div><button class="btn-add-i" onclick="openAdd('lauk')">＋ Tambah Lauk</button></div>
+        <div class="ac"><div class="act"><span>🥦 Sayur &amp; Pelengkap</span></div><div id="adm-sayur"></div><button class="btn-add-i" onclick="openAdd('sayur')">＋ Tambah Sayur</button></div>
+        <div class="ac"><div class="act"><span>🥟 Gorengan</span></div><div id="adm-goreng"></div><button class="btn-add-i" onclick="openAdd('goreng')">＋ Tambah Gorengan</button></div>
+      </div>
+      <div id="tm-preview" style="display:none;">
+        <div id="menu-preview-content"></div>
+      </div>
     </div>
 
     <!-- KALENDER -->
@@ -814,6 +864,7 @@ let editId = null, editB64 = null, editSub = null;
 let selCalDate = null, tapCnt = 0, tapTmr = null, pinStr = '';
 let poll = null, checkedOrders = new Set();
 let currentOrderDate = '';
+let editOrdId = null, editOrdCart = {};
 
 // ═══════════════════════════════════════════
 //  DEFAULT MENU
@@ -1459,7 +1510,7 @@ function placeOrder() {
       const m = MENU.find(x => x.id === k);
       return { id:k, name: m ? m.name : k, price: m ? m.price : (cart[k].price || 0), qty: cart[k].qty };
     }),
-    subtotal: sub, ongkir, total, status:'new'
+    subtotal: sub, ongkir, total, status:'pending'
   };
 
   const orders = getOrders(); orders.unshift(order); ss(SK.orders, orders);
@@ -1499,7 +1550,7 @@ function refreshOrders() {
   const target = fd || todayStr();
   const filtered = allOrders.filter(o => (o.orderDate || o.ts.split('T')[0]) === target);
 
-  const newC = filtered.filter(o => o.status === 'new').length;
+  const newC = filtered.filter(o => o.status === 'pending' || o.status === 'new').length;
   const b = document.getElementById('nbadge');
   if (b) { b.style.display = newC > 0 ? 'inline-block' : 'none'; b.textContent = newC; }
 
@@ -1515,12 +1566,19 @@ function refreshOrders() {
 
   list.innerHTML = filtered.map(o => {
     const t     = new Date(o.ts).toLocaleTimeString('id-ID', {hour:'2-digit',minute:'2-digit'});
-    const chip  = o.status === 'new'
-      ? '<span class="schip snew">🔔 Baru</span>'
-      : '<span class="schip sdone">✅ Selesai</span>';
+    const st = o.status;
+    const chip = (st === 'pending' || st === 'new')
+      ? '<span class="schip spending">🔔 Menunggu</span>'
+      : st === 'confirmed'
+      ? '<span class="schip sconfirmed">✅ Dikonfirmasi</span>'
+      : '<span class="schip sdone">✔️ Selesai</span>';
     const items = o.items.map(it => `${escHTML(it.name)}&times;${it.qty}`).join(', ');
-    const dBtn  = o.status === 'new'
-      ? `<button class="btn-done" onclick="markDone('${o.id}')">&#x2705; Selesai</button>` : '';
+    const confBtn = (st === 'pending' || st === 'new')
+      ? `<button class="btn-confirm" onclick="confirmOrder('${o.id}')">✅ Konfirmasi</button>` : '';
+    const dBtn = st === 'confirmed'
+      ? `<button class="btn-done" onclick="markDone('${o.id}')">✔️ Selesai</button>` : '';
+    const editBtn = role === 'super'
+      ? `<button class="btn-edit-ord" onclick="openEditOrder('${o.id}')">✏️</button>` : '';
     const delBtn = role === 'super'
       ? `<button class="btn-del-ord" onclick="deleteOrder('${o.id}')">🗑️</button>` : '';
     const chked  = checkedOrders.has(o.id);
@@ -1548,7 +1606,7 @@ function refreshOrders() {
       </div>
       <div style="font-size:10px;color:var(--mu);margin:3px 0 2px;">${items}</div>
       ${chip}
-      <div class="oact"><div class="otot">${rp(o.total)}</div>${dBtn}${waOrdBtn}${delBtn}</div>
+      <div class="oact"><div class="otot">${rp(o.total)}</div>${confBtn}${dBtn}${waOrdBtn}${editBtn}${delBtn}</div>
       ${notesH}
     </div>`;
   }).join('');
@@ -1567,8 +1625,11 @@ function toggleSelectAll() {
 }
 function markDone(id) {
   const orders = getOrders(), idx = orders.findIndex(o => o.id === id);
-  if (idx >= 0) { orders[idx].status = 'done'; ss(SK.orders, orders); }
-  refreshOrders(); updateStats(); toast('✅ Pesanan selesai!');
+  if (idx >= 0) {
+    orders[idx].status = 'done'; ss(SK.orders, orders);
+    if (db) db.collection('orders').doc(id).update({status:'done'}).catch(()=>{});
+  }
+  refreshOrders(); updateStats(); toast('✔️ Pesanan selesai!');
 }
 function batchPrint() {
   if (!checkedOrders.size) { toast('Pilih pesanan dulu!'); return; }
@@ -1589,7 +1650,7 @@ function updateStats() {
   const set = (id, val) => { const e = document.getElementById(id); if (e) e.textContent = val; };
   set('stat-ord',  tod.length);
   set('stat-rev',  rev >= 1000 ? (rev/1000).toFixed(0)+'k' : rev);
-  set('stat-new',  tod.filter(o => o.status === 'new').length);
+  set('stat-new',  tod.filter(o => o.status === 'pending' || o.status === 'new').length);
   set('stat-done', tod.filter(o => o.status === 'done').length);
 
   const ic = {};
@@ -1900,7 +1961,9 @@ function downloadCSV() {
     o.orderDate||o.ts.split('T')[0],
     new Date(o.ts).toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'}),
     o.id, o.name, o.phone, o.addr, it.name, it.qty, it.price, it.price*it.qty,
-    o.subtotal, o.ongkir, o.total, o.status==='new'?'Baru':'Selesai', o.notes||''
+    o.subtotal, o.ongkir, o.total,
+    (o.status==='pending'||o.status==='new')?'Menunggu':o.status==='confirmed'?'Dikonfirmasi':'Selesai',
+    o.notes||''
   ]));
   const headers = ['Tanggal','Waktu','ID','Nama','No HP','Alamat','Menu Item','Qty','Harga Satuan','Total Item','Subtotal','Ongkir','Grand Total','Status','Catatan'];
   const csv = [headers, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
@@ -2130,11 +2193,175 @@ function stab(btn, pid) {
   document.getElementById(pid).classList.add('active');
   if      (pid === 'to')  refreshOrders();
   else if (pid === 'td')  { updateStats(); loadSettings(); }
-  else if (pid === 'tm')  renderAdminMenu();
+  else if (pid === 'tm')  { switchMenuTab('kelola'); renderAdminMenu(); }
   else if (pid === 'tc')  { buildCal(); renderMenuHistory(); }
   else if (pid === 'tdp') updateDapur();
   else if (pid === 'tan') renderAnalytics();
   else if (pid === 'tst') renderStaffList();
+}
+
+// ═══════════════════════════════════════════
+//  ORDER CONFIRMATION
+// ═══════════════════════════════════════════
+function confirmOrder(id) {
+  const orders = getOrders(), idx = orders.findIndex(o => o.id === id);
+  if (idx >= 0) {
+    orders[idx].status = 'confirmed'; ss(SK.orders, orders);
+    if (db) db.collection('orders').doc(id).update({status:'confirmed'}).catch(()=>{});
+  }
+  refreshOrders(); updateStats(); toast('✅ Pesanan dikonfirmasi!');
+}
+
+// ═══════════════════════════════════════════
+//  EDIT ORDER
+// ═══════════════════════════════════════════
+function openEditOrder(id) {
+  const o = getOrders().find(x => x.id === id); if (!o) return;
+  editOrdId = id;
+  editOrdCart = {};
+  o.items.forEach(it => { editOrdCart[it.id] = { qty: it.qty, price: it.price, name: it.name }; });
+  document.getElementById('edit-ord-info').textContent = `${o.name} · ${fmtDateLabel(o.orderDate||o.ts.split('T')[0])}`;
+  renderEditOrdItems(o.orderDate||o.ts.split('T')[0]);
+  document.getElementById('edit-order-modal').classList.add('open');
+}
+function renderEditOrdItems(dateStr) {
+  const MENU = getMenuForDate(dateStr||currentOrderDate);
+  const el = document.getElementById('edit-ord-items'); if (!el) return;
+  const allIds = new Set([...Object.keys(editOrdCart), ...MENU.map(m => m.id)]);
+  el.innerHTML = Array.from(allIds).map(id => {
+    const m = MENU.find(x => x.id === id);
+    const name  = m ? m.name : (editOrdCart[id]?.name || id);
+    const price = m ? m.price : (editOrdCart[id]?.price || 0);
+    const qty   = editOrdCart[id]?.qty || 0;
+    const safeN = escHTML(name).replace(/'/g, '&#39;');
+    return `<div class="citem" style="padding:7px 0;border-bottom:1px solid var(--bd);">
+      <div><div class="cin">${escHTML(name)}</div><div class="cis">${rp(price)}</div></div>
+      <div style="display:flex;align-items:center;gap:7px;">
+        <button style="width:26px;height:26px;border-radius:6px;border:1px solid var(--bd);background:white;font-size:15px;font-weight:700;cursor:pointer;" onclick="editOrdChg('${id}',-1,${price},'${safeN}')">-</button>
+        <span style="min-width:22px;text-align:center;font-weight:700;font-size:13px;" id="eq-${id}">${qty}</span>
+        <button style="width:26px;height:26px;border-radius:6px;border:1px solid var(--bd);background:white;font-size:15px;font-weight:700;cursor:pointer;" onclick="editOrdChg('${id}',1,${price},'${safeN}')">+</button>
+      </div>
+    </div>`;
+  }).join('');
+  updateEditOrdTotal();
+}
+function editOrdChg(id, d, price, name) {
+  if (!editOrdCart[id]) editOrdCart[id] = { qty: 0, price, name };
+  editOrdCart[id].qty = Math.max(0, editOrdCart[id].qty + d);
+  if (editOrdCart[id].qty === 0) delete editOrdCart[id];
+  const el = document.getElementById('eq-' + id); if (el) el.textContent = editOrdCart[id]?.qty || 0;
+  updateEditOrdTotal();
+}
+function updateEditOrdTotal() {
+  const sub = Object.values(editOrdCart).reduce((s, v) => s + v.price * v.qty, 0);
+  const ongkir = sub > 0 && sub < ONGKIR_MIN ? ONGKIR_FEE : 0;
+  const el = document.getElementById('edit-ord-total'); if (el) el.textContent = rp(sub + ongkir);
+}
+function saveEditOrder() {
+  if (!editOrdId) return;
+  if (!Object.keys(editOrdCart).length) { toast('Pesanan tidak boleh kosong!'); return; }
+  const orders = getOrders(), idx = orders.findIndex(o => o.id === editOrdId);
+  if (idx < 0) { toast('Pesanan tidak ditemukan!'); closeEditOrder(); return; }
+  const newItems = Object.entries(editOrdCart).map(([id, v]) => ({ id, name: v.name, price: v.price, qty: v.qty }));
+  const sub = newItems.reduce((s, it) => s + it.price * it.qty, 0);
+  const ongkir = sub > 0 && sub < ONGKIR_MIN ? ONGKIR_FEE : 0;
+  orders[idx] = { ...orders[idx], items: newItems, subtotal: sub, ongkir, total: sub + ongkir };
+  ss(SK.orders, orders);
+  if (db) db.collection('orders').doc(editOrdId).update({ items: newItems, subtotal: sub, ongkir, total: sub + ongkir }).catch(()=>{});
+  closeEditOrder(); refreshOrders(); updateStats(); toast('✅ Pesanan berhasil diedit!');
+}
+function closeEditOrder() {
+  editOrdId = null; editOrdCart = {};
+  document.getElementById('edit-order-modal').classList.remove('open');
+}
+
+// ═══════════════════════════════════════════
+//  CUSTOMER ORDER HISTORY
+// ═══════════════════════════════════════════
+function showMyOrders() {
+  renderMyOrders(); showView('hv');
+}
+function renderMyOrders() {
+  const el = document.getElementById('my-orders-list'); if (!el) return;
+  if (!user || !user.phone) {
+    el.innerHTML = '<div class="emp"><div class="ee">👤</div><p>Login dulu ya!</p></div>'; return;
+  }
+  const norm = p => (p||'').replace(/\D/g,'');
+  const uPhone = norm(user.phone);
+  const since = new Date(Date.now() - 7 * 86400000).toISOString().split('T')[0];
+  const myOrders = getOrders().filter(o => {
+    const op = norm(o.phone);
+    const d  = o.orderDate || o.ts.split('T')[0];
+    const phoneMatch = op.endsWith(uPhone.slice(-8)) || uPhone.endsWith(op.slice(-8));
+    return phoneMatch && d >= since;
+  });
+  if (!myOrders.length) {
+    el.innerHTML = '<div class="emp"><div class="ee">📭</div><p>Belum ada pesanan<br>7 hari terakhir.</p></div>'; return;
+  }
+  el.innerHTML = myOrders.map(o => {
+    const st   = o.status;
+    const chip = (st === 'pending' || st === 'new')
+      ? '<span class="schip spending">🔔 Menunggu</span>'
+      : st === 'confirmed' ? '<span class="schip sconfirmed">✅ Dikonfirmasi</span>'
+      : '<span class="schip sdone">✔️ Selesai</span>';
+    const t     = new Date(o.ts).toLocaleTimeString('id-ID', {hour:'2-digit',minute:'2-digit'});
+    const items = o.items.map(it => `${escHTML(it.name)} ×${it.qty}`).join(', ');
+    return `<div class="oe" style="margin-bottom:10px;">
+      <div class="oetop">
+        <div><div class="ocn">📅 ${fmtDateLabel(o.orderDate||o.ts.split('T')[0])}</div><div class="ometa">⏰ ${t} WIB</div></div>
+        ${chip}
+      </div>
+      <div style="font-size:10px;color:var(--mu);margin:4px 0 2px;">${items}</div>
+      <div class="oact"><div class="otot">${rp(o.total)}</div></div>
+    </div>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════
+//  ADMIN MENU PREVIEW
+// ═══════════════════════════════════════════
+function switchMenuTab(tab) {
+  ['kelola','preview'].forEach(t => {
+    document.getElementById('mtab-' + t).classList.toggle('active', t === tab);
+    document.getElementById('tm-' + t).style.display = t === tab ? 'block' : 'none';
+  });
+  if (tab === 'preview') renderMenuPreview();
+}
+function renderMenuPreview() {
+  const { isOpen, deliveryDate, oH, oM } = getOrderWindow();
+  const el = document.getElementById('menu-preview-content'); if (!el) return;
+  const statusLine = isOpen
+    ? `🟢 Pesanan <b>BUKA</b> — Menu untuk <b>${fmtDateLabel(deliveryDate)}</b>`
+    : `🔴 Pesanan <b>TUTUP</b> — Buka jam ${String(oH).padStart(2,'0')}:${String(oM).padStart(2,'0')}`;
+  let html = `<div class="ac" style="margin-bottom:10px;">
+    <div class="act">👁️ Tampilan Customer Saat Ini</div>
+    <div style="font-size:11px;color:var(--mu);margin-bottom:10px;">${statusLine}</div>`;
+  if (!isOpen) {
+    html += `<div class="emp" style="padding:18px 0;">🔴 Pesanan Sedang Tutup</div></div>`;
+    el.innerHTML = html; return;
+  }
+  const menu = getMenuForDate(deliveryDate);
+  if (!menu.length) {
+    html += `<div class="emp" style="padding:18px 0;">📋 Menu Belum Tersedia<br><small style="font-size:11px;">Belum ada menu untuk ${fmtDateLabel(deliveryDate)}</small></div></div>`;
+    el.innerHTML = html; return;
+  }
+  [{key:'sarapan',lbl:'🍱 Sarapan'},{key:'lauk',lbl:'🍗 Lauk'},{key:'sayur',lbl:'🥦 Sayur & Pelengkap'},{key:'goreng',lbl:'🥟 Gorengan'}].forEach(c => {
+    const items = menu.filter(m => m.cat === c.key);
+    if (!items.length) return;
+    html += `<div style="margin-bottom:9px;"><div style="font-size:11px;font-weight:800;color:var(--n);margin-bottom:5px;">${c.lbl}</div>`;
+    items.forEach(m => {
+      html += `<div class="mi" style="pointer-events:none;opacity:.85;">
+        <div class="mitxt">
+          <div class="min">${m.emj||'🍽️'} ${escHTML(m.name)}</div>
+          ${m.desc ? `<div class="mid">${escHTML(m.desc)}</div>` : ''}
+          <div class="mip">${rp(m.price)}</div>
+        </div>
+      </div>`;
+    });
+    html += '</div>';
+  });
+  html += '</div>';
+  el.innerHTML = html;
 }
 
 // ═══════════════════════════════════════════
