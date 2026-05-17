@@ -238,8 +238,12 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--cr);color:var(-
 .cal-row{display:flex;align-items:center;gap:5px;margin-bottom:5px;}
 .cal-row input[type=text]{flex:1;padding:7px 9px;border:1.5px solid var(--bd);border-radius:8px;font-size:11px;font-family:inherit;outline:none;color:var(--tx);}
 .cal-row input[type=text]:focus{border-color:var(--g);}
-.cal-row input[type=number]{width:80px;flex:none;padding:7px 9px;border:1.5px solid var(--bd);border-radius:8px;font-size:11px;font-family:inherit;outline:none;color:var(--tx);}
+.cal-row input[type=number]{width:75px;flex:none;padding:7px 9px;border:1.5px solid var(--bd);border-radius:8px;font-size:11px;font-family:inherit;outline:none;color:var(--tx);}
 .cal-row input[type=number]:focus{border-color:var(--g);}
+.sambal-lbl{display:flex;align-items:center;gap:3px;font-size:11px;font-weight:600;color:var(--mu);cursor:pointer;white-space:nowrap;user-select:none;}
+.sambal-lbl input[type=checkbox]{accent-color:#e53e3e;width:14px;height:14px;cursor:pointer;}
+.msambal{display:flex;align-items:center;gap:5px;padding:5px 0 0;font-size:11px;color:var(--mu);}
+.msambal input[type=checkbox]{accent-color:#e53e3e;width:14px;height:14px;cursor:pointer;}
 .btn-del-row{background:#fee2e2;border:none;border-radius:7px;padding:6px 8px;color:#dc2626;font-size:13px;cursor:pointer;flex-shrink:0;}
 .btn-add-row{background:none;border:1.5px dashed var(--bd);border-radius:8px;padding:6px;color:var(--mu);font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;width:100%;margin-top:2px;}
 .btn-add-row:hover{border-color:var(--g);color:var(--g);}
@@ -589,8 +593,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--cr);color:var(-
     <button class="atab active" onclick="stab(this,'td')"  data-role="super">📊 Dashboard</button>
     <button class="atab" onclick="stab(this,'tan')" data-role="super">📈 Analitik</button>
     <button class="atab" onclick="stab(this,'to')"  data-role="both">🔴 Pesanan</button>
-    <button class="atab" onclick="stab(this,'tm')"  data-role="super">🍛 Menu</button>
-    <button class="atab" onclick="stab(this,'tc')"  data-role="super">📅 Kalender</button>
+    <button class="atab" onclick="stab(this,'tc')"  data-role="super">📅 Menu Kalender</button>
     <button class="atab" onclick="stab(this,'tdp')" data-role="super">👨‍🍳 Dapur</button>
     <button class="atab" onclick="stab(this,'tex')" data-role="super">📤 Export</button>
     <button class="atab" onclick="stab(this,'tst')" data-role="super">👤 Staff</button>
@@ -706,41 +709,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--cr);color:var(-
       </div>
     </div>
 
-    <!-- MENU MANAGEMENT -->
-    <div class="apanel" id="tm">
-      <div class="mtabs">
-        <button class="mtab active" id="mtab-kelola" onclick="switchMenuTab('kelola')">⚙️ Kelola Menu</button>
-        <button class="mtab" id="mtab-preview" onclick="switchMenuTab('preview')">👁️ Preview Customer</button>
-      </div>
-      <div id="tm-kelola">
-        <div class="ac" style="background:var(--gp);border-color:rgba(201,168,76,.4);">
-          <div class="act">📅 Edit Menu per Tanggal</div>
-          <div style="font-size:11px;color:var(--mu);margin-bottom:9px;">Pilih tanggal untuk langsung edit menu harian di Kalender.</div>
-          <div style="display:flex;gap:8px;">
-            <input type="date" id="kelola-date-jump" style="flex:1;padding:8px 10px;border:1.5px solid var(--bd);border-radius:8px;font-size:13px;font-family:inherit;">
-            <button onclick="jumpToCalDate()" style="padding:8px 14px;background:var(--n);color:white;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;">Edit Tanggal →</button>
-          </div>
-          <div style="font-size:10px;color:var(--mu);margin-top:7px;">💡 Item di bawah adalah database master — tambah item baru di sini, lalu atur per tanggal via Kalender.</div>
-        </div>
-        <div class="ac"><div class="act"><span>🍱 Sarapan</span></div><div id="adm-sarapan"></div><button class="btn-add-i" onclick="openAdd('sarapan')">＋ Tambah Item Sarapan</button></div>
-        <div class="ac"><div class="act"><span>🍗 Lauk</span></div><div id="adm-lauk"></div><button class="btn-add-i" onclick="openAdd('lauk')">＋ Tambah Lauk</button></div>
-        <div class="ac"><div class="act"><span>🥦 Sayur &amp; Pelengkap</span></div><div id="adm-sayur"></div><button class="btn-add-i" onclick="openAdd('sayur')">＋ Tambah Sayur</button></div>
-        <div class="ac"><div class="act"><span>🥟 Gorengan</span></div><div id="adm-goreng"></div><button class="btn-add-i" onclick="openAdd('goreng')">＋ Tambah Gorengan</button></div>
-      </div>
-      <div id="tm-preview" style="display:none;">
-        <div class="ac">
-          <div class="act">👁️ Tampilan Customer Saat Ini</div>
-          <div style="font-size:11px;color:var(--mu);margin-bottom:9px;" id="preview-status-line">—</div>
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
-            <label style="font-size:10px;font-weight:700;color:var(--mu);text-transform:uppercase;white-space:nowrap;">Lihat Tanggal:</label>
-            <input type="date" id="preview-date-picker" style="flex:1;padding:7px 10px;border:1.5px solid var(--bd);border-radius:8px;font-size:12px;font-family:inherit;" onchange="renderMenuPreview()">
-          </div>
-          <div id="menu-preview-items"></div>
-        </div>
-      </div>
-    </div>
-
-    <!-- KALENDER -->
+    <!-- MENU KALENDER -->
     <div class="apanel" id="tc">
       <div class="ac">
         <div class="act" style="margin-bottom:9px;">📅 Mei 2026 — Edit menu per tanggal</div>
@@ -1297,7 +1266,7 @@ function getMenuForDate(dateStr) {
   const calCat = (key, emoji, sec, sub) => {
     if (calDay[key] && calDay[key].length) {
       calDay[key].forEach((ci, i) =>
-        items.push({ id:`cal_${key}_${i}`, name:ci.name, desc:'', price:ci.price||0, emoji, sec, sub })
+        items.push({ id:`cal_${key}_${i}`, name:ci.name, desc:'', price:ci.price||0, emoji, sec, sub, sambal:!!ci.sambal })
       );
     } else {
       MENU.filter(m => sub ? (m.sub === sub) : (m.sec === sec && !m.sub))
@@ -1353,6 +1322,13 @@ function mcard(m, ph) {
   const hasImg = !!ph[m.id];
   const imgH   = hasImg ? `<img src="${ph[m.id]}" alt="">` : '';
   const emjH   = hasImg ? '' : `<span>${m.emoji}</span>`;
+  const qty    = cart[m.id] ? cart[m.id].qty : 0;
+  const sambalRow = m.sambal
+    ? `<div class="msambal" id="msbl-${m.id}" style="display:${qty>0?'flex':'none'};">
+        <input type="checkbox" id="sblcb-${m.id}" onchange="setSambal('${m.id}',this.checked)" ${cart[m.id]?.sambal?'checked':''}>
+        <label for="sblcb-${m.id}">🌶️ Pakai Sambal?</label>
+       </div>`
+    : '';
   return `<div class="mcard"><div class="mcinner">
     <div class="mebox">${imgH}${emjH}</div>
     <div class="minfo">
@@ -1362,10 +1338,11 @@ function mcard(m, ph) {
         <div class="mprice"><span class="cur">Rp </span>${fmt(m.price)}</div>
         <div class="qctrl">
           <button class="qbtn minus" onclick="chg('${m.id}',-1,${m.price})">&#8722;</button>
-          <span class="qnum" id="q-${m.id}">${cart[m.id] ? cart[m.id].qty : 0}</span>
+          <span class="qnum" id="q-${m.id}">${qty}</span>
           <button class="qbtn" onclick="chg('${m.id}',1,${m.price})">+</button>
         </div>
       </div>
+      ${sambalRow}
     </div>
   </div></div>`;
 }
@@ -1455,12 +1432,17 @@ function saveIM() {
 //  CART
 // ═══════════════════════════════════════════
 function chg(id, d, price) {
-  if (!cart[id]) cart[id] = { qty:0, price };
+  if (!cart[id]) cart[id] = { qty:0, price, sambal:false };
   cart[id].qty = Math.max(0, cart[id].qty + d);
   if (cart[id].qty === 0) delete cart[id];
   const el = document.getElementById('q-' + id);
   if (el) el.textContent = cart[id] ? cart[id].qty : 0;
+  const sblRow = document.getElementById('msbl-' + id);
+  if (sblRow) sblRow.style.display = (cart[id]?.qty||0) > 0 ? 'flex' : 'none';
   updateFloat();
+}
+function setSambal(id, val) {
+  if (cart[id]) cart[id].sambal = val;
 }
 function cartTotals() {
   const MENU = getMenuForDate(currentOrderDate);
@@ -1530,7 +1512,7 @@ function placeOrder() {
     notes:     document.getElementById('ocat').value.trim(),
     items:     keys.map(k => {
       const m = MENU.find(x => x.id === k);
-      return { id:k, name: m ? m.name : k, price: m ? m.price : (cart[k].price || 0), qty: cart[k].qty };
+      return { id:k, name: m ? m.name : k, price: m ? m.price : (cart[k].price || 0), qty: cart[k].qty, sambal: !!cart[k].sambal };
     }),
     subtotal: sub, ongkir, total, status:'pending'
   };
@@ -1594,7 +1576,7 @@ function refreshOrders() {
       : st === 'confirmed'
       ? '<span class="schip sconfirmed">✅ Dikonfirmasi</span>'
       : '<span class="schip sdone">✔️ Selesai</span>';
-    const items = o.items.map(it => `${escHTML(it.name)}&times;${it.qty}`).join(', ');
+    const items = o.items.map(it => `${escHTML(it.name)}${it.sambal?' 🌶️':''}&times;${it.qty}`).join(', ');
     const confBtn = (st === 'pending' || st === 'new')
       ? `<button class="btn-confirm" onclick="confirmOrder('${o.id}')">✅ Konfirmasi</button>` : '';
     const dBtn = st === 'confirmed'
@@ -1769,7 +1751,7 @@ function openCalE(d) {
   let body = '';
   CAL_CATS.forEach(cat => {
     body += `<div class="cas-lbl">${cat.lbl}</div><div id="calrows-${cat.key}">`;
-    (dd[cat.key]||[]).forEach((item,i) => { body += calRowH(cat.key, i, item.name, item.price); });
+    (dd[cat.key]||[]).forEach((item,i) => { body += calRowH(cat.key, i, item.name, item.price, item.sambal); });
     body += `</div><button class="btn-add-row" onclick="addCalRow('${cat.key}')">+ Tambah item</button>`;
   });
   document.getElementById('cae-body').innerHTML = body;
@@ -1777,10 +1759,11 @@ function openCalE(d) {
   ed.style.display = 'block';
   ed.scrollIntoView({behavior:'smooth', block:'nearest'});
 }
-function calRowH(cat, idx, name, price) {
+function calRowH(cat, idx, name, price, sambal) {
   return `<div class="cal-row" id="crow-${cat}-${idx}">
     <input type="text" placeholder="Nama item..." value="${escHTML(name||'')}">
     <input type="number" placeholder="Harga" value="${price||''}">
+    <label class="sambal-lbl" title="Tersedia pilihan sambal untuk customer"><input type="checkbox" class="sambal-cb" ${sambal?'checked':''}> 🌶️</label>
     <button class="btn-del-row" onclick="this.closest('.cal-row').remove()">&#215;</button>
   </div>`;
 }
@@ -1801,7 +1784,8 @@ function saveCalMenu() {
       const ins = row.querySelectorAll('input');
       const nm  = ins[0] ? ins[0].value.trim() : '';
       const pr  = ins[1] ? parseInt(ins[1].value)||0 : 0;
-      if (nm) items.push({name:nm, price:pr});
+      const sb  = !!(row.querySelector('.sambal-cb') && row.querySelector('.sambal-cb').checked);
+      if (nm) items.push({name:nm, price:pr, sambal:sb});
     });
     if (items.length) dd[cat.key] = items;
   });
@@ -1917,7 +1901,7 @@ function censorPhone(phone) {
 }
 function buildOrderPrintHTML(o) {
   const t  = new Date(o.ts).toLocaleTimeString('id-ID', {hour:'2-digit',minute:'2-digit'});
-  const ih = o.items.map(it => `<div class="pirow"><span>${escHTML(it.name)} x${it.qty}</span><span>${rp(it.price*it.qty)}</span></div>`).join('');
+  const ih = o.items.map(it => `<div class="pirow"><span>${escHTML(it.name)}${it.sambal?' 🌶️':''} x${it.qty}</span><span>${rp(it.price*it.qty)}</span></div>`).join('');
   const oh = o.ongkir ? `<div class="pirow"><span>Ongkir</span><span>${rp(o.ongkir)}</span></div>` : '';
   const nh = o.notes  ? `<div style="font-size:8px;color:#666;margin-top:4px;font-family:monospace;">Catatan: ${escHTML(o.notes)}</div>` : '';
   const odLabel = o.orderDate ? `<div class="pmr"><span class="pml">Antar</span><span class="pmv">${fmtDateLabel(o.orderDate)}</span></div>` : '';
@@ -2216,7 +2200,6 @@ function stab(btn, pid) {
   document.getElementById(pid).classList.add('active');
   if      (pid === 'to')  refreshOrders();
   else if (pid === 'td')  { updateStats(); loadSettings(); }
-  else if (pid === 'tm')  { switchMenuTab('kelola'); renderAdminMenu(); }
   else if (pid === 'tc')  { buildCal(); renderMenuHistory(); }
   else if (pid === 'tdp') updateDapur();
   else if (pid === 'tan') renderAnalytics();
