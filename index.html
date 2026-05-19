@@ -338,8 +338,13 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--cr);color:var(-
 .pbar{display:flex;gap:9px;padding:13px;}
 .pbar button{flex:1;padding:11px;border:none;border-radius:11px;font-weight:700;font-size:13px;cursor:pointer;font-family:inherit;}
 .btn-dp{background:var(--n);color:white;}.btn-cp{background:#ebebeb;color:var(--tx);}
-/* on-screen: narrow label preview */
-.pdoc{background:white;border-radius:13px;border:1px solid var(--bd);padding:12px;margin:0 auto 18px;max-width:200px;}
+/* on-screen: label preview proportional to 50x30mm */
+.pdoc{background:white;border-radius:8px;border:2px dashed var(--bd);padding:9px 11px;margin:0 auto 18px;width:250px;}
+.plbl-brand{font-size:9px;font-family:monospace;letter-spacing:.5px;text-align:center;border-bottom:1px solid #aaa;padding-bottom:4px;margin-bottom:5px;color:#555;}
+.plbl-name{font-size:17px;font-weight:900;font-family:monospace;line-height:1.1;margin-bottom:3px;}
+.plbl-addr{font-size:10px;font-family:monospace;color:#333;line-height:1.3;margin-bottom:2px;}
+.plbl-date{font-size:10px;font-family:monospace;font-weight:700;margin-bottom:2px;}
+.plbl-items{font-size:9px;font-family:monospace;color:#555;line-height:1.4;border-top:1px dashed #ccc;padding-top:4px;margin-top:3px;}
 .print-page{page-break-after:always;}
 .print-page:last-child{page-break-after:auto;}
 .print-header{text-align:center;margin-bottom:8px;border-bottom:1px solid #333;padding-bottom:6px;}
@@ -386,17 +391,17 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--cr);color:var(-
 @keyframes slideUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
 @keyframes popIn{from{transform:scale(.45);opacity:0}to{transform:scale(1);opacity:1}}
 @media print{
-  @page{size:48mm auto;margin:2mm 3mm;}
+  @page{size:50mm 30mm;margin:1.2mm 1.5mm;}
   body>*:not(#pv){display:none!important;}
   #pv{display:block!important;background:white;}
   .pbar,.subhdr{display:none!important;}
-  .pdoc{margin:0;border:none;box-shadow:none;border-radius:0;padding:0;max-width:none;width:42mm;}
-  .print-biz-name{font-size:11pt;}
-  .print-biz-sub{font-size:8pt;}
-  .pmr,.pirow,.ptrow,.pfoot,.pitlbl{font-size:7.5pt;}
-  .ptrow{font-size:9pt;}
-  .print-phone-screen{display:none!important;}
-  .print-phone-only{display:flex!important;}
+  .pdoc{margin:0;border:none;box-shadow:none;border-radius:0;padding:0;max-width:none;width:47mm;overflow:hidden;}
+  .print-page{max-height:27.6mm;overflow:hidden;}
+  .plbl-brand{font-size:5.5pt;font-family:monospace;letter-spacing:.5px;text-align:center;border-bottom:1px solid #000;padding-bottom:1mm;margin-bottom:1mm;}
+  .plbl-name{font-size:10pt;font-weight:900;font-family:monospace;line-height:1.1;margin-bottom:.8mm;}
+  .plbl-addr{font-size:6.5pt;font-family:monospace;line-height:1.25;margin-bottom:.6mm;}
+  .plbl-date{font-size:6.5pt;font-family:monospace;font-weight:700;margin-bottom:.6mm;}
+  .plbl-items{font-size:6pt;font-family:monospace;color:#333;line-height:1.3;}
 }
 </style>
 </head>
@@ -1991,26 +1996,17 @@ function censorPhone(phone) {
   return c.slice(0,4) + '*'.repeat(c.length - 7) + c.slice(-3);
 }
 function buildOrderPrintHTML(o) {
-  const t  = new Date(o.ts).toLocaleTimeString('id-ID', {hour:'2-digit',minute:'2-digit'});
-  const ih = o.items.map(it => `<div class="pirow"><span>${it.isSambal?'🌶️ ':''}${escHTML(it.name)}${it.isSambal?'':' x'+it.qty}</span><span>${it.isSambal?'-':rp(it.price*it.qty)}</span></div>`).join('');
-  const oh = o.ongkir ? `<div class="pirow"><span>Ongkir</span><span>${rp(o.ongkir)}</span></div>` : '';
-  const nh = o.notes  ? `<div style="font-size:8px;color:#666;margin-top:4px;font-family:monospace;">Catatan: ${escHTML(o.notes)}</div>` : '';
-  const odLabel = o.orderDate ? `<div class="pmr"><span class="pml">Antar</span><span class="pmv">${fmtDateLabel(o.orderDate)}</span></div>` : '';
+  const menuItems = o.items.map(it =>
+    `${it.isSambal?'🌶 ':''}${escHTML(it.name)}${it.isSambal?'':' ×'+it.qty}`
+  ).join(', ');
+  const nh = o.notes ? ` | 📝${escHTML(o.notes)}` : '';
+  const tgl = o.orderDate ? `<div class="plbl-date">${fmtDateLabel(o.orderDate)}</div>` : '';
   return `<div class="print-page">
-    <div class="print-header">
-      <div class="print-biz-name">BETI NUR CATERING</div>
-      <div class="print-biz-sub">by Homader</div>
-    </div>
-    <div class="pmr"><span class="pml">Nama</span><span class="pmv">${escHTML(o.name)}</span></div>
-    <div class="pmr print-phone-screen"><span class="pml">WA</span><span class="pmv">${escHTML(o.phone)}</span></div>
-    <div class="pmr print-phone-only" style="display:none;"><span class="pml">WA</span><span class="pmv">${escHTML(censorPhone(o.phone))}</span></div>
-    <div class="pmr"><span class="pml">Alamat</span><span class="pmv">${escHTML(o.addr)}</span></div>
-    ${odLabel}
-    <div class="pmr"><span class="pml">Pesan</span><span class="pmv">${t} WIB</span></div>
-    <div class="pmr"><span class="pml">Status</span><span class="pmv">${(o.status==='pending'||o.status==='new')?'Menunggu Konfirmasi':o.status==='confirmed'?'✓ Dikonfirmasi':'✓ Selesai'}</span></div>
-    <hr class="phr"><div class="pitlbl">Pesanan</div>${ih}${oh}
-    <div class="ptrow"><span>TOTAL</span><span>${rp(o.total)}</span></div>
-    ${nh}<div class="pfoot">Terima kasih! Pembayaran via QRIS</div>
+    <div class="plbl-brand">BETI NUR CATERING</div>
+    <div class="plbl-name">${escHTML(o.name)}</div>
+    <div class="plbl-addr">${escHTML(o.addr)}</div>
+    ${tgl}
+    <div class="plbl-items">${menuItems}${nh}</div>
   </div>`;
 }
 function printOrder(id) {
