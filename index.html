@@ -7,6 +7,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
 :root{--n:#0f1f3d;--n2:#1a3260;--g:#c9a84c;--gl:#e8c97a;--gp:#fdf6e3;--cr:#fefcf7;--tx:#1a1a2e;--mu:#6b7280;--bd:#e8dfc5;--sh:0 2px 12px rgba(15,31,61,.08);--sf:0 8px 32px rgba(15,31,61,.45);}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
@@ -335,16 +337,28 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--cr);color:var(-
 /* DELETE ORDER */
 .btn-del-ord{background:#fee2e2;color:#dc2626;border:none;border-radius:7px;padding:5px 9px;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;}
 #pv{background:var(--cr);}
-.pbar{display:flex;gap:9px;padding:13px;}
-.pbar button{flex:1;padding:11px;border:none;border-radius:11px;font-weight:700;font-size:13px;cursor:pointer;font-family:inherit;}
+.pbar{display:flex;gap:8px;padding:11px 13px;flex-wrap:wrap;}
+.pbar button,.pbar a{flex:1;min-width:calc(50% - 4px);padding:10px 8px;border:none;border-radius:11px;font-weight:700;font-size:12px;cursor:pointer;font-family:inherit;text-align:center;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:4px;}
 .btn-dp{background:var(--n);color:white;}.btn-cp{background:#ebebeb;color:var(--tx);}
-/* on-screen: label preview proportional to 50x30mm */
-.pdoc{background:white;border-radius:8px;border:2px dashed var(--bd);padding:9px 11px;margin:0 auto 18px;width:250px;}
-.plbl-brand{font-size:9px;font-family:monospace;letter-spacing:.5px;text-align:center;border-bottom:1px solid #aaa;padding-bottom:4px;margin-bottom:5px;color:#555;}
-.plbl-name{font-size:17px;font-weight:900;font-family:monospace;line-height:1.1;margin-bottom:3px;}
-.plbl-addr{font-size:10px;font-family:monospace;color:#333;line-height:1.3;margin-bottom:2px;}
-.plbl-date{font-size:10px;font-family:monospace;font-weight:700;margin-bottom:2px;}
-.plbl-items{font-size:9px;font-family:monospace;color:#555;line-height:1.4;border-top:1px dashed #ccc;padding-top:4px;margin-top:3px;}
+.btn-pdf{background:linear-gradient(135deg,#1d4ed8,#2563eb);color:white;}
+.btn-pdf-all{background:linear-gradient(135deg,#0f766e,#0d9488);color:white;}
+/* on-screen: label preview proportional to 50x60mm */
+.pdoc{background:white;border-radius:10px;border:2px dashed var(--bd);padding:0;margin:0 auto 18px;width:250px;overflow:hidden;}
+.print-page{padding:11px 13px;border-bottom:3px dashed var(--bd);}
+.print-page:last-child{border-bottom:none;}
+.plbl-brand{font-size:9px;font-family:monospace;letter-spacing:.5px;text-align:center;border-bottom:1px solid #000;padding-bottom:5px;margin-bottom:5px;color:#000;}
+.plbl-meal{font-size:9px;font-weight:900;font-family:monospace;text-align:center;background:#000;color:#fff;padding:3px 0;margin-bottom:6px;letter-spacing:1.5px;border-radius:4px;}
+.plbl-name{font-size:18px;font-weight:900;font-family:monospace;line-height:1.1;margin-bottom:3px;color:#000;}
+.plbl-addr{font-size:10px;font-family:monospace;color:#333;line-height:1.35;margin-bottom:2px;}
+.plbl-date{font-size:10px;font-family:monospace;font-weight:700;margin-bottom:3px;color:#000;}
+.plbl-divider{border:none;border-top:1px dashed #999;margin:5px 0;}
+.plbl-items{font-size:9px;font-family:monospace;color:#333;line-height:1.45;}
+.plbl-notes{font-size:8.5px;font-family:monospace;color:#555;margin-top:3px;}
+.plbl-irow{display:flex;justify-content:space-between;font-size:9px;font-family:monospace;color:#333;line-height:1.4;padding:1px 0;}
+.plbl-irow span:last-child{text-align:right;white-space:nowrap;margin-left:4px;}
+.plbl-ongkir{color:#555;}
+.plbl-total{display:flex;justify-content:space-between;font-size:10px;font-weight:900;font-family:monospace;color:#000;border-top:1.5px solid #000;padding-top:4px;margin-top:4px;}
+.plbl-footer{font-size:7.5px;font-family:monospace;color:#555;text-align:center;margin-top:5px;padding-top:4px;border-top:1px dashed #999;line-height:1.4;}
 .print-page{page-break-after:always;}
 .print-page:last-child{page-break-after:auto;}
 .print-header{text-align:center;margin-bottom:8px;border-bottom:1px solid #333;padding-bottom:6px;}
@@ -390,18 +404,101 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--cr);color:var(-
 @keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
 @keyframes slideUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
 @keyframes popIn{from{transform:scale(.45);opacity:0}to{transform:scale(1);opacity:1}}
+/* DRIVER VIEW */
+.drv-card{background:white;border:1px solid var(--bd);border-radius:14px;padding:14px;margin-bottom:11px;box-shadow:var(--sh);}
+.drv-num{width:26px;height:26px;background:var(--n);color:var(--g);border-radius:50%;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.drv-name{font-weight:800;font-size:14px;color:var(--n);margin-bottom:2px;}
+.drv-addr{font-size:11px;color:var(--mu);margin-bottom:4px;line-height:1.4;}
+.drv-meta{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+.btn-drv-wa{background:#e7fef0;color:#1a7a40;border:none;border-radius:8px;padding:6px 11px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;text-decoration:none;display:inline-flex;align-items:center;gap:4px;}
+.btn-drv-done{background:linear-gradient(135deg,var(--g),var(--gl));color:var(--n);border:none;border-radius:8px;padding:6px 13px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;}
+.btn-drv-done.delivered{background:#e8f5e9;color:#2e7d32;}
+.drv-empty{text-align:center;padding:40px 20px;color:var(--mu);}
+/* INVOICE TAB */
+.inv-srch-wrap{position:relative;margin-bottom:10px;}
+.inv-srch{width:100%;padding:10px 13px;border:1.5px solid var(--bd);border-radius:10px;font-size:13px;font-family:inherit;color:var(--n);outline:none;background:white;}
+.inv-srch:focus{border-color:var(--g);}
+.inv-sugg{position:absolute;top:100%;left:0;right:0;background:white;border:1px solid var(--bd);border-radius:10px;box-shadow:var(--sh);z-index:200;max-height:200px;overflow-y:auto;margin-top:4px;display:none;}
+.inv-sugg-item{padding:10px 13px;cursor:pointer;border-bottom:1px solid var(--bd);}
+.inv-sugg-item:last-child{border-bottom:none;}
+.inv-sugg-item:hover{background:var(--gp);}
+.inv-sugg-name{font-weight:700;font-size:12px;color:var(--n);}
+.inv-sugg-wa{font-size:10px;color:var(--mu);}
+.inv-date-row{display:flex;gap:8px;align-items:center;margin-bottom:10px;}
+.inv-date-row input[type=date]{flex:1;padding:9px 10px;border:1.5px solid var(--bd);border-radius:9px;font-size:12px;font-family:inherit;color:var(--n);outline:none;}
+.inv-date-row input[type=date]:focus{border-color:var(--g);}
+.inv-date-sep{color:var(--mu);font-size:11px;white-space:nowrap;}
+.inv-act-row{display:flex;gap:8px;margin-bottom:4px;}
+.btn-inv-gen{flex:1;padding:11px;background:var(--n);color:white;border:none;border-radius:10px;font-weight:700;font-size:12px;cursor:pointer;font-family:inherit;}
+.btn-inv-pdf{flex:1;padding:11px;background:linear-gradient(135deg,#1d4ed8,#2563eb);color:white;border:none;border-radius:10px;font-weight:700;font-size:12px;cursor:pointer;font-family:inherit;}
+.btn-inv-pdf:disabled{background:#9ca3af;cursor:not-allowed;}
+/* Invoice document */
+.inv-doc{background:white;border:1px solid var(--bd);border-radius:14px;padding:20px 18px 16px;margin-top:14px;font-size:11px;}
+/* Header — big & prominent */
+.inv-doc-hdr{display:flex;align-items:center;gap:14px;margin-bottom:14px;padding-bottom:12px;border-bottom:3px solid var(--n);}
+.inv-doc-logo{width:56px;height:56px;object-fit:contain;border-radius:12px;flex-shrink:0;}
+.inv-doc-biz{flex:1;}
+.inv-doc-bizname{font-size:20px;font-weight:900;color:var(--n);letter-spacing:.4px;}
+.inv-doc-bizsub{font-size:11px;color:var(--mu);margin-top:2px;}
+.inv-doc-badge{background:var(--n);color:var(--g);font-size:13px;font-weight:900;padding:6px 16px;border-radius:20px;letter-spacing:1px;}
+/* Meta section — compact */
+.inv-meta{display:flex;justify-content:space-between;gap:12px;margin-bottom:12px;}
+.inv-meta-left{flex:1;}
+.inv-meta-right{text-align:right;flex-shrink:0;}
+.inv-lbl{font-size:8px;font-weight:800;color:var(--mu);text-transform:uppercase;letter-spacing:.8px;margin-bottom:2px;}
+.inv-cust-name{font-size:13px;font-weight:800;color:var(--n);}
+.inv-cust-sub{font-size:11px;color:var(--mu);margin-top:1px;line-height:1.4;}
+.inv-meta-right div{font-size:11px;color:var(--tx);margin-bottom:1px;line-height:1.45;}
+.inv-meta-right strong{color:var(--n);}
+/* Table — compact 11px */
+.inv-tbl-wrap{overflow-x:auto;margin-bottom:12px;}
+.inv-tbl{width:100%;border-collapse:collapse;font-size:11px;}
+.inv-tbl th{background:var(--n);color:var(--g);padding:5px 8px;text-align:left;font-size:10px;font-weight:800;letter-spacing:.3px;}
+.inv-tbl td{padding:5px 8px;border-bottom:1px solid var(--bd);vertical-align:top;font-size:11px;line-height:1.4;}
+.inv-tbl tr:last-child td{border-bottom:none;}
+.inv-tbl tr:nth-child(even) td{background:#faf7f0;}
+.inv-td-num{text-align:center;color:var(--mu);font-size:10px;width:20px;}
+.inv-td-date{white-space:nowrap;color:var(--n);font-weight:600;font-size:11px;}
+.inv-td-menu{font-size:11px;color:#444;line-height:1.45;}
+.inv-td-total{text-align:right;font-weight:700;color:var(--n);white-space:nowrap;font-size:11px;}
+.inv-paid-chip{display:inline-block;background:#dcfce7;color:#166534;border:1px solid #bbf7d0;font-size:8px;font-weight:800;padding:1px 5px;border-radius:8px;margin-left:3px;vertical-align:middle;}
+.inv-unpaid-chip{display:inline-block;background:#fef9c3;color:#854d0e;border:1px solid #fde68a;font-size:8px;font-weight:800;padding:1px 5px;border-radius:8px;margin-left:3px;vertical-align:middle;}
+/* Summary — compact */
+.inv-summary{border-top:1.5px solid var(--bd);padding-top:8px;}
+.inv-sum-row{display:flex;justify-content:space-between;font-size:11px;color:var(--mu);padding:2px 0;}
+.inv-grand{display:flex;justify-content:space-between;font-size:13px;font-weight:900;color:var(--n);border-top:2px solid var(--n);padding-top:6px;margin-top:5px;}
+.inv-foot{margin-top:12px;padding-top:9px;border-top:1px dashed var(--bd);text-align:center;font-size:10px;color:var(--mu);line-height:1.6;}
+/* ROUTE TAB */
+.rt-card{background:white;border:1px solid var(--bd);border-radius:12px;padding:11px 13px;margin-bottom:8px;display:flex;align-items:center;gap:10px;box-shadow:var(--sh);}
+.rt-handle{font-size:18px;color:var(--mu);cursor:grab;flex-shrink:0;user-select:none;touch-action:none;}
+.rt-num{width:24px;height:24px;background:var(--n);color:var(--g);border-radius:50%;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.rt-info{flex:1;min-width:0;}
+.rt-name{font-weight:800;font-size:12px;color:var(--n);}
+.rt-addr{font-size:10px;color:var(--mu);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.rt-arrows{display:flex;flex-direction:column;gap:2px;}
+.rt-arr{background:none;border:1px solid var(--bd);border-radius:5px;width:22px;height:22px;cursor:pointer;font-size:11px;display:flex;align-items:center;justify-content:center;color:var(--n);}
+.rt-arr:disabled{opacity:.3;cursor:not-allowed;}
 @media print{
-  @page{size:50mm 30mm;margin:1.2mm 1.5mm;}
+  @page{size:50mm 60mm portrait;margin:2mm 2mm;}
   body>*:not(#pv){display:none!important;}
   #pv{display:block!important;background:white;}
   .pbar,.subhdr{display:none!important;}
-  .pdoc{margin:0;border:none;box-shadow:none;border-radius:0;padding:0;max-width:none;width:47mm;overflow:hidden;}
-  .print-page{max-height:27.6mm;overflow:hidden;}
+  .pdoc{margin:0;border:none;box-shadow:none;border-radius:0;padding:0;max-width:none;width:46mm;overflow:hidden;}
+  .print-page{page-break-after:always;max-height:56mm;overflow:hidden;padding:2mm 2mm;}
+  .print-page:last-child{page-break-after:auto;}
   .plbl-brand{font-size:5.5pt;font-family:monospace;letter-spacing:.5px;text-align:center;border-bottom:1px solid #000;padding-bottom:1mm;margin-bottom:1mm;}
-  .plbl-name{font-size:10pt;font-weight:900;font-family:monospace;line-height:1.1;margin-bottom:.8mm;}
-  .plbl-addr{font-size:6.5pt;font-family:monospace;line-height:1.25;margin-bottom:.6mm;}
-  .plbl-date{font-size:6.5pt;font-family:monospace;font-weight:700;margin-bottom:.6mm;}
-  .plbl-items{font-size:6pt;font-family:monospace;color:#333;line-height:1.3;}
+  .plbl-meal{font-size:6.5pt;font-weight:900;font-family:monospace;text-align:center;background:#000;color:#fff;padding:.8mm 0;margin-bottom:1.5mm;letter-spacing:1px;}
+  .plbl-name{font-size:12pt;font-weight:900;font-family:monospace;line-height:1.1;margin-bottom:1mm;}
+  .plbl-addr{font-size:7pt;font-family:monospace;line-height:1.3;margin-bottom:.8mm;}
+  .plbl-date{font-size:7pt;font-family:monospace;font-weight:700;margin-bottom:.8mm;}
+  .plbl-divider{border:none;border-top:1px dashed #555;margin:1mm 0;}
+  .plbl-items{font-size:6.5pt;font-family:monospace;color:#222;line-height:1.35;}
+  .plbl-irow{display:flex;justify-content:space-between;font-size:6.5pt;font-family:monospace;color:#222;line-height:1.35;padding:.3mm 0;}
+  .plbl-irow span:last-child{text-align:right;white-space:nowrap;margin-left:2mm;}
+  .plbl-ongkir{color:#666;}
+  .plbl-notes{font-size:6pt;font-family:monospace;color:#555;margin-top:.8mm;}
+  .plbl-total{display:flex;justify-content:space-between;font-size:7.5pt;font-weight:900;font-family:monospace;color:#000;border-top:1px solid #000;padding-top:.8mm;margin-top:.8mm;}
+  .plbl-footer{font-size:5.5pt;font-family:monospace;color:#666;text-align:center;margin-top:.8mm;padding-top:.8mm;border-top:1px dashed #aaa;line-height:1.3;}
 }
 </style>
 </head>
@@ -608,7 +705,9 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--cr);color:var(-
     <button class="atab" onclick="stab(this,'to')"  data-role="both">🔴 Pesanan</button>
     <button class="atab" onclick="stab(this,'tc')"  data-role="super">📅 Menu Kalender</button>
     <button class="atab" onclick="stab(this,'tdp')" data-role="super">👨‍🍳 Dapur</button>
+    <button class="atab" onclick="stab(this,'trt')" data-role="super">🚗 Rute Antar</button>
     <button class="atab" onclick="stab(this,'tex')" data-role="super">📤 Export</button>
+    <button class="atab" onclick="stab(this,'tinv')" data-role="super">🧾 Invoice</button>
     <button class="atab" onclick="stab(this,'tst')" data-role="super">👤 Staff</button>
   </div>
   <div class="abody">
@@ -717,7 +816,9 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--cr);color:var(-
         <div class="batch-bar">
           <span id="batch-info">Pilih pesanan untuk batch print</span>
           <button class="btn-batch-all" onclick="toggleSelectAll()">Pilih Semua</button>
-          <button class="btn-batch" onclick="batchPrint()">🖨️ Print Terpilih</button>
+          <button class="btn-batch" onclick="batchPrint()">🖨️ Print</button>
+          <button class="btn-batch" style="background:#1d4ed8;" onclick="batchDownloadPDF()">⬇️ PDF</button>
+          <button class="btn-batch" style="background:#0f766e;" onclick="downloadAllLabelsPDF()">⬇️ Semua PDF</button>
         </div>
         <div id="order-list"><div class="emp-ord"><div class="ee">📭</div><p>Belum ada pesanan.</p></div></div>
       </div>
@@ -804,7 +905,8 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--cr);color:var(-
         <div class="sff">
           <label>Role / Akses</label>
           <select id="staff-frole">
-            <option value="orders">Admin Pesanan — hanya lihat &amp; proses pesanan</option>
+            <option value="orders">Admin Pesanan — lihat &amp; proses pesanan</option>
+            <option value="driver">Driver — lihat daftar antar &amp; konfirmasi</option>
             <option value="super">Super Admin — akses penuh</option>
           </select>
         </div>
@@ -815,6 +917,18 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--cr);color:var(-
           <button class="btn-sf-save" onclick="saveStaff()">💾 Simpan</button>
         </div>
       </div>
+    </div>
+
+    <!-- RUTE ANTAR -->
+    <div class="apanel" id="trt">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+        <div>
+          <div style="font-size:13px;font-weight:800;color:var(--n);">🚗 Urutan Pengantaran</div>
+          <div style="font-size:10px;color:var(--mu);margin-top:2px;">Atur urutan lalu simpan. Driver lihat sesuai urutan ini.</div>
+        </div>
+        <button onclick="saveRoute()" style="background:linear-gradient(135deg,var(--g),var(--gl));color:var(--n);border:none;border-radius:10px;padding:8px 14px;font-size:11px;font-weight:800;cursor:pointer;font-family:inherit;">💾 Simpan</button>
+      </div>
+      <div id="route-list"></div>
     </div>
 
     <!-- EXPORT -->
@@ -831,6 +945,32 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--cr);color:var(-
       </div>
     </div>
 
+    <!-- INVOICE -->
+    <div class="apanel" id="tinv">
+      <div class="ac">
+        <div class="act">🧾 Invoice Pelanggan</div>
+        <div style="font-size:10px;color:var(--mu);margin-bottom:12px;">Filter pesanan per pelanggan, generate invoice, download PDF.</div>
+
+        <div class="inv-srch-wrap">
+          <input class="inv-srch" id="inv-search" type="text" placeholder="🔍  Cari nama atau nomor WA pelanggan..."
+            oninput="invSearch()" autocomplete="off">
+          <div class="inv-sugg" id="inv-suggestions"></div>
+        </div>
+
+        <div class="inv-date-row">
+          <input type="date" id="inv-from">
+          <span class="inv-date-sep">s/d</span>
+          <input type="date" id="inv-to">
+        </div>
+
+        <div class="inv-act-row">
+          <button class="btn-inv-gen" onclick="generateInvoice()">📄 Generate Invoice</button>
+          <button class="btn-inv-pdf" id="btn-inv-pdf" onclick="downloadInvoicePDF()" disabled>⬇️ Download PDF</button>
+        </div>
+      </div>
+      <div id="inv-preview"></div>
+    </div>
+
   </div>
 </div>
 
@@ -838,10 +978,28 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--cr);color:var(-
 <div id="pv" class="view">
   <div class="subhdr"><button class="backbtn" onclick="showView('av')">&#8249;</button><h2>Preview Print</h2></div>
   <div class="pbar">
-    <button class="btn-dp" onclick="window.print()">🖨️ Print Sekarang</button>
+    <button class="btn-dp" onclick="window.print()">🖨️ Print</button>
+    <button class="btn-pdf" onclick="downloadLabelPDF()">⬇️ Download PDF</button>
     <button class="btn-cp" onclick="showView('av')">&#215; Tutup</button>
   </div>
   <div class="pdoc" id="pdoc"></div>
+</div>
+
+<!-- ═══ DRIVER VIEW ═══ -->
+<div id="drv" class="view">
+  <div class="hdr">
+    <div class="hbrand">
+      <div class="hlogo"><img id="logo-drv" src="" alt="logo"></div>
+      <div>
+        <h2 style="color:white;font-family:'Playfair Display',serif;font-size:14px;">Daftar Antar</h2>
+        <small style="color:#c9a84c;font-size:10px;font-weight:600;" id="drv-date"></small>
+      </div>
+    </div>
+    <button class="ibtn2" onclick="driverLogout()">Keluar</button>
+  </div>
+  <div style="padding:13px 14px;flex:1;overflow-y:auto;padding-bottom:30px;">
+    <div id="drv-list"></div>
+  </div>
 </div>
 
 <script>
@@ -850,7 +1008,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--cr);color:var(-
 // ═══════════════════════════════════════════
 const LOGO_SRC = 'data:image/jpeg;base64,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Vjp0FkrCPLFjksxySasvGoTap6UoCqoHpS4AHFZLcllVrbL59cVSmtVlYjOcVpFCR1qrJGU6daYiuluqjgVRXRbWa4llEQDPjIJ6HFajrxjFVDGc8mgBsWj2YBIXH4mklgghXCqKvoMRkVWkXcMHpQBBJPCrBWJ49qS1tUdQwdTntmlCq/UAH1pqiNFwPloAu7WVc560pUev8AjUJdgh5xzUgIx60gHxBec0r8nng+lNWnjn/9dMBpOBjNNHQdTSsc9DxmjpyeaYCelI3WlJGOM0hPGDigBOTxTcY61IWyuCahJ+XjHFABuHc01uh6c04jPSkII60AIen1pOtGO/40o5oAaeTRSmigoASnClFKBQAoGaBQDg1IOlAhKO9FA5oAKXpSUUAFA96KXNABnikzRnIoxSAUHmjOaKBxQApGaTNLmkFACkUlL3pKAFoooHSgApfpRQKAA0UUCgBC3SkLGjbk5pajqA0k0lLijFABRRQKACkopaMgUAFGaSimAbqM0maUUAGaKTNGaAEoPSloBFABilHWkp1ACikpaO1ACUUtFABRSClHSgA7UUvWigBM0ZxRRQAmcUUGjpQAuaUUlHNADhzRnikHWloAUUuaQGjPFAC54zSE0daMUAISMU0mpD3NMoAZQKdijFAChacDmkpaBCkE9aTNHfpS0AJijNKKAKACig0UAJilooFABRRSZoAWiiigAooooAKKKKADNGaKKACiiigAooooA//2Q==';
 const ONGKIR_MIN = 20000, ONGKIR_FEE = 2000;
-const SK = { user:'bn_u', orders:'bn_ord', cal:'bn_cal', photos:'bn_ph', menu:'bn_mn', role:'bn_role', settings:'bn_set', staff:'bn_staff', logo:'bn_logo', mh:'bn_mh', qris:'bn_qris' };
+const SK = { user:'bn_u', orders:'bn_ord', cal:'bn_cal', photos:'bn_ph', menu:'bn_mn', role:'bn_role', settings:'bn_set', staff:'bn_staff', logo:'bn_logo', mh:'bn_mh', qris:'bn_qris', route:'bn_route' };
 const WA_DEFAULT = '6281234567890';
 
 // Default staff — super admin awal, PIN bisa diubah di CMS
@@ -915,7 +1073,8 @@ const FS_MAP = {
   [SK.qris]:      'qris',
   [SK.menu]:      'menu',
   [SK.cal]:       'calendar',
-  [SK.mh]:        'menuHistory'
+  [SK.mh]:        'menuHistory',
+  [SK.staff]:     'staff'
 };
 // orders handled separately per-document in /orders/{id}
 
@@ -939,8 +1098,8 @@ let _ordersUnsub  = null;
 
 async function syncFromFirestore() {
   if (!db) return;
-  const docs = ['settings','logo','menu','calendar','menuHistory'];
-  const keyMap = { settings:SK.settings, logo:SK.logo, menu:SK.menu, calendar:SK.cal, menuHistory:SK.mh };
+  const docs = ['settings','logo','menu','calendar','menuHistory','staff'];
+  const keyMap = { settings:SK.settings, logo:SK.logo, menu:SK.menu, calendar:SK.cal, menuHistory:SK.mh, staff:SK.staff };
   try {
     const results = await Promise.all(docs.map(d => fsGet(d)));
     results.forEach((data, i) => {
@@ -968,6 +1127,7 @@ function startConfigListeners() {
   _configUnsubs.push(fsListen('settings', d => { try{localStorage.setItem(SK.settings, JSON.stringify(d));}catch(e){} }));
   _configUnsubs.push(fsListen('logo',     d => { try{localStorage.setItem(SK.logo, JSON.stringify(d));}catch(e){} updateLogos(); }));
   _configUnsubs.push(fsListen('qris',     d => { try{localStorage.setItem(SK.qris, JSON.stringify(d));}catch(e){} updateQRIS(); }));
+  _configUnsubs.push(fsListen('staff',    d => { try{localStorage.setItem(SK.staff, JSON.stringify(d));}catch(e){} }));
 }
 
 function startOrdersListener() {
@@ -975,6 +1135,7 @@ function startOrdersListener() {
   _ordersUnsub = db.collection('orders').onSnapshot(snap => {
     const orders = snap.docs.map(d => d.data()).sort((a,b) => b.ts.localeCompare(a.ts));
     try { localStorage.setItem(SK.orders, JSON.stringify(orders)); } catch(e) {}
+    if (role === 'driver') { refreshDriverView(); return; }
     refreshOrders(); updateStats(); updateDapur();
   }, () => {});
 }
@@ -1203,10 +1364,21 @@ function checkPin() {
 }
 function enterAdmin() {
   ss(SK.role, role);
+  // Driver goes to their own view
+  if (role === 'driver') {
+    showView('drv');
+    const logoD = document.getElementById('logo-drv');
+    if (logoD) { const lg = ls(SK.logo); logoD.src = lg || LOGO_SRC; }
+    document.getElementById('drv-date').textContent = fmtDateLabel(todayStr());
+    refreshDriverView();
+    startOrdersListener();
+    return;
+  }
   // Header: nama staff + role badge
   const nameEl = document.getElementById('admin-staff-name');
   if (nameEl) nameEl.textContent = currentStaff ? currentStaff.name : 'Admin CMS';
-  document.getElementById('role-badge').textContent = role === 'super' ? 'SUPER ADMIN' : 'ADMIN PESANAN';
+  const roleLbl = role === 'super' ? 'SUPER ADMIN' : 'ADMIN PESANAN';
+  document.getElementById('role-badge').textContent = roleLbl;
   // Tab visibility
   document.querySelectorAll('.atab').forEach(t => {
     t.style.display = (t.dataset.role === 'both' || role === 'super') ? '' : 'none';
@@ -1224,6 +1396,11 @@ function enterAdmin() {
 }
 function adminLogout() {
   if (poll) { clearInterval(poll); poll = null; }
+  stopOrdersListener();
+  currentStaff = null;
+  showView('lv');
+}
+function driverLogout() {
   stopOrdersListener();
   currentStaff = null;
   showView('lv');
@@ -1570,7 +1747,8 @@ function placeOrder() {
     notes:     document.getElementById('ocat').value.trim(),
     items:     keys.map(k => {
       const m = MENU.find(x => x.id === k);
-      return { id:k, name: m ? m.name : (cart[k].name || k), price: m ? m.price : (cart[k].price || 0), qty: cart[k].qty, isSambal: !!(cart[k].isSambal || (m && m.isSambal)) };
+      const sec = m ? m.sec : (k.startsWith('cal_sarapan') ? 'sarapan' : 'siang');
+      return { id:k, name: m ? m.name : (cart[k].name || k), price: m ? m.price : (cart[k].price || 0), qty: cart[k].qty, isSambal: !!(cart[k].isSambal || (m && m.isSambal)), sec };
     }),
     subtotal: sub, ongkir, total, status:'pending', paid: false
   };
@@ -1721,13 +1899,229 @@ function togglePaid(id) {
   }
   refreshOrders();
 }
+// ═══════════════════════════════════════════
+//  DRIVER VIEW
+// ═══════════════════════════════════════════
+function getRoute() { return ls(SK.route) || []; }
+function saveRoute() {
+  const items = document.querySelectorAll('#route-list .rt-card');
+  const ids = Array.from(items).map(el => el.dataset.id);
+  ss(SK.route, ids);
+  toast('💾 Urutan disimpan!');
+}
+function refreshDriverView() {
+  const el = document.getElementById('drv-list'); if (!el) return;
+  const today = todayStr();
+  const route = getRoute();
+  let orders = getOrders().filter(o =>
+    (o.orderDate || o.ts.split('T')[0]) === today &&
+    (o.status === 'confirmed' || o.status === 'dikirim' || o.status === 'done')
+  );
+  // Sort by saved route order
+  if (route.length) {
+    orders.sort((a, b) => {
+      const ai = route.indexOf(a.id), bi = route.indexOf(b.id);
+      if (ai === -1 && bi === -1) return 0;
+      if (ai === -1) return 1;
+      if (bi === -1) return -1;
+      return ai - bi;
+    });
+  }
+  if (!orders.length) {
+    el.innerHTML = '<div class="drv-empty"><div style="font-size:42px;margin-bottom:10px;">🚗</div><p>Belum ada pesanan yang perlu diantar hari ini.</p></div>';
+    return;
+  }
+  el.innerHTML = orders.map((o, i) => {
+    const bizWA = (getSettings().waNumber || WA_DEFAULT).replace(/\D/g,'');
+    const isDone = o.status === 'done';
+    const items = o.items.map(it => `${it.isSambal?'🌶️ ':''}${escHTML(it.name)}${it.isSambal?'':' ×'+it.qty}`).join(', ');
+    const konfMsg = encodeURIComponent(
+      `✅ *Konfirmasi Antar*\n` +
+      `Nama: ${o.name}\n` +
+      `Alamat: ${o.addr}\n` +
+      `Pesanan: ${o.items.map(it=>`${it.name}${it.isSambal?'':' ×'+it.qty}`).join(', ')}\n` +
+      `Status: Sudah diantar 📦`
+    );
+    const waBtn = `<a class="btn-drv-wa" href="https://wa.me/${bizWA}?text=${konfMsg}" target="_blank">💬 Lapor WA</a>`;
+    const doneBtn = isDone
+      ? `<button class="btn-drv-done delivered" disabled>✅ Sudah Diantar</button>`
+      : `<button class="btn-drv-done" onclick="markDelivered('${o.id}')">📦 Konfirmasi Antar</button>`;
+    return `<div class="drv-card" style="${isDone?'opacity:.6':''}">
+      <div style="display:flex;align-items:flex-start;gap:10px;">
+        <div class="drv-num">${i+1}</div>
+        <div style="flex:1">
+          <div class="drv-name">${escHTML(o.name)}</div>
+          <div class="drv-addr">📍 ${escHTML(o.addr)}</div>
+          <div style="font-size:10px;color:var(--mu);margin-bottom:6px;">${items}</div>
+          <div class="drv-meta">${waBtn}${doneBtn}</div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+function markDelivered(id) {
+  const orders = getOrders(), idx = orders.findIndex(o => o.id === id);
+  if (idx >= 0) {
+    orders[idx].status = 'done'; ss(SK.orders, orders);
+    if (db) db.collection('orders').doc(id).update({status:'done'}).catch(()=>{});
+  }
+  refreshDriverView(); toast('✅ Terkirim!');
+}
+
+// ═══════════════════════════════════════════
+//  ROUTE MANAGEMENT (SUPER ADMIN)
+// ═══════════════════════════════════════════
+function renderRouteTab() {
+  const el = document.getElementById('route-list'); if (!el) return;
+  const today = todayStr();
+  const route = getRoute();
+  let orders = getOrders().filter(o =>
+    (o.orderDate || o.ts.split('T')[0]) === today &&
+    (o.status === 'confirmed' || o.status === 'dikirim' || o.status === 'done')
+  );
+  // Apply saved route order
+  if (route.length) {
+    orders.sort((a, b) => {
+      const ai = route.indexOf(a.id), bi = route.indexOf(b.id);
+      if (ai === -1 && bi === -1) return 0;
+      if (ai === -1) return 1; if (bi === -1) return -1;
+      return ai - bi;
+    });
+  }
+  if (!orders.length) {
+    el.innerHTML = '<div style="text-align:center;padding:30px;color:var(--mu);font-size:12px;">Belum ada pesanan yang dikonfirmasi hari ini.</div>';
+    return;
+  }
+  el.innerHTML = orders.map((o, i) => {
+    const statusColor = o.status === 'done' ? '#2e7d32' : o.status === 'dikirim' ? '#1d4ed8' : '#c2410c';
+    return `<div class="rt-card" data-id="${o.id}">
+      <div class="rt-num">${i+1}</div>
+      <div class="rt-info">
+        <div class="rt-name">${escHTML(o.name)}</div>
+        <div class="rt-addr">📍 ${escHTML(o.addr)}</div>
+      </div>
+      <span style="font-size:9px;font-weight:800;color:${statusColor};white-space:nowrap;">${statusLabel(o.status)}</span>
+      <div class="rt-arrows">
+        <button class="rt-arr" onclick="moveRoute(${i},-1)" ${i===0?'disabled':''}>▲</button>
+        <button class="rt-arr" onclick="moveRoute(${i},1)"  ${i===orders.length-1?'disabled':''}>▼</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+function moveRoute(idx, dir) {
+  const cards = Array.from(document.querySelectorAll('#route-list .rt-card'));
+  const newIdx = idx + dir;
+  if (newIdx < 0 || newIdx >= cards.length) return;
+  const parent = cards[0].parentNode;
+  if (dir === -1) parent.insertBefore(cards[idx], cards[newIdx]);
+  else parent.insertBefore(cards[newIdx], cards[idx]);
+  // Re-number
+  Array.from(parent.querySelectorAll('.rt-num')).forEach((n, i) => n.textContent = i + 1);
+  // Update arrow disabled states
+  const all = Array.from(parent.querySelectorAll('.rt-card'));
+  all.forEach((c, i) => {
+    const btns = c.querySelectorAll('.rt-arr');
+    btns[0].disabled = i === 0;
+    btns[1].disabled = i === all.length - 1;
+  });
+}
+
 function batchPrint() {
   if (!checkedOrders.size) { toast('Pilih pesanan dulu!'); return; }
   const selected = getOrders().filter(o => checkedOrders.has(o.id));
   document.getElementById('pdoc').innerHTML = selected
     .map(o => buildOrderPrintHTML(o))
-    .join('<div style="page-break-after:always;"></div>');
+    .join('');
   showView('pv');
+}
+
+// ── PDF Download via html2canvas + jsPDF ──────────────────────────────────
+async function downloadLabelPDF() {
+  const pages = Array.from(document.querySelectorAll('#pdoc .print-page'));
+  if (!pages.length) { toast('Tidak ada label!'); return; }
+  await _renderLabelsToPDF(pages, 'label-betinur');
+}
+
+async function batchDownloadPDF() {
+  if (!checkedOrders.size) { toast('Pilih pesanan dulu!'); return; }
+  const selected = getOrders().filter(o => checkedOrders.has(o.id));
+  document.getElementById('pdoc').innerHTML = selected.map(o => buildOrderPrintHTML(o)).join('');
+  showView('pv');
+  await new Promise(r => setTimeout(r, 250));
+  await downloadLabelPDF();
+}
+
+async function downloadAllLabelsPDF() {
+  const fd = (document.getElementById('ord-filter-date')||{}).value || todayStr();
+  const orders = getOrders().filter(o => (o.orderDate||o.ts.split('T')[0]) === fd);
+  if (!orders.length) { toast('Tidak ada pesanan!'); return; }
+  document.getElementById('pdoc').innerHTML = orders.map(o => buildOrderPrintHTML(o)).join('');
+  showView('pv');
+  await new Promise(r => setTimeout(r, 250));
+  await downloadLabelPDF();
+}
+
+async function _renderLabelsToPDF(pages, baseName) {
+  if (!window.jspdf || !window.html2canvas) {
+    toast('Library PDF belum siap, coba lagi'); return;
+  }
+  toast('⏳ Menyiapkan PDF...');
+  try {
+    const { jsPDF } = window.jspdf;
+    const PW = 50, PH = 60; // mm portrait
+    const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: [PW, PH] });
+
+    // Off-screen render container (189px ≈ 50mm @96dpi)
+    const wrap = document.createElement('div');
+    wrap.style.cssText = 'position:fixed;left:-9999px;top:0;width:189px;background:#fff;padding:0;margin:0;';
+    document.body.appendChild(wrap);
+
+    for (let i = 0; i < pages.length; i++) {
+      if (i > 0) pdf.addPage([PW, PH], 'portrait');
+
+      // Clone page into off-screen container with print-like inline styles
+      const clone = pages[i].cloneNode(true);
+      clone.style.cssText = 'padding:5px 6px;font-family:monospace;background:#fff;width:189px;box-sizing:border-box;';
+      // Apply compact font sizes matching print media
+      clone.querySelectorAll('.plbl-brand').forEach(e=>Object.assign(e.style,{fontSize:'6px',letterSpacing:'.4px',textAlign:'center',borderBottom:'1px solid #000',paddingBottom:'2px',marginBottom:'2px',color:'#000'}));
+      clone.querySelectorAll('.plbl-meal').forEach(e=>Object.assign(e.style,{fontSize:'7px',fontWeight:'900',textAlign:'center',background:'#000',color:'#fff',padding:'2px 0',marginBottom:'3px',letterSpacing:'1px',borderRadius:'2px',display:'block'}));
+      clone.querySelectorAll('.plbl-name').forEach(e=>Object.assign(e.style,{fontSize:'17px',fontWeight:'900',lineHeight:'1.1',marginBottom:'2px',color:'#000'}));
+      clone.querySelectorAll('.plbl-addr').forEach(e=>Object.assign(e.style,{fontSize:'7.5px',lineHeight:'1.3',marginBottom:'1px',color:'#333'}));
+      clone.querySelectorAll('.plbl-date').forEach(e=>Object.assign(e.style,{fontSize:'7.5px',fontWeight:'700',marginBottom:'2px',color:'#000'}));
+      clone.querySelectorAll('.plbl-divider').forEach(e=>Object.assign(e.style,{borderTop:'1px dashed #999',margin:'3px 0',borderBottom:'none',borderLeft:'none',borderRight:'none'}));
+      clone.querySelectorAll('.plbl-irow').forEach(e=>Object.assign(e.style,{display:'flex',justifyContent:'space-between',fontSize:'7px',lineHeight:'1.35',padding:'0.5px 0',color:'#333'}));
+      clone.querySelectorAll('.plbl-ongkir').forEach(e=>Object.assign(e.style,{color:'#555'}));
+      clone.querySelectorAll('.plbl-notes').forEach(e=>Object.assign(e.style,{fontSize:'6.5px',color:'#555',marginTop:'2px'}));
+      clone.querySelectorAll('.plbl-total').forEach(e=>Object.assign(e.style,{display:'flex',justifyContent:'space-between',fontSize:'8px',fontWeight:'900',color:'#000',borderTop:'1.5px solid #000',paddingTop:'2px',marginTop:'2px'}));
+      clone.querySelectorAll('.plbl-footer').forEach(e=>Object.assign(e.style,{fontSize:'6px',color:'#555',textAlign:'center',marginTop:'3px',paddingTop:'3px',borderTop:'1px dashed #999',lineHeight:'1.4'}));
+      wrap.innerHTML = '';
+      wrap.appendChild(clone);
+
+      const canvas = await html2canvas(wrap, {
+        scale: 4,
+        useCORS: true,
+        backgroundColor: '#ffffff',
+        logging: false,
+        width: 189,
+        windowWidth: 189
+      });
+
+      const imgData = canvas.toDataURL('image/png');
+      // Fit to portrait page, no distortion
+      const ratio  = canvas.height / canvas.width;
+      const imgH   = PW * ratio;
+      const offsetY = imgH < PH ? (PH - imgH) / 2 : 0;
+      pdf.addImage(imgData, 'PNG', 0, offsetY, PW, Math.min(imgH, PH));
+    }
+
+    document.body.removeChild(wrap);
+    const d = new Date().toISOString().slice(0, 10);
+    pdf.save(`${baseName}-${d}.pdf`);
+    toast('✅ PDF berhasil didownload!');
+  } catch(err) {
+    console.error('PDF error', err);
+    toast('❌ Gagal buat PDF');
+  }
 }
 
 // ═══════════════════════════════════════════
@@ -1996,18 +2390,62 @@ function censorPhone(phone) {
   return c.slice(0,4) + '*'.repeat(c.length - 7) + c.slice(-3);
 }
 function buildOrderPrintHTML(o) {
-  const menuItems = o.items.map(it =>
-    `${it.isSambal?'🌶 ':''}${escHTML(it.name)}${it.isSambal?'':' ×'+it.qty}`
-  ).join(', ');
-  const nh = o.notes ? ` | 📝${escHTML(o.notes)}` : '';
-  const tgl = o.orderDate ? `<div class="plbl-date">${fmtDateLabel(o.orderDate)}</div>` : '';
-  return `<div class="print-page">
-    <div class="plbl-brand">BETI NUR CATERING</div>
-    <div class="plbl-name">${escHTML(o.name)}</div>
-    <div class="plbl-addr">${escHTML(o.addr)}</div>
-    ${tgl}
-    <div class="plbl-items">${menuItems}${nh}</div>
-  </div>`;
+  // Split items: sarapan vs makan siang
+  const sarapan = o.items.filter(it =>
+    it.sec === 'sarapan' || (it.id && it.id.startsWith('cal_sarapan'))
+  );
+  const siang = o.items.filter(it =>
+    it.sec !== 'sarapan' && !(it.id && it.id.startsWith('cal_sarapan'))
+  );
+
+  const settings = getSettings();
+  const waRaw = (settings.waNumber || WA_DEFAULT).replace(/\D/g,'');
+  const waDisplay = waRaw.startsWith('62') ? '0' + waRaw.slice(2) : waRaw;
+
+  // showTotal=true → tampilkan total penuh order; false → subtotal meal ini saja
+  function makeLabel(items, mealTag, showTotal) {
+    // Item rows dengan harga
+    const itemRows = items.map(it => {
+      if (it.isSambal) {
+        return `<div class="plbl-irow plbl-ongkir"><span>🌶 ${escHTML(it.name)}</span><span>+</span></div>`;
+      }
+      const sub = (it.price || 0) * (it.qty || 1);
+      return `<div class="plbl-irow"><span>${escHTML(it.name)} ×${it.qty}</span><span>${rp(sub)}</span></div>`;
+    }).join('');
+
+    // Subtotal items ini
+    const mealSub = items.reduce((s, it) => s + (it.isSambal ? 0 : (it.price||0)*(it.qty||1)), 0);
+    // Ongkir hanya tampil di label yg showTotal
+    const ongkirRow = (showTotal && o.ongkir)
+      ? `<div class="plbl-irow plbl-ongkir"><span>Ongkir</span><span>${rp(o.ongkir)}</span></div>` : '';
+    const totalAmt   = showTotal ? (o.total || mealSub) : mealSub;
+    const totalLabel = showTotal ? 'TOTAL' : 'SUBTOTAL';
+
+    const tgl = o.orderDate ? `<div class="plbl-date">📅 ${fmtDateLabel(o.orderDate)}</div>` : '';
+    const nh  = o.notes ? `<div class="plbl-notes">📝 ${escHTML(o.notes)}</div>` : '';
+
+    return `<div class="print-page">
+      <div class="plbl-brand">BETI NUR CATERING · by Homader</div>
+      <div class="plbl-meal">${mealTag}</div>
+      <div class="plbl-name">${escHTML(o.name)}</div>
+      <div class="plbl-addr">📍 ${escHTML(o.addr)}</div>
+      ${tgl}
+      <hr class="plbl-divider">
+      <div class="plbl-items">${itemRows}</div>
+      ${nh}
+      ${ongkirRow}
+      <div class="plbl-total"><span>${totalLabel}</span><span>${rp(totalAmt)}</span></div>
+      <div class="plbl-footer">Terima kasih sudah memesan! 🍱<br>WA: ${waDisplay}</div>
+    </div>`;
+  }
+
+  if (sarapan.length && siang.length) {
+    return makeLabel(sarapan, '🍱 SARAPAN', false) + makeLabel(siang, '🍽️ MAKAN SIANG', true);
+  } else if (sarapan.length) {
+    return makeLabel(sarapan, '🍱 SARAPAN', true);
+  } else {
+    return makeLabel(siang, '🍽️ MAKAN SIANG', true);
+  }
 }
 function printOrder(id) {
   const o = getOrders().find(x => x.id === id); if (!o) return;
@@ -2203,8 +2641,10 @@ function renderStaffList() {
   el.innerHTML = staff.map(s => {
     const isYou  = currentStaff && s.id === currentStaff.id;
     const roleTag = s.role === 'super'
-      ? '<span class="staff-role-tag super">Super Admin</span>'
-      : '<span class="staff-role-tag orders">Admin Pesanan</span>';
+      ? '<span class="staff-role-tag super">⭐ Super Admin</span>'
+      : s.role === 'driver'
+      ? '<span class="staff-role-tag orders" style="background:#ede9fe;color:#5b21b6;border-color:#c4b5fd;">🚗 Driver</span>'
+      : '<span class="staff-role-tag orders">📋 Admin Pesanan</span>';
     const youTag  = isYou ? '<span class="staff-you">Kamu</span>' : '';
     const delBtn  = isYou ? '' : `<button class="btn-staff-del" onclick="deleteStaff('${s.id}')">🗑️</button>`;
     return `<div class="staff-row">
@@ -2280,7 +2720,7 @@ function saveStaff() {
     staff.push({ id:'staff_'+Date.now(), name, pin, role: frole });
   }
 
-  ss(SK.staff, staff);
+  ss(SK.staff, staff); fsWrite(SK.staff, staff);
   closeStaffForm();
   renderStaffList();
   toast('✅ Data karyawan tersimpan!');
@@ -2292,7 +2732,7 @@ function deleteStaff(id) {
   const staff = getStaff().filter(s => s.id !== id);
   // Pastikan minimal 1 super admin
   if (!staff.some(s => s.role === 'super')) { toast('Harus ada minimal 1 Super Admin!'); return; }
-  ss(SK.staff, staff);
+  ss(SK.staff, staff); fsWrite(SK.staff, staff);
   renderStaffList();
   toast('🗑️ Karyawan dihapus.');
 }
@@ -2323,7 +2763,7 @@ function saveSelfEdit() {
   if (idx >= 0) {
     staff[idx].name = name;
     if (pin) staff[idx].pin = pin;
-    ss(SK.staff, staff);
+    ss(SK.staff, staff); fsWrite(SK.staff, staff);
     currentStaff = staff[idx];
     // Update header
     const nameEl = document.getElementById('admin-staff-name');
@@ -2348,6 +2788,8 @@ function stab(btn, pid) {
   else if (pid === 'tdp') updateDapur();
   else if (pid === 'tan') renderAnalytics();
   else if (pid === 'tst') renderStaffList();
+  else if (pid === 'trt') renderRouteTab();
+  else if (pid === 'tinv') invInitDates();
 }
 
 // ═══════════════════════════════════════════
@@ -2598,6 +3040,303 @@ function startClock() {
     }
   }
   tick(); setInterval(tick, 1000);
+}
+
+// ═══════════════════════════════════════════
+//  INVOICE
+// ═══════════════════════════════════════════
+let _invPhone = null; // selected customer's normalized phone
+
+function invInitDates() {
+  const today = todayStr();
+  // Default: first day of current month → today
+  const firstOfMonth = today.slice(0,7) + '-01';
+  const f = document.getElementById('inv-from');
+  const t = document.getElementById('inv-to');
+  if (f && !f.value) f.value = firstOfMonth;
+  if (t && !t.value) t.value = today;
+}
+
+function invGetCustomers() {
+  const map = {};
+  getOrders().forEach(o => {
+    const key = (o.phone || '').replace(/\D/g, '');
+    if (!key) return;
+    if (!map[key]) map[key] = { name: o.name, phone: o.phone, addr: o.addr, count: 0, key };
+    map[key].count++;
+    // Keep most recent name/addr
+    map[key].name = o.name || map[key].name;
+    map[key].addr = o.addr || map[key].addr;
+  });
+  return Object.values(map).sort((a, b) => a.name.localeCompare(b.name, 'id'));
+}
+
+function invSearch() {
+  const q = document.getElementById('inv-search').value.trim();
+  const sugg = document.getElementById('inv-suggestions');
+  _invPhone = null; // reset selection when typing
+  if (q.length < 1) { sugg.style.display = 'none'; return; }
+
+  const ql = q.toLowerCase();
+  const qd = q.replace(/\D/g, '');
+  const matches = invGetCustomers().filter(c =>
+    c.name.toLowerCase().includes(ql) ||
+    (qd && c.key.includes(qd))
+  ).slice(0, 8);
+
+  if (!matches.length) { sugg.style.display = 'none'; return; }
+
+  sugg.innerHTML = matches.map(c => {
+    const safe = JSON.stringify(c).replace(/'/g, '&#39;');
+    return `<div class="inv-sugg-item" onclick='invPickCustomer(${safe})'>
+      <div class="inv-sugg-name">${escHTML(c.name)}</div>
+      <div class="inv-sugg-wa">${escHTML(c.phone || '-')} &nbsp;·&nbsp; ${c.count} pesanan</div>
+    </div>`;
+  }).join('');
+  sugg.style.display = 'block';
+}
+
+function invPickCustomer(c) {
+  _invPhone = (c.phone || '').replace(/\D/g, '');
+  document.getElementById('inv-search').value = `${c.name}  ·  ${c.phone}`;
+  document.getElementById('inv-suggestions').style.display = 'none';
+}
+
+// Close suggestions when clicking outside
+document.addEventListener('click', e => {
+  if (!e.target.closest('#inv-search') && !e.target.closest('#inv-suggestions')) {
+    const s = document.getElementById('inv-suggestions');
+    if (s) s.style.display = 'none';
+  }
+});
+
+function generateInvoice() {
+  const search = document.getElementById('inv-search').value.trim();
+  const from   = document.getElementById('inv-from').value;
+  const to     = document.getElementById('inv-to').value;
+  const pdfBtn = document.getElementById('btn-inv-pdf');
+
+  if (!search) { toast('Cari pelanggan dulu!'); return; }
+  if (!from || !to) { toast('Pilih rentang tanggal!'); return; }
+  if (from > to)    { toast('Tanggal mulai harus sebelum akhir'); return; }
+
+  // Match orders
+  const ql = search.toLowerCase().split('·')[0].trim();
+  const qd = ql.replace(/\D/g, '');
+  const orders = getOrders().filter(o => {
+    const d = o.orderDate || o.ts.split('T')[0];
+    if (d < from || d > to) return false;
+    if (_invPhone) return (o.phone || '').replace(/\D/g, '') === _invPhone;
+    // Fallback: loose match
+    return o.name.toLowerCase().includes(ql) ||
+           (qd && (o.phone || '').replace(/\D/g, '').includes(qd));
+  }).sort((a, b) => {
+    const da = a.orderDate || a.ts.split('T')[0];
+    const db = b.orderDate || b.ts.split('T')[0];
+    return da.localeCompare(db);
+  });
+
+  const preview = document.getElementById('inv-preview');
+
+  if (!orders.length) {
+    preview.innerHTML = '<div class="emp" style="padding:30px 18px"><div class="ee">📭</div><p>Tidak ada pesanan di periode ini.</p></div>';
+    if (pdfBtn) pdfBtn.disabled = true;
+    return;
+  }
+
+  // Totals
+  const subtotal  = orders.reduce((s, o) => s + (o.subtotal || o.total || 0), 0);
+  const ongkirTot = orders.reduce((s, o) => s + (o.ongkir || 0), 0);
+  const grandTot  = orders.reduce((s, o) => s + (o.total || 0), 0);
+  const unpaid    = orders.filter(o => !o.paid).length;
+
+  const cust     = orders[0];
+  const settings = getSettings();
+  const waRaw    = (settings.waNumber || WA_DEFAULT).replace(/\D/g, '');
+  const waDisp   = waRaw.startsWith('62') ? '0' + waRaw.slice(2) : waRaw;
+  const logo     = ls(SK.logo) || LOGO_SRC;
+  const invNum   = `INV-${new Date().getFullYear()}-${String(Date.now()).slice(-6)}`;
+  const periode  = `${fmtDateLabel(from)} — ${fmtDateLabel(to)}`;
+  const today    = fmtDateLabel(todayStr());
+
+  const rows = orders.map((o, i) => {
+    const d     = o.orderDate || o.ts.split('T')[0];
+    const items = o.items.map(it =>
+      `${it.isSambal ? '🌶 ' : ''}${escHTML(it.name)}${it.isSambal ? '' : ' ×' + it.qty}${it.price && !it.isSambal ? ' <span style="color:#999">(' + rp(it.price * it.qty) + ')</span>' : ''}`
+    ).join('<br>');
+    const payChip = o.paid
+      ? '<span class="inv-paid-chip">✅ Lunas</span>'
+      : '<span class="inv-unpaid-chip">⏳ Belum</span>';
+    return `<tr>
+      <td class="inv-td-num">${i + 1}</td>
+      <td class="inv-td-date">${fmtDateLabel(d)}</td>
+      <td class="inv-td-menu">${items}</td>
+      <td class="inv-td-total">${rp(o.total)}${payChip}</td>
+    </tr>`;
+  }).join('');
+
+  const ongkirRow = ongkirTot > 0
+    ? `<div class="inv-sum-row"><span>Total Ongkir</span><span>${rp(ongkirTot)}</span></div>` : '';
+  const unpaidNote = unpaid > 0
+    ? `<span style="color:#c2410c;font-weight:700">${unpaid} pesanan belum lunas</span>` : '✅ Semua sudah lunas';
+
+  preview.innerHTML = `
+    <div class="inv-doc" id="inv-doc">
+      <!-- Header -->
+      <div class="inv-doc-hdr">
+        <img class="inv-doc-logo" src="${logo}" alt="logo">
+        <div class="inv-doc-biz">
+          <div class="inv-doc-bizname">BETI NUR CATERING</div>
+          <div class="inv-doc-bizsub">by Homader &nbsp;·&nbsp; WA: ${waDisp}</div>
+        </div>
+        <div class="inv-doc-badge">INVOICE</div>
+      </div>
+
+      <!-- Meta: customer + invoice info -->
+      <div class="inv-meta">
+        <div class="inv-meta-left">
+          <div class="inv-lbl">Invoice Untuk</div>
+          <div class="inv-cust-name">${escHTML(cust.name)}</div>
+          <div class="inv-cust-sub">${escHTML(cust.phone || '-')}</div>
+          <div class="inv-cust-sub">${escHTML(cust.addr || '-')}</div>
+        </div>
+        <div class="inv-meta-right">
+          <div><strong>${invNum}</strong></div>
+          <div>Dibuat: ${today}</div>
+          <div>Periode:</div>
+          <div><strong>${periode}</strong></div>
+        </div>
+      </div>
+
+      <!-- Orders table -->
+      <div class="inv-tbl-wrap">
+        <table class="inv-tbl">
+          <thead>
+            <tr>
+              <th class="inv-td-num">#</th>
+              <th>Tanggal</th>
+              <th>Menu</th>
+              <th style="text-align:right">Total</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+
+      <!-- Summary -->
+      <div class="inv-summary">
+        <div class="inv-sum-row"><span>Subtotal (${orders.length} pesanan)</span><span>${rp(subtotal)}</span></div>
+        ${ongkirRow}
+        <div class="inv-grand"><span>TOTAL</span><span>${rp(grandTot)}</span></div>
+        <div style="text-align:right;font-size:10px;color:var(--mu);margin-top:6px;">${unpaidNote}</div>
+      </div>
+
+      <!-- Footer -->
+      <div class="inv-foot">
+        Terima kasih atas kepercayaan Anda! 🍱<br>
+        Pembayaran via Transfer Bank / QRIS · Beti Nur Catering
+      </div>
+    </div>`;
+
+  if (pdfBtn) pdfBtn.disabled = false;
+}
+
+async function downloadInvoicePDF() {
+  const doc = document.getElementById('inv-doc');
+  if (!doc) { toast('Generate invoice dulu!'); return; }
+  if (!window.jspdf || !window.html2canvas) { toast('Library PDF belum siap, coba lagi'); return; }
+
+  toast('⏳ Menyiapkan PDF...');
+  try {
+    const { jsPDF } = window.jspdf;
+    const PW = 210, PH = 297; // A4 mm
+    // A4 at 96dpi = 794px. Use scale:2 → effective 1588px canvas width.
+    const A4_W = 794;
+    const MARGIN = 40; // px padding inside wrapper
+
+    // ── Off-screen A4-width container ──────────────────────────────
+    const wrap = document.createElement('div');
+    wrap.style.cssText = `position:fixed;left:-9999px;top:0;width:${A4_W}px;`+
+      `background:#fff;padding:${MARGIN}px;box-sizing:border-box;font-family:'Plus Jakarta Sans',sans-serif;`;
+
+    // Clone invoice HTML
+    const clone = doc.cloneNode(true);
+    clone.style.cssText = 'border:none;border-radius:0;padding:0;margin:0;font-size:11px;';
+
+    // Inline style overrides so sizes are correct at A4 width
+    const st = document.createElement('style');
+    st.textContent = [
+      // Header stays big
+      '.inv-doc-hdr{gap:16px;padding-bottom:14px;margin-bottom:16px;}',
+      '.inv-doc-logo{width:64px!important;height:64px!important;}',
+      '.inv-doc-bizname{font-size:24px!important;}',
+      '.inv-doc-bizsub{font-size:12px!important;color:#555!important;}',
+      '.inv-doc-badge{font-size:14px!important;padding:6px 18px!important;}',
+      // Everything else compact at 11px
+      '.inv-lbl{font-size:9px!important;}',
+      '.inv-cust-name{font-size:12px!important;}',
+      '.inv-cust-sub{font-size:11px!important;}',
+      '.inv-meta{margin-bottom:14px!important;}',
+      '.inv-meta-right div{font-size:11px!important;}',
+      '.inv-tbl th{font-size:10px!important;padding:5px 8px!important;}',
+      '.inv-tbl td{font-size:11px!important;padding:4px 8px!important;line-height:1.4!important;}',
+      '.inv-td-menu{font-size:11px!important;}',
+      '.inv-td-date{font-size:11px!important;}',
+      '.inv-td-total{font-size:11px!important;}',
+      '.inv-paid-chip,.inv-unpaid-chip{font-size:9px!important;}',
+      '.inv-sum-row{font-size:11px!important;}',
+      '.inv-grand{font-size:13px!important;}',
+      '.inv-foot{font-size:10px!important;}',
+    ].join('');
+    wrap.appendChild(st);
+    wrap.appendChild(clone);
+    document.body.appendChild(wrap);
+
+    // Wait for fonts/layout
+    await new Promise(r => setTimeout(r, 150));
+
+    const canvas = await html2canvas(wrap, {
+      scale: 2,
+      useCORS: true,
+      backgroundColor: '#ffffff',
+      logging: false,
+      width: A4_W,
+      windowWidth: A4_W
+    });
+
+    document.body.removeChild(wrap);
+
+    const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+    const imgData  = canvas.toDataURL('image/png');
+    const totalMmH = (canvas.height / canvas.width) * PW; // total height in mm
+
+    if (totalMmH <= PH) {
+      // Single page
+      pdf.addImage(imgData, 'PNG', 0, 0, PW, totalMmH);
+    } else {
+      // Multi-page: slice canvas row by row
+      const pageHpx = Math.round((PH / PW) * canvas.width);
+      let y = 0;
+      while (y < canvas.height) {
+        if (y > 0) pdf.addPage('a4', 'portrait');
+        const sliceH = Math.min(pageHpx, canvas.height - y);
+        const slice  = document.createElement('canvas');
+        slice.width  = canvas.width;
+        slice.height = sliceH;
+        slice.getContext('2d').drawImage(canvas, 0, -y);
+        pdf.addImage(slice.toDataURL('image/png'), 'PNG', 0, 0, PW, (sliceH / canvas.width) * PW);
+        y += pageHpx;
+      }
+    }
+
+    const name = (document.getElementById('inv-search').value || 'invoice')
+      .split('·')[0].trim().replace(/[^a-zA-Z0-9 ]/g, '').trim().replace(/\s+/g, '-').slice(0, 20) || 'invoice';
+    pdf.save(`invoice-${name}-${todayStr()}.pdf`);
+    toast('✅ Invoice PDF berhasil didownload!');
+  } catch (e) {
+    console.error('Invoice PDF error', e);
+    toast('❌ Gagal buat PDF');
+  }
 }
 </script>
 </body>
