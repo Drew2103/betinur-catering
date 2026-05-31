@@ -842,7 +842,11 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--cr);color:var(-
     <!-- MENU KALENDER -->
     <div class="apanel" id="tc">
       <div class="ac">
-        <div class="act" style="margin-bottom:9px;">📅 Mei 2026 — Edit menu per tanggal</div>
+        <div class="act" style="margin-bottom:9px;display:flex;align-items:center;justify-content:space-between;">
+          <button onclick="calNavMonth(-1)" style="background:none;border:1px solid var(--br);border-radius:6px;padding:2px 10px;font-size:16px;cursor:pointer;color:var(--tx);">‹</button>
+          <span id="cal-month-title">📅 Mei 2026</span>
+          <button onclick="calNavMonth(1)" style="background:none;border:1px solid var(--br);border-radius:6px;padding:2px 10px;font-size:16px;cursor:pointer;color:var(--tx);">›</button>
+        </div>
         <div class="calg" style="margin-bottom:5px;">
           <div class="calhd">Min</div><div class="calhd">Sen</div><div class="calhd">Sel</div>
           <div class="calhd">Rab</div><div class="calhd">Kam</div><div class="calhd">Jum</div><div class="calhd">Sab</div>
@@ -1035,6 +1039,7 @@ let cart = {}, user = {}, role = 'super';
 let currentStaff = null;
 let editId = null, editB64 = null, editSub = null;
 let selCalDate = null, tapCnt = 0, tapTmr = null, pinStr = '';
+let calYear = new Date().getFullYear(), calMonth = new Date().getMonth(); // 0-based
 let poll = null, checkedOrders = new Set();
 let currentOrderDate = '';
 let editOrdId = null, editOrdCart = {};
@@ -2222,15 +2227,27 @@ function renderAllStats() {
 // ═══════════════════════════════════════════
 //  CALENDAR EDITOR
 // ═══════════════════════════════════════════
+const MONTH_NAMES = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+function calNavMonth(dir) {
+  calMonth += dir;
+  if (calMonth > 11) { calMonth = 0; calYear++; }
+  if (calMonth < 0)  { calMonth = 11; calYear--; }
+  closeCalE();
+  buildCal();
+}
 function buildCal() {
   const g = document.getElementById('calg'); if (!g) return;
-  const calData = getCal(), now = new Date(), first = new Date(2026,4,1).getDay();
+  const titleEl = document.getElementById('cal-month-title');
+  if (titleEl) titleEl.textContent = `📅 ${MONTH_NAMES[calMonth]} ${calYear}`;
+  const calData = getCal(), now = new Date();
+  const firstDay = new Date(calYear, calMonth, 1).getDay();
+  const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
   let h = '';
-  for (let i = 0; i < first; i++) h += '<div></div>';
-  for (let d = 1; d <= 31; d++) {
-    const key = `2026-05-${String(d).padStart(2,'0')}`;
+  for (let i = 0; i < firstDay; i++) h += '<div></div>';
+  for (let d = 1; d <= daysInMonth; d++) {
+    const key = `${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
     const hm  = !!(calData[key] && Object.keys(calData[key]).length);
-    const it  = d === now.getDate() && now.getMonth() === 4 && now.getFullYear() === 2026;
+    const it  = d === now.getDate() && calMonth === now.getMonth() && calYear === now.getFullYear();
     h += `<div class="cald ${hm?'hm':''} ${it?'td':''}" id="cald-${d}" onclick="selCal(${d})">${d}${hm?'<div class="caldot"></div>':''}</div>`;
   }
   g.innerHTML = h;
@@ -2241,9 +2258,9 @@ function selCal(d) {
   selCalDate = d; openCalE(d);
 }
 function openCalE(d) {
-  const key = `2026-05-${String(d).padStart(2,'0')}`;
+  const key = `${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
   const dd  = getCal()[key] || {};
-  document.getElementById('cae-title').textContent = `Menu ${d} Mei 2026`;
+  document.getElementById('cae-title').textContent = `Menu ${d} ${MONTH_NAMES[calMonth]} ${calYear}`;
   let body = '';
   CAL_CATS.forEach(cat => {
     body += `<div class="cas-lbl">${cat.lbl}</div><div id="calrows-${cat.key}">`;
@@ -2276,7 +2293,7 @@ function addCalRow(cat) {
 }
 function saveCalMenu() {
   if (!selCalDate) return;
-  const key = `2026-05-${String(selCalDate).padStart(2,'0')}`;
+  const key = `${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(selCalDate).padStart(2,'0')}`;
   const cal = getCal(), dd = {};
   CAL_CATS.forEach(cat => {
     const rows = document.querySelectorAll(`#calrows-${cat.key} .cal-row`);
@@ -2298,15 +2315,15 @@ function saveCalMenu() {
   ss(SK.cal, cal);
   if (Object.keys(dd).length) {
     const hist = getMenuHistory().filter(h => h.key !== key);
-    hist.unshift({ key, label: `${selCalDate} Mei 2026`, data: dd, savedAt: Date.now() });
+    hist.unshift({ key, label: `${selCalDate} ${MONTH_NAMES[calMonth]} ${calYear}`, data: dd, savedAt: Date.now() });
     ss(SK.mh, hist.slice(0, 50));
     renderMenuHistory();
   }
-  buildCal(); toast(`✅ Menu ${selCalDate} Mei tersimpan!`);
+  buildCal(); toast(`✅ Menu ${selCalDate} ${MONTH_NAMES[calMonth]} tersimpan!`);
 }
 function clearCalMenu() {
   if (!selCalDate || !confirm('Hapus semua menu untuk tanggal ini?')) return;
-  const key = `2026-05-${String(selCalDate).padStart(2,'0')}`;
+  const key = `${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(selCalDate).padStart(2,'0')}`;
   const cal = getCal(); delete cal[key]; ss(SK.cal, cal);
   buildCal(); closeCalE(); toast('🗑️ Menu dihapus.');
 }
@@ -2343,13 +2360,13 @@ function renderMenuHistory() {
 function applyMenuTemplate(idx) {
   if (!selCalDate) { toast('Pilih tanggal dulu di kalender!'); return; }
   const h = getMenuHistory()[idx]; if (!h) return;
-  const key = `2026-05-${String(selCalDate).padStart(2,'0')}`;
+  const key = `${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(selCalDate).padStart(2,'0')}`;
   const cal = getCal();
   cal[key] = h.data;
   ss(SK.cal, cal);
   openCalE(selCalDate);
   buildCal();
-  toast(`✅ Template "${h.label}" diterapkan ke ${selCalDate} Mei!`);
+  toast(`✅ Template "${h.label}" diterapkan ke ${selCalDate} ${MONTH_NAMES[calMonth]}!`);
 }
 function deleteMenuTemplate(idx) {
   const hist = getMenuHistory();
