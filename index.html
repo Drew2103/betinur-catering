@@ -22,6 +22,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
@@ -62,7 +63,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--cr);color:var(-
 .pin-pad{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;}
 .pin-btn{padding:13px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:12px;color:white;font-size:18px;font-weight:700;cursor:pointer;font-family:inherit;}
 .pin-btn:active{background:rgba(201,168,76,.25);}
-.pin-err{color:#fc8181;font-size:12px;text-align:center;margin-top:8px;display:none;}
+.pin-err{color:#fc8181;font-size:12px;text-align:center;margin-top:8px;display:none;line-height:1.4;padding:0 8px;}
 .btn-cancel-m{width:100%;padding:10px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:10px;color:rgba(255,255,255,.45);font-size:12px;cursor:pointer;font-family:inherit;margin-top:9px;}
 .ibox{background:var(--cr);border:1px solid rgba(201,168,76,.4);border-radius:20px;padding:22px 18px;width:100%;max-width:380px;max-height:90vh;overflow-y:auto;animation:popIn .3s ease;}
 .ibox h3{font-family:'Playfair Display',serif;color:var(--n);font-size:16px;margin-bottom:3px;text-align:center;}
@@ -499,7 +500,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--cr);color:var(-
   #pv{display:block!important;background:white;}
   .pbar,.subhdr{display:none!important;}
   .pdoc{margin:0;border:none;box-shadow:none;border-radius:0;padding:0;max-width:none;width:46mm;overflow:hidden;}
-  .print-page{page-break-after:always;max-height:56mm;overflow:hidden;padding:2mm 2mm;}
+  .print-page{page-break-after:always;padding:2mm 2mm;}
   .print-page:last-child{page-break-after:auto;}
   .plbl-brand{font-size:9pt;font-family:monospace;letter-spacing:.5px;text-align:center;border-bottom:1px solid #000;padding-bottom:1mm;margin-bottom:1mm;}
   .plbl-meal{font-size:9pt;font-weight:900;font-family:monospace;text-align:center;background:#000;color:#fff;padding:.8mm 0;margin-bottom:1.5mm;letter-spacing:1px;}
@@ -1035,6 +1036,58 @@ const DEF_STAFF = [
   { id:'owner', name:'Pemilik', pin:'1234', role:'super' }
 ];
 
+// ── SECURITY ────────────────────────────────────────────
+const APP_SECRET = 'BNC@H0mad3r#2024$Srpg!';
+
+// SHA-256 via Web Crypto API
+async function sha256(str) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+}
+
+// PIN lockout (5 gagal → kunci 5 menit)
+const PIN_MAX_TRIES  = 5;
+const PIN_LOCKOUT_MS = 5 * 60 * 1000;
+function pinLockInfo()  { return ls('bn_plock') || { tries:0, until:0 }; }
+function isPinLocked()  { const d = pinLockInfo(); return d.until > Date.now() ? d.until : 0; }
+function recordPinFail() {
+  const d = pinLockInfo();
+  d.tries = (d.tries || 0) + 1;
+  if (d.tries >= PIN_MAX_TRIES) { d.until = Date.now() + PIN_LOCKOUT_MS; d.tries = 0; }
+  localStorage.setItem('bn_plock', JSON.stringify(d));
+}
+function resetPinLock() { localStorage.removeItem('bn_plock'); }
+function showPinErr(msg) {
+  const el = document.getElementById('pin-err');
+  if (!el) return;
+  el.textContent = msg;
+  el.style.display = 'block';
+  setTimeout(() => { el.style.display = 'none'; el.textContent = 'PIN salah!'; }, 4000);
+}
+
+// Secondary Firebase App — untuk buat akun staff baru tanpa sign-out admin
+let _secApp = null;
+function getSecApp() {
+  if (!_secApp) {
+    try { _secApp = firebase.app('secondary'); } catch(e) {}
+    if (!_secApp) try { _secApp = firebase.initializeApp(FB_CONFIG, 'secondary'); } catch(e) {}
+  }
+  return _secApp;
+}
+async function createFBAccount(email, password) {
+  const sec = getSecApp(); if (!sec) return false;
+  try {
+    const secAuth = sec.auth();
+    await secAuth.createUserWithEmailAndPassword(email, password);
+    await secAuth.signOut();
+    return true;
+  } catch(e) {
+    if (e.code === 'auth/email-already-in-use') return true;
+    console.warn('FB create account:', e.code); return false;
+  }
+}
+// ────────────────────────────────────────────────────────
+
 let cart = {}, user = {}, role = 'super';
 let currentStaff = null;
 let editId = null, editB64 = null, editSub = null;
@@ -1084,7 +1137,12 @@ const FB_CONFIG = {
   appId: "1:92306876296:web:87060b2cc47cfd199a3c3d"
 };
 let db = null;
-try { firebase.initializeApp(FB_CONFIG); db = firebase.firestore(); } catch(e) { console.warn('Firebase init failed:', e); }
+let auth = null;
+try {
+  firebase.initializeApp(FB_CONFIG);
+  db   = firebase.firestore();
+  auth = firebase.auth();
+} catch(e) { console.warn('Firebase init failed:', e); }
 
 // Keys that sync to Firestore /config/{doc}
 const FS_MAP = {
@@ -1364,23 +1422,74 @@ function openPin() {
 function closePin() { document.getElementById('pin-modal').classList.remove('open'); pinStr = ''; renderDots(); }
 function renderDots() { for (let i = 0; i < 4; i++) document.getElementById('pd' + i).classList.toggle('filled', i < pinStr.length); }
 function pinKey(k) {
-  if (k === 'D')      pinStr = pinStr.slice(0, -1);
-  else if (k === 'OK'){ checkPin(); return; }
+  if (k === 'D')           pinStr = pinStr.slice(0, -1);
+  else if (k === 'OK')   { checkPin(); return; }
   else if (pinStr.length < 4) pinStr += k;
   renderDots();
-  if (pinStr.length === 4) setTimeout(checkPin, 200);
+  if (pinStr.length === 4) setTimeout(() => checkPin(), 200);
 }
-function checkPin() {
-  const staff = getStaff().find(s => s.pin === pinStr);
-  if (staff) {
-    currentStaff = staff;
-    role = staff.role;
-    closePin(); enterAdmin();
-  } else {
-    document.getElementById('pin-err').style.display = 'block';
-    pinStr = ''; renderDots();
-    setTimeout(() => document.getElementById('pin-err').style.display = 'none', 2000);
+async function checkPin() {
+  // 1. Lockout check
+  const lockUntil = isPinLocked();
+  if (lockUntil) {
+    const mins = Math.ceil((lockUntil - Date.now()) / 60000);
+    showPinErr(`Terlalu banyak percobaan. Coba lagi ${mins} menit lagi.`);
+    pinStr = ''; renderDots(); return;
   }
+
+  // 2. Hash input PIN
+  const inputHash = await sha256(pinStr + APP_SECRET);
+  let allStaff = getStaff();
+
+  // 3. Find staff: cek pinHash dulu, fallback ke pin lama (migrasi)
+  let matched = allStaff.find(s => s.pinHash && s.pinHash === inputHash)
+             || allStaff.find(s => s.pin     && s.pin     === pinStr);
+
+  if (!matched) {
+    recordPinFail();
+    const d = pinLockInfo();
+    const remaining = PIN_MAX_TRIES - (d.tries || 0);
+    const msg = d.until > Date.now()
+      ? `Terlalu banyak percobaan. Tunggu 5 menit.`
+      : `PIN salah! ${remaining} percobaan tersisa.`;
+    showPinErr(msg);
+    pinStr = ''; renderDots(); return;
+  }
+
+  // 4. Migrasi PIN lama (plaintext → hash)
+  if (matched.pin && !matched.pinHash) {
+    const idx = allStaff.findIndex(s => s.id === matched.id);
+    if (idx >= 0) {
+      allStaff[idx].pinHash = inputHash;
+      delete allStaff[idx].pin;
+      ss(SK.staff, allStaff);
+      matched = allStaff[idx];
+    }
+  }
+
+  // 5. Firebase Auth sign-in (untuk Firestore rules)
+  if (auth) {
+    const fbEmail = `${matched.id}@staff.homaderfood.app`;
+    const fbPwd   = await sha256(pinStr + APP_SECRET + '_fbv1');
+    try {
+      await auth.signInWithEmailAndPassword(fbEmail, fbPwd);
+    } catch(e) {
+      if (['auth/user-not-found','auth/invalid-credential',
+           'auth/invalid-login-credentials','auth/invalid-email'].includes(e.code)) {
+        // Buat akun Firebase Auth baru untuk staff ini
+        const created = await createFBAccount(fbEmail, fbPwd);
+        if (created) {
+          try { await auth.signInWithEmailAndPassword(fbEmail, fbPwd); } catch(e2) { console.warn('FB signin after create:', e2.code); }
+        }
+      } else { console.warn('FB signin:', e.code); }
+    }
+  }
+
+  // 6. Masuk admin
+  resetPinLock();
+  currentStaff = matched;
+  role = matched.role;
+  closePin(); enterAdmin();
 }
 function enterAdmin() {
   ss(SK.role, role);
@@ -1417,12 +1526,14 @@ function enterAdmin() {
 function adminLogout() {
   if (poll) { clearInterval(poll); poll = null; }
   stopOrdersListener();
-  currentStaff = null;
+  currentStaff = null; role = 'super';
+  try { if (auth) auth.signOut(); } catch(e) {}
   showView('lv');
 }
 function driverLogout() {
   stopOrdersListener();
   currentStaff = null;
+  try { if (auth) auth.signOut(); } catch(e) {}
   showView('lv');
 }
 function goToStaffTab() {
@@ -2457,39 +2568,51 @@ function buildOrderPrintHTML(o) {
 
   // showTotal=true → tampilkan total penuh order; false → subtotal meal ini saja
   function makeLabel(items, mealTag, showTotal) {
-    // Item rows dengan harga
-    const itemRows = items.map(it => {
-      if (it.isSambal) {
-        return `<div class="plbl-irow plbl-ongkir"><span>🌶 ${escHTML(it.name)}</span><span>+</span></div>`;
-      }
-      const sub = (it.price || 0) * (it.qty || 1);
-      return `<div class="plbl-irow"><span>${escHTML(it.name)} ×${it.qty}</span><span>${rp(sub)}</span></div>`;
-    }).join('');
+    const MAX_ITEMS = 4; // max item per label sebelum split ke label baru
 
-    // Subtotal items ini
-    const mealSub = items.reduce((s, it) => s + (it.isSambal ? 0 : (it.price||0)*(it.qty||1)), 0);
-    // Ongkir hanya tampil di label yg showTotal
+    // Split items ke chunks
+    const chunks = [];
+    for (let i = 0; i < items.length; i += MAX_ITEMS) {
+      chunks.push(items.slice(i, i + MAX_ITEMS));
+    }
+
+    const mealSub  = items.reduce((s, it) => s + (it.isSambal ? 0 : (it.price||0)*(it.qty||1)), 0);
     const ongkirRow = (showTotal && o.ongkir)
       ? `<div class="plbl-irow plbl-ongkir"><span>Ongkir</span><span>${rp(o.ongkir)}</span></div>` : '';
     const totalAmt   = showTotal ? (o.total || mealSub) : mealSub;
     const totalLabel = showTotal ? 'TOTAL' : 'SUBTOTAL';
-
     const tgl = o.orderDate ? `<div class="plbl-date">📅 ${fmtDateLabel(o.orderDate)}</div>` : '';
     const nh  = o.notes ? `<div class="plbl-notes">📝 ${escHTML(o.notes)}</div>` : '';
+    const total = chunks.length;
 
-    return `<div class="print-page">
-      <div class="plbl-brand">BETI NUR CATERING<br>by Homader</div>
-      <div class="plbl-meal">${mealTag}</div>
-      <div class="plbl-name">${escHTML(o.name)}</div>
-      <div class="plbl-addr">📍 ${escHTML(o.addr)}</div>
-      ${tgl}
-      <hr class="plbl-divider">
-      <div class="plbl-items">${itemRows}</div>
-      ${nh}
-      ${ongkirRow}
-      <div class="plbl-total"><span>${totalLabel}</span><span>${rp(totalAmt)}</span></div>
-      <div class="plbl-footer">Terima kasih sudah memesan! 🍱<br>WA: ${waDisplay}</div>
-    </div>`;
+    return chunks.map((chunk, idx) => {
+      const isFirst = idx === 0;
+      const isLast  = idx === total - 1;
+      const pageTag = total > 1 ? ` (${idx+1}/${total})` : '';
+
+      const itemRows = chunk.map(it => {
+        if (it.isSambal) return `<div class="plbl-irow plbl-ongkir"><span>🌶 ${escHTML(it.name)}</span><span>+</span></div>`;
+        const sub = (it.price || 0) * (it.qty || 1);
+        return `<div class="plbl-irow"><span>${escHTML(it.name)} ×${it.qty}</span><span>${rp(sub)}</span></div>`;
+      }).join('');
+
+      const bottomRow = isLast
+        ? `${ongkirRow}<div class="plbl-total"><span>${totalLabel}</span><span>${rp(totalAmt)}</span></div>`
+        : `<div class="plbl-total" style="color:#666;font-size:10px;font-weight:700;font-family:monospace;margin-top:4px;"><span>bersambung...</span><span>${idx+2}/${total}</span></div>`;
+
+      return `<div class="print-page">
+        <div class="plbl-brand">BETI NUR CATERING<br>by Homader</div>
+        <div class="plbl-meal">${isFirst ? mealTag : `LANJUTAN ${idx+1}/${total}`}</div>
+        <div class="plbl-name">${escHTML(o.name)}</div>
+        <div class="plbl-addr">📍 ${escHTML(o.addr)}</div>
+        ${tgl}
+        <hr class="plbl-divider">
+        <div class="plbl-items">${itemRows}</div>
+        ${isFirst ? nh : ''}
+        ${bottomRow}
+        ${isLast ? `<div class="plbl-footer">Terima kasih sudah memesan! 🍱<br>WA: ${waDisplay}</div>` : ''}
+      </div>`;
+    }).join('');
   }
 
   if (sarapan.length && siang.length) {
@@ -2738,7 +2861,7 @@ function openEditStaff(id) {
 }
 function closeStaffForm() { document.getElementById('staff-form').style.display = 'none'; }
 
-function saveStaff() {
+async function saveStaff() {
   const editingId = document.getElementById('staff-edit-id').value;
   const name  = document.getElementById('staff-fname').value.trim();
   const frole = document.getElementById('staff-frole').value;
@@ -2746,35 +2869,48 @@ function saveStaff() {
   const pin2  = document.getElementById('staff-fpin2').value.trim();
 
   if (!name) { toast('Nama wajib diisi!'); return; }
-
-  const staff = getStaff();
-
-  if (editingId) {
-    // Edit existing
-    const idx = staff.findIndex(s => s.id === editingId); if (idx < 0) return;
-    if (pin) {
-      if (pin.length !== 4 || !/^\d+$/.test(pin)) { toast('PIN harus 4 angka!'); return; }
-      if (pin !== pin2) { toast('Konfirmasi PIN tidak cocok!'); return; }
-      // Check duplicate PIN
-      if (staff.some(s => s.pin === pin && s.id !== editingId)) { toast('PIN sudah dipakai staff lain!'); return; }
-      staff[idx].pin = pin;
-    }
-    staff[idx].name = name;
-    staff[idx].role = frole;
-    // Update currentStaff if editing self
-    if (currentStaff && currentStaff.id === editingId) {
-      currentStaff = staff[idx];
-      document.getElementById('admin-staff-name').textContent = currentStaff.name;
-    }
-  } else {
-    // Add new
-    if (!pin || pin.length !== 4 || !/^\d+$/.test(pin)) { toast('PIN harus 4 angka!'); return; }
+  if (pin) {
+    if (pin.length !== 4 || !/^\d+$/.test(pin)) { toast('PIN harus 4 angka!'); return; }
     if (pin !== pin2) { toast('Konfirmasi PIN tidak cocok!'); return; }
-    if (staff.some(s => s.pin === pin)) { toast('PIN sudah dipakai staff lain!'); return; }
-    staff.push({ id:'staff_'+Date.now(), name, pin, role: frole });
   }
 
-  ss(SK.staff, staff); fsWrite(SK.staff, staff);
+  const allStaff = getStaff();
+
+  if (pin) {
+    const newHash = await sha256(pin + APP_SECRET);
+    const dup = allStaff.some(s => s.id !== editingId && (s.pinHash === newHash || s.pin === pin));
+    if (dup) { toast('PIN sudah dipakai staff lain!'); return; }
+  }
+
+  if (editingId) {
+    const idx = allStaff.findIndex(s => s.id === editingId); if (idx < 0) return;
+    allStaff[idx].name = name;
+    allStaff[idx].role = frole;
+    if (pin) {
+      allStaff[idx].pinHash = await sha256(pin + APP_SECRET);
+      delete allStaff[idx].pin;
+      // Buat ulang Firebase Auth account dengan PIN baru (best-effort)
+      const fbEmail = `${editingId}@staff.homaderfood.app`;
+      const fbPwd   = await sha256(pin + APP_SECRET + '_fbv1');
+      await createFBAccount(fbEmail, fbPwd);
+    }
+    if (currentStaff && currentStaff.id === editingId) {
+      currentStaff = allStaff[idx];
+      const nameEl = document.getElementById('admin-staff-name');
+      if (nameEl) nameEl.textContent = currentStaff.name;
+    }
+  } else {
+    if (!pin) { toast('PIN wajib diisi untuk staff baru!'); return; }
+    const newId   = 'staff_' + Date.now();
+    const newHash = await sha256(pin + APP_SECRET);
+    // Buat Firebase Auth account untuk staff baru
+    const fbEmail = `${newId}@staff.homaderfood.app`;
+    const fbPwd   = await sha256(pin + APP_SECRET + '_fbv1');
+    await createFBAccount(fbEmail, fbPwd);
+    allStaff.push({ id: newId, name, pinHash: newHash, role: frole });
+  }
+
+  ss(SK.staff, allStaff);
   closeStaffForm();
   renderStaffList();
   toast('✅ Data karyawan tersimpan!');
@@ -2801,7 +2937,7 @@ function openEditSelf() {
   document.getElementById('self-edit-form').scrollIntoView({behavior:'smooth', block:'nearest'});
 }
 function closeSelfEdit() { document.getElementById('self-edit-form').style.display = 'none'; }
-function saveSelfEdit() {
+async function saveSelfEdit() {
   const name = document.getElementById('self-name').value.trim();
   const pin  = document.getElementById('self-pin').value.trim();
   const pin2 = document.getElementById('self-pin2').value.trim();
@@ -2809,17 +2945,27 @@ function saveSelfEdit() {
   if (pin) {
     if (pin.length !== 4 || !/^\d+$/.test(pin)) { toast('PIN harus 4 angka!'); return; }
     if (pin !== pin2) { toast('Konfirmasi PIN tidak cocok!'); return; }
-    const staff = getStaff();
-    if (staff.some(s => s.pin === pin && s.id !== currentStaff.id)) { toast('PIN sudah dipakai orang lain!'); return; }
+    const newHash = await sha256(pin + APP_SECRET);
+    const allStaff = getStaff();
+    if (allStaff.some(s => s.id !== currentStaff.id && (s.pinHash === newHash || s.pin === pin))) {
+      toast('PIN sudah dipakai orang lain!'); return;
+    }
   }
-  const staff = getStaff();
-  const idx   = staff.findIndex(s => s.id === currentStaff.id);
+  const allStaff = getStaff();
+  const idx = allStaff.findIndex(s => s.id === currentStaff.id);
   if (idx >= 0) {
-    staff[idx].name = name;
-    if (pin) staff[idx].pin = pin;
-    ss(SK.staff, staff); fsWrite(SK.staff, staff);
-    currentStaff = staff[idx];
-    // Update header
+    allStaff[idx].name = name;
+    if (pin) {
+      allStaff[idx].pinHash = await sha256(pin + APP_SECRET);
+      delete allStaff[idx].pin;
+      // Update Firebase Auth password (signed in = bisa updatePassword langsung)
+      if (auth && auth.currentUser) {
+        const fbPwd = await sha256(pin + APP_SECRET + '_fbv1');
+        try { await auth.currentUser.updatePassword(fbPwd); } catch(e) { console.warn('FB pwd update:', e.code); }
+      }
+    }
+    ss(SK.staff, allStaff);
+    currentStaff = allStaff[idx];
     const nameEl = document.getElementById('admin-staff-name');
     if (nameEl) nameEl.textContent = currentStaff.name;
     closeSelfEdit();
