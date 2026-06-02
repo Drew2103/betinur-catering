@@ -486,14 +486,12 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--cr);color:var(-
 .inv-foot{margin-top:12px;padding-top:9px;border-top:1px dashed var(--bd);text-align:center;font-size:10px;color:var(--mu);line-height:1.6;}
 /* ROUTE TAB */
 .rt-card{background:white;border:1px solid var(--bd);border-radius:12px;padding:11px 13px;margin-bottom:8px;display:flex;align-items:center;gap:10px;box-shadow:var(--sh);}
-.rt-handle{font-size:18px;color:var(--mu);cursor:grab;flex-shrink:0;user-select:none;touch-action:none;}
-.rt-num{width:24px;height:24px;background:var(--n);color:var(--g);border-radius:50%;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.rt-num-inp{width:42px;height:42px;border:2px solid var(--bd);border-radius:10px;font-size:16px;font-weight:900;font-family:inherit;color:var(--n);background:var(--gp);text-align:center;cursor:pointer;flex-shrink:0;-moz-appearance:textfield;}
+.rt-num-inp::-webkit-outer-spin-button,.rt-num-inp::-webkit-inner-spin-button{-webkit-appearance:none;margin:0;}
+.rt-num-inp:focus{outline:none;border-color:var(--g);background:#fff;}
 .rt-info{flex:1;min-width:0;}
 .rt-name{font-weight:800;font-size:12px;color:var(--n);}
 .rt-addr{font-size:10px;color:var(--mu);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.rt-arrows{display:flex;flex-direction:column;gap:2px;}
-.rt-arr{background:none;border:1px solid var(--bd);border-radius:5px;width:22px;height:22px;cursor:pointer;font-size:11px;display:flex;align-items:center;justify-content:center;color:var(--n);}
-.rt-arr:disabled{opacity:.3;cursor:not-allowed;}
 @media print{
   @page{size:50mm 60mm portrait;margin:2mm 2mm;}
   body>*:not(#pv){display:none!important;}
@@ -941,12 +939,9 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--cr);color:var(-
 
     <!-- RUTE ANTAR -->
     <div class="apanel" id="trt">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-        <div>
-          <div style="font-size:13px;font-weight:800;color:var(--n);">🚗 Urutan Pengantaran</div>
-          <div style="font-size:10px;color:var(--mu);margin-top:2px;">Atur urutan lalu simpan. Driver lihat sesuai urutan ini.</div>
-        </div>
-        <button onclick="saveRoute()" style="background:linear-gradient(135deg,var(--g),var(--gl));color:var(--n);border:none;border-radius:10px;padding:8px 14px;font-size:11px;font-weight:800;cursor:pointer;font-family:inherit;">💾 Simpan</button>
+      <div style="margin-bottom:12px;">
+        <div style="font-size:13px;font-weight:800;color:var(--n);">🚗 Urutan Pengantaran</div>
+        <div style="font-size:10px;color:var(--mu);margin-top:2px;">Ketik angka urutan → Enter. Driver lihat sesuai urutan ini.</div>
       </div>
       <div id="route-list"></div>
     </div>
@@ -2034,12 +2029,6 @@ function togglePaid(id) {
 //  DRIVER VIEW
 // ═══════════════════════════════════════════
 function getRoute() { return ls(SK.route) || []; }
-function saveRoute() {
-  const items = document.querySelectorAll('#route-list .rt-card');
-  const ids = Array.from(items).map(el => el.dataset.id);
-  ss(SK.route, ids);
-  toast('💾 Urutan disimpan!');
-}
 function refreshDriverView() {
   const el = document.getElementById('drv-list'); if (!el) return;
   const today = todayStr();
@@ -2126,35 +2115,29 @@ function renderRouteTab() {
   el.innerHTML = orders.map((o, i) => {
     const statusColor = o.status === 'done' ? '#2e7d32' : o.status === 'dikirim' ? '#1d4ed8' : '#c2410c';
     return `<div class="rt-card" data-id="${o.id}">
-      <div class="rt-num">${i+1}</div>
+      <input class="rt-num-inp" type="number" min="1" max="${orders.length}" value="${i+1}"
+             onchange="setRouteNum('${o.id}', this.value)"
+             onkeydown="if(event.key==='Enter')this.blur()">
       <div class="rt-info">
         <div class="rt-name">${escHTML(o.name)}</div>
         <div class="rt-addr">📍 ${escHTML(o.addr)}</div>
       </div>
       <span style="font-size:9px;font-weight:800;color:${statusColor};white-space:nowrap;">${statusLabel(o.status)}</span>
-      <div class="rt-arrows">
-        <button class="rt-arr" onclick="moveRoute(${i},-1)" ${i===0?'disabled':''}>▲</button>
-        <button class="rt-arr" onclick="moveRoute(${i},1)"  ${i===orders.length-1?'disabled':''}>▼</button>
-      </div>
     </div>`;
   }).join('');
 }
-function moveRoute(idx, dir) {
+function setRouteNum(id, rawVal) {
   const cards = Array.from(document.querySelectorAll('#route-list .rt-card'));
-  const newIdx = idx + dir;
-  if (newIdx < 0 || newIdx >= cards.length) return;
-  const parent = cards[0].parentNode;
-  if (dir === -1) parent.insertBefore(cards[idx], cards[newIdx]);
-  else parent.insertBefore(cards[newIdx], cards[idx]);
-  // Re-number
-  Array.from(parent.querySelectorAll('.rt-num')).forEach((n, i) => n.textContent = i + 1);
-  // Update arrow disabled states
-  const all = Array.from(parent.querySelectorAll('.rt-card'));
-  all.forEach((c, i) => {
-    const btns = c.querySelectorAll('.rt-arr');
-    btns[0].disabled = i === 0;
-    btns[1].disabled = i === all.length - 1;
-  });
+  const total  = cards.length;
+  const newPos = Math.max(1, Math.min(total, parseInt(rawVal) || 1));
+  const ids    = cards.map(c => c.dataset.id);
+  const curIdx = ids.indexOf(id);
+  if (curIdx === -1 || curIdx === newPos - 1) return;
+  ids.splice(curIdx, 1);
+  ids.splice(newPos - 1, 0, id);
+  ss(SK.route, ids);
+  renderRouteTab();
+  toast('✅ Urutan diperbarui!');
 }
 
 function batchPrint() {
