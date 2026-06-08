@@ -618,7 +618,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--cr);color:var(-
   </div>
   <div class="dbanner">
     <div><h3 id="mdtitle">—</h3><p>Pilih menu &amp; tanggal pesanan</p></div>
-    <div class="cbadge">⏰ Order max 22:00</div>
+    <div class="cbadge" id="order-cutoff-badge">⏰ Sarapan s/d 05:00 • Siang s/d 08:00</div>
   </div>
   <div class="date-strip">
     <label>📅 Tanggal Pesanan</label>
@@ -736,7 +736,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--cr);color:var(-
         <div class="sbox"><div class="sval" id="stat-done">0</div><div class="slbl">Selesai</div></div>
       </div>
       <div class="clkcard">
-        <div><div class="clklbl">⏰ Batas Pesanan</div><div class="clkt">22:00</div><div class="clkc" id="clkc">Menghitung...</div></div>
+        <div><div class="clklbl">⏰ Batas Pesanan</div><div class="clkt" id="clkt">--:--</div><div class="clkc" id="clkc">Menghitung...</div></div>
         <div style="font-size:46px;">🌙</div>
       </div>
       <div class="ac"><div class="act">📈 Top Item Hari Ini</div><div id="dash-top"></div></div>
@@ -767,13 +767,18 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--cr);color:var(-
         </div>
         <p class="set-hint">Format: 628xxx (tanpa +, tanpa spasi). Contoh: 6281234567890</p>
         <!-- Order Window -->
-        <div style="font-size:10px;font-weight:800;color:var(--mu);text-transform:uppercase;letter-spacing:.5px;margin:11px 0 7px;">Jam Tutup Pesanan (pagi)</div>
-        <div style="font-size:11px;color:var(--mu);margin-bottom:7px;">Setelah jam ini pesanan ditutup sampai jam buka siang. Default: 07:00.</div>
+        <div style="font-size:10px;font-weight:800;color:var(--mu);text-transform:uppercase;letter-spacing:.5px;margin:11px 0 7px;">Jam Tutup Pesanan Sarapan</div>
+        <div style="font-size:11px;color:var(--mu);margin-bottom:7px;">Setelah jam ini menu Sarapan otomatis hilang & tidak bisa dipesan lagi (Makan Siang masih bisa). Default: 05:00.</div>
         <div class="set-row">
-          <input type="time" id="set-close-time" value="07:00" style="flex:1;">
+          <input type="time" id="set-close-sarapan" value="05:00" style="flex:1;">
         </div>
-        <div style="font-size:10px;font-weight:800;color:var(--mu);text-transform:uppercase;letter-spacing:.5px;margin:11px 0 7px;">Jam Buka Pesanan (siang)</div>
-        <div style="font-size:11px;color:var(--mu);margin-bottom:7px;">Mulai jam ini menu besok tampil dan bisa dipesan. Default: 12:00.</div>
+        <div style="font-size:10px;font-weight:800;color:var(--mu);text-transform:uppercase;letter-spacing:.5px;margin:11px 0 7px;">Jam Tutup Pesanan Makan Siang</div>
+        <div style="font-size:11px;color:var(--mu);margin-bottom:7px;">Setelah jam ini semua pesanan ditutup sampai jam buka berikutnya. Default: 08:00.</div>
+        <div class="set-row">
+          <input type="time" id="set-close-siang" value="08:00" style="flex:1;">
+        </div>
+        <div style="font-size:10px;font-weight:800;color:var(--mu);text-transform:uppercase;letter-spacing:.5px;margin:11px 0 7px;">Jam Buka Pesanan (untuk besok)</div>
+        <div style="font-size:11px;color:var(--mu);margin-bottom:7px;">Mulai jam ini menu besok tampil dan bisa dipesan lagi. Default: 12:00.</div>
         <div class="set-row">
           <input type="time" id="set-open-time" value="12:00" style="flex:1;">
           <button class="btn-set-save" onclick="saveSettings()">💾 Simpan</button>
@@ -1219,20 +1224,32 @@ function getMenu()    { return ls(SK.menu)    || DEF_MENU; }
 function getPh()      { return ls(SK.photos)  || {}; }
 function getOrders()  { return ls(SK.orders)  || []; }
 function getCal()     { return ls(SK.cal)     || {}; }
-function getSettings(){ return ls(SK.settings) || { waNumber: WA_DEFAULT, closeTime: '07:00', openTime: '12:00' }; }
+function getSettings(){ return ls(SK.settings) || { waNumber: WA_DEFAULT, sarapanCloseTime: '05:00', siangCloseTime: '08:00', openTime: '12:00' }; }
 function getOrderWindow() {
   const s = getSettings();
-  const [cH,cM] = (s.closeTime || '07:00').split(':').map(Number);
-  const [oH,oM] = (s.openTime  || '12:00').split(':').map(Number);
+  // sarapanCloseTime / siangCloseTime baru menggantikan closeTime lama (migrasi otomatis)
+  const [scH,scM] = (s.sarapanCloseTime || s.closeTime || '05:00').split(':').map(Number);
+  const [lcH,lcM] = (s.siangCloseTime  || '08:00').split(':').map(Number);
+  const [oH,oM]   = (s.openTime  || '12:00').split(':').map(Number);
   const now = new Date(), h = now.getHours(), m = now.getMinutes();
-  const afterClose = h > cH || (h === cH && m >= cM);
-  const afterOpen  = h > oH || (h === oH && m >= oM);
+  const nowMin = h*60+m, scMin = scH*60+scM, lcMin = lcH*60+lcM, oMin = oH*60+oM;
   const today    = localDateStr(now);
   const tmrw     = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
   const tomorrow = localDateStr(tmrw);
-  if (!afterClose)         return { isOpen:true,  deliveryDate:today,    state:'early',  cH,cM,oH,oM };
-  else if (!afterOpen)     return { isOpen:false,  deliveryDate:null,     state:'closed', cH,cM,oH,oM };
-  else                     return { isOpen:true,   deliveryDate:tomorrow, state:'open',   cH,cM,oH,oM };
+  if (nowMin < lcMin) {
+    // Masih sebelum jam tutup makan siang -> order untuk HARI INI masih buka
+    const sarapanAvailable = nowMin < scMin;
+    return { isOpen:true, deliveryDate:today, state: sarapanAvailable ? 'early' : 'siangOnly',
+             sarapanAvailable, siangAvailable:true, scH,scM,lcH,lcM,oH,oM };
+  } else if (nowMin < oMin) {
+    // Sudah lewat jam tutup siang, belum jam buka lagi -> tutup total
+    return { isOpen:false, deliveryDate:null, state:'closed',
+             sarapanAvailable:false, siangAvailable:false, scH,scM,lcH,lcM,oH,oM };
+  } else {
+    // Sudah jam buka -> order untuk BESOK, semua kategori tersedia lagi
+    return { isOpen:true, deliveryDate:tomorrow, state:'open',
+             sarapanAvailable:true, siangAvailable:true, scH,scM,lcH,lcM,oH,oM };
+  }
 }
 function getMenuHistory() { return ls(SK.mh) || []; }
 function getStaff()   { return ls(SK.staff)   || DEF_STAFF; }
@@ -1327,19 +1344,32 @@ function setWALink(order) {
 function saveSettings() {
   const wa = (document.getElementById('set-wa').value || '').replace(/\D/g, '');
   if (!wa || wa.length < 10) { toast('Nomor WA tidak valid!'); return; }
-  const closeTime = document.getElementById('set-close-time').value || '07:00';
-  const openTime  = document.getElementById('set-open-time').value  || '12:00';
-  ss(SK.settings, { ...getSettings(), waNumber: wa, closeTime, openTime });
+  const sarapanCloseTime = document.getElementById('set-close-sarapan').value || '05:00';
+  const siangCloseTime   = document.getElementById('set-close-siang').value   || '08:00';
+  const openTime         = document.getElementById('set-open-time').value    || '12:00';
+  const cur = getSettings();
+  delete cur.closeTime; // bersihkan field lama
+  ss(SK.settings, { ...cur, waNumber: wa, sarapanCloseTime, siangCloseTime, openTime });
   toast('✅ Pengaturan disimpan!');
+  updateOrderBadge();
 }
 function loadSettings() {
   const s = getSettings();
   const el = document.getElementById('set-wa');
   if (el) el.value = s.waNumber || WA_DEFAULT;
-  const ec = document.getElementById('set-close-time');
-  if (ec) ec.value = s.closeTime || '07:00';
+  const ecs = document.getElementById('set-close-sarapan');
+  if (ecs) ecs.value = s.sarapanCloseTime || s.closeTime || '05:00';
+  const ecl = document.getElementById('set-close-siang');
+  if (ecl) ecl.value = s.siangCloseTime || '08:00';
   const eo = document.getElementById('set-open-time');
   if (eo) eo.value = s.openTime || '12:00';
+}
+function updateOrderBadge() {
+  const s = getSettings();
+  const sc = s.sarapanCloseTime || s.closeTime || '05:00';
+  const lc = s.siangCloseTime || '08:00';
+  const badge = document.getElementById('order-cutoff-badge');
+  if (badge) badge.textContent = `⏰ Sarapan s/d ${sc} • Siang s/d ${lc}`;
 }
 
 // ═══════════════════════════════════════════
@@ -1632,39 +1662,47 @@ function getMenuForDate(dateStr) {
 //  RENDER CUSTOMER MENU
 // ═══════════════════════════════════════════
 function renderMenu() {
-  const { isOpen, oH, oM } = getOrderWindow();
+  updateOrderBadge();
+  const { isOpen, oH, oM, sarapanAvailable } = getOrderWindow();
   if (!isOpen) {
-    document.getElementById('mscroll').innerHTML = `<div class="emp" style="padding:50px 20px;"><div class="ee">🔴</div><p style="font-weight:800;color:var(--tx);font-size:15px;margin-bottom:8px;">Pesanan Sedang Tutup</p><p style="font-size:12px;color:var(--mu);">Pemesanan dibuka kembali pukul<br><strong>${String(oH).padStart(2,'0')}:${String(oM).padStart(2,'0')} WIB</strong> siang ini.</p></div>`;
+    document.getElementById('mscroll').innerHTML = `<div class="emp" style="padding:50px 20px;"><div class="ee">🔴</div><p style="font-weight:800;color:var(--tx);font-size:15px;margin-bottom:8px;">Pesanan Sedang Tutup</p><p style="font-size:12px;color:var(--mu);">Pemesanan dibuka kembali pukul<br><strong>${String(oH).padStart(2,'0')}:${String(oM).padStart(2,'0')} WIB</strong>.</p></div>`;
     return;
   }
   const MENU = getMenuForDate(currentOrderDate), ph = getPh();
-  const G = [
-    { lbl:'🍱', title:'Sarapan', pill:'Pagi',  items: MENU.filter(m => m.sec === 'sarapan') },
-    { lbl:'🍛', title:'Makan Siang', pill:'Siang', subs:[
+  const sarapanItems = MENU.filter(m => m.sec === 'sarapan');
+  const G = [];
+  // Sarapan: cuma tampil kalau masih dalam jam pesan DAN admin sudah isi menunya
+  if (sarapanAvailable && sarapanItems.length) {
+    G.push({ lbl:'🍱', title:'Sarapan', pill:'Pagi', items: sarapanItems });
+  }
+  G.push({ lbl:'🍛', title:'Makan Siang', pill:'Siang', subs:[
       {key:'nasi',   lbl:'🍚 Nasi Putih'},
       {key:'lauk',   lbl:'🍗 Lauk'},
       {key:'sayur',  lbl:'🥦 Sayur / Pelengkap'},
       {key:'goreng', lbl:'🥟 Gorengan'},
       {key:'sambal', lbl:'🌶️ Sambal (gratis — pilih satu / lebih)'},
-    ]},
-  ];
-  let h = '';
-  G.forEach((g, gi) => {
-    if (gi > 0) h += '<div class="sdiv"></div>';
-    h += `<div class="strow"><span>${g.lbl}</span><h3>${escHTML(g.title)}</h3><span class="spill">${g.pill}</span></div>`;
+    ]});
+  const blocks = [];
+  G.forEach(g => {
+    let gh = `<div class="strow"><span>${g.lbl}</span><h3>${escHTML(g.title)}</h3><span class="spill">${g.pill}</span></div>`;
     if (g.items) {
-      g.items.forEach(m => { h += mcard(m, ph); });
+      g.items.forEach(m => { gh += mcard(m, ph); });
     } else {
+      let any = false;
       g.subs.forEach(s => {
         const subItems = MENU.filter(m => m.sec === 'siang' && m.sub === s.key);
         if (!subItems.length) return;
-        h += `<div class="sublbl"><span>${s.lbl}</span></div>`;
+        any = true;
+        gh += `<div class="sublbl"><span>${s.lbl}</span></div>`;
         subItems.forEach(m => {
-          h += s.key === 'sambal' ? sambalCard(m) : mcard(m, ph);
+          gh += s.key === 'sambal' ? sambalCard(m) : mcard(m, ph);
         });
       });
+      if (!any) return; // skip blok Makan Siang kalau kosong sama sekali
     }
+    blocks.push(gh);
   });
+  let h = blocks.join('<div class="sdiv"></div>');
   if (!h.includes('mcard'))
     h = `<div class="emp" style="padding:40px 20px;"><div class="ee">🍽️</div><p style="font-weight:700;color:var(--tx);margin-bottom:6px;">Menu Belum Tersedia</p><p style="font-size:12px;color:var(--mu);">Menu untuk <strong>${fmtDateLabel(currentOrderDate)}</strong><br>belum diupdate oleh admin.<br>Coba pilih tanggal lain atau<br>hubungi kami via WhatsApp.</p></div>`;
   document.getElementById('mscroll').innerHTML = h;
@@ -3198,13 +3236,23 @@ function renderMenuPreview() {
 function startClock() {
   let lastState = null;
   function tick() {
-    const { isOpen, state, cH, cM, oH, oM } = getOrderWindow();
+    const { isOpen, state, scH, scM, lcH, lcM, oH, oM } = getOrderWindow();
     // Auto-refresh UI when window state changes
     if (lastState !== null && lastState !== state) { initDatePicker(); renderMenu(); }
     lastState = state;
     const now = new Date(), target = new Date();
-    if (isOpen) { target.setHours(cH, cM, 0, 0); if (target <= now) target.setDate(target.getDate() + 1); }
-    else        { target.setHours(oH, oM, 0, 0); if (target <= now) target.setDate(target.getDate() + 1); }
+    let dispH, dispM, prefix;
+    if (state === 'early') {           // sebelum jam tutup sarapan
+      dispH = scH; dispM = scM; prefix = '🍱 Sarapan tutup';
+    } else if (state === 'siangOnly') { // sarapan sudah tutup, makan siang masih buka
+      dispH = lcH; dispM = lcM; prefix = '🍽️ Pesanan tutup';
+    } else if (state === 'closed') {    // tutup total, menunggu jam buka
+      dispH = oH; dispM = oM; prefix = '🌙 Buka lagi';
+    } else {                            // 'open' — sudah terima order untuk besok
+      dispH = scH; dispM = scM; prefix = '🍱 Sarapan tutup';
+    }
+    target.setHours(dispH, dispM, 0, 0);
+    if (target <= now) target.setDate(target.getDate() + 1);
     const diff = Math.max(0, Math.floor((target - now) / 1000));
     const hh = String(Math.floor(diff/3600)).padStart(2,'0');
     const mm = String(Math.floor((diff%3600)/60)).padStart(2,'0');
@@ -3212,15 +3260,9 @@ function startClock() {
     const lbl  = document.querySelector('.clklbl');
     const clkt = document.getElementById('clkt');
     const clkc = document.getElementById('clkc');
-    if (isOpen) {
-      if (lbl)  lbl.textContent  = '🟢 Pesanan BUKA';
-      if (clkt) clkt.textContent = `${String(cH).padStart(2,'0')}:${String(cM).padStart(2,'0')}`;
-      if (clkc) clkc.textContent = `Tutup: ${hh}:${mm}:${ss}`;
-    } else {
-      if (lbl)  lbl.textContent  = '🔴 Pesanan TUTUP';
-      if (clkt) clkt.textContent = `${String(oH).padStart(2,'0')}:${String(oM).padStart(2,'0')}`;
-      if (clkc) clkc.textContent = `Buka: ${hh}:${mm}:${ss}`;
-    }
+    if (lbl)  lbl.textContent  = isOpen ? '🟢 Pesanan BUKA' : '🔴 Pesanan TUTUP';
+    if (clkt) clkt.textContent = `${String(dispH).padStart(2,'0')}:${String(dispM).padStart(2,'0')}`;
+    if (clkc) clkc.textContent = `${prefix}: ${hh}:${mm}:${ss}`;
   }
   tick(); setInterval(tick, 1000);
 }
