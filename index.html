@@ -4,6 +4,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <title>Beti Nur Catering · by Homader — Catering Harian Serpong</title>
+<!-- PWA -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0f1f3d">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Beti Nur">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 <meta name="description" content="Pesan catering harian enak & terjangkau di Serpong. Menu sarapan & makan siang, antar ke rumah. Pesan sekarang di homaderfood.com!">
 <meta name="keywords" content="catering harian serpong, catering murah serpong, pesan makan siang, catering tangerang, beti nur catering, homader">
 <meta name="robots" content="index, follow">
@@ -420,6 +428,125 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--cr);color:var(-
 @keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
 @keyframes slideUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
 @keyframes popIn{from{transform:scale(.45);opacity:0}to{transform:scale(1);opacity:1}}
+/* ── PROMO BANNER CAROUSEL ─────────────────── */
+.banner-carousel{position:relative;overflow:hidden;background:var(--n);margin:0;}
+.banner-slides{display:flex;transition:transform .4s ease;will-change:transform;}
+.banner-slide{min-width:100%;position:relative;overflow:hidden;}
+.banner-slide img{width:100%;height:160px;object-fit:cover;display:block;opacity:.85;}
+.banner-slide-overlay{position:absolute;inset:0;background:linear-gradient(180deg,transparent 30%,rgba(15,31,61,.7));display:flex;flex-direction:column;justify-content:flex-end;padding:12px 14px;}
+.banner-slide-title{color:white;font-weight:800;font-size:14px;line-height:1.3;text-shadow:0 1px 4px rgba(0,0,0,.5);}
+.banner-slide-desc{color:rgba(255,255,255,.8);font-size:11px;margin-top:2px;text-shadow:0 1px 3px rgba(0,0,0,.4);}
+.banner-slide-emoji{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:56px;background:linear-gradient(135deg,var(--n),var(--n2));}
+.banner-dots{position:absolute;bottom:7px;right:10px;display:flex;gap:5px;}
+.banner-dot{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.4);transition:all .2s;}
+.banner-dot.active{background:var(--g);width:18px;border-radius:3px;}
+/* ── MENU DETAIL VIEW ─────────────────────── */
+#mdv{background:var(--cr);}
+.mdv-img{width:100%;height:220px;object-fit:cover;background:linear-gradient(135deg,var(--gp),#edddb5);display:flex;align-items:center;justify-content:center;font-size:72px;position:relative;overflow:hidden;}
+.mdv-img img{width:100%;height:100%;object-fit:cover;position:absolute;inset:0;}
+.mdv-body{padding:16px 15px 100px;}
+.mdv-name{font-family:'Playfair Display',serif;font-size:22px;font-weight:800;color:var(--n);margin-bottom:4px;}
+.mdv-price{font-size:18px;font-weight:800;color:var(--g);margin-bottom:10px;}
+.mdv-price span{font-size:11px;color:var(--mu);font-weight:600;}
+.mdv-desc{font-size:13px;color:var(--mu);line-height:1.7;margin-bottom:16px;padding:12px 14px;background:white;border-radius:12px;border:1px solid var(--bd);}
+.mdv-cat{display:inline-block;background:rgba(201,168,76,.15);color:#6b4c00;font-size:10px;font-weight:800;padding:4px 10px;border-radius:20px;letter-spacing:.5px;text-transform:uppercase;margin-bottom:14px;}
+.mdv-qctrl{display:flex;align-items:center;gap:12px;margin-bottom:14px;}
+.mdv-qbtn{width:38px;height:38px;border-radius:10px;border:none;font-size:20px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.mdv-qnum{font-size:20px;font-weight:800;min-width:32px;text-align:center;color:var(--n);}
+.mdv-add{width:100%;padding:15px;background:linear-gradient(135deg,var(--g),var(--gl));border:none;border-radius:13px;color:var(--n);font-weight:800;font-size:15px;cursor:pointer;font-family:inherit;box-shadow:0 4px 18px rgba(201,168,76,.38);}
+.mdv-add:disabled{background:#ccc;box-shadow:none;cursor:not-allowed;}
+.mcard-clickable{cursor:pointer;}
+.mcard-clickable:active{opacity:.85;}
+/* ── CHAMPION (REFERRAL) SYSTEM ───────────── */
+#chv{background:var(--cr);}
+.ch-hdr{background:linear-gradient(135deg,var(--n),var(--n2));padding:18px 15px 22px;position:relative;overflow:hidden;}
+.ch-hdr::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 85% 20%,rgba(201,168,76,.22),transparent 55%);pointer-events:none;}
+.ch-hdr-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+.ch-hdr-name{color:white;font-family:'Playfair Display',serif;font-size:17px;}
+.ch-hdr-ref{background:rgba(201,168,76,.15);border:1px solid rgba(201,168,76,.35);border-radius:8px;padding:4px 10px;color:var(--g);font-size:10px;font-weight:800;letter-spacing:.5px;}
+.ch-stat-row{display:grid;grid-template-columns:1fr 1fr;gap:9px;}
+.ch-stat{background:rgba(255,255,255,.08);border:1px solid rgba(201,168,76,.2);border-radius:12px;padding:12px;}
+.ch-stat-val{font-size:20px;font-weight:800;color:var(--g);}
+.ch-stat-lbl{font-size:10px;color:rgba(255,255,255,.5);margin-top:2px;}
+.ch-body{flex:1;overflow-y:auto;padding:13px;padding-bottom:30px;}
+.ch-card{background:white;border:1px solid var(--bd);border-radius:13px;padding:13px;margin-bottom:11px;box-shadow:var(--sh);}
+.ch-card-title{font-weight:800;font-size:13px;color:var(--n);margin-bottom:11px;display:flex;align-items:center;justify-content:space-between;}
+.ch-komisi-row{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--bd);}
+.ch-komisi-row:last-child{border-bottom:none;}
+.ch-komisi-lbl{font-size:12px;color:var(--tx);}
+.ch-komisi-val{font-size:13px;font-weight:800;color:var(--n);}
+.ch-komisi-val.pending{color:#c2410c;}
+.ch-komisi-val.available{color:#166534;}
+.ch-week-chart{display:flex;align-items:flex-end;gap:6px;height:80px;padding:4px 0;}
+.ch-week-bar-wrap{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;}
+.ch-week-bar{background:var(--g);border-radius:4px 4px 0 0;width:100%;min-height:3px;transition:height .3s;}
+.ch-week-lbl{font-size:9px;color:var(--mu);font-weight:700;}
+.ch-cust-row{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--bd);}
+.ch-cust-row:last-child{border-bottom:none;}
+.ch-cust-avatar{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--n),var(--n2));color:var(--g);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;flex-shrink:0;}
+.ch-cust-name{font-size:13px;font-weight:700;color:var(--n);}
+.ch-cust-meta{font-size:10px;color:var(--mu);margin-top:1px;}
+.ch-wd-btn{width:100%;padding:13px;background:linear-gradient(135deg,var(--g),var(--gl));border:none;border-radius:12px;color:var(--n);font-weight:800;font-size:14px;cursor:pointer;font-family:inherit;margin-top:4px;box-shadow:0 4px 16px rgba(201,168,76,.3);}
+.ch-wd-btn.disabled{background:#e0e0e0;color:#999;box-shadow:none;cursor:not-allowed;}
+.ch-wd-note{font-size:10px;color:var(--mu);text-align:center;margin-top:6px;line-height:1.5;}
+/* ── CHAMPION LOGIN ───────────────────────── */
+#chlv{background:linear-gradient(160deg,var(--n),var(--n2) 55%,#0b2218);min-height:100vh;display:none;flex-direction:column;align-items:center;justify-content:center;padding:28px 20px;}
+#chlv.active{display:flex;}
+.chlcard{background:rgba(255,255,255,.055);border:1px solid rgba(201,168,76,.3);border-radius:22px;padding:30px 24px 26px;width:100%;max-width:390px;backdrop-filter:blur(14px);animation:fadeUp .55s ease;}
+.chlcard h2{font-family:'Playfair Display',serif;color:white;font-size:20px;text-align:center;margin-bottom:4px;}
+.chlcard p{color:rgba(255,255,255,.4);font-size:11px;text-align:center;margin-bottom:20px;}
+/* ── ADMIN CHAMPION MANAGEMENT ────────────── */
+.champ-card{background:white;border:1px solid var(--bd);border-radius:13px;padding:13px;margin-bottom:11px;box-shadow:var(--sh);}
+.champ-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--bd);}
+.champ-row:last-child{border-bottom:none;}
+.champ-avatar{width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,var(--g),var(--gl));color:var(--n);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px;flex-shrink:0;}
+.champ-info{flex:1;}
+.champ-name{font-size:13px;font-weight:700;color:var(--n);}
+.champ-meta{font-size:10px;color:var(--mu);margin-top:1px;}
+.champ-badge{display:inline-block;font-size:9px;font-weight:800;padding:2px 7px;border-radius:20px;text-transform:uppercase;letter-spacing:.5px;}
+.champ-badge.active{background:#dcfce7;color:#166534;border:1px solid #bbf7d0;}
+.champ-badge.inactive{background:#fee2e2;color:#dc2626;border:1px solid #fecaca;}
+.champ-actions{display:flex;gap:6px;flex-shrink:0;}
+.btn-champ-edit{background:#f0f2f8;border:none;border-radius:7px;padding:5px 9px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;color:var(--n);}
+.btn-champ-toggle{border:none;border-radius:7px;padding:5px 9px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;}
+.btn-champ-toggle.active{background:#fee2e2;color:#dc2626;}
+.btn-champ-toggle.inactive{background:#dcfce7;color:#166534;}
+.wd-req-row{background:white;border:1px solid var(--bd);border-radius:11px;padding:11px 13px;margin-bottom:8px;box-shadow:var(--sh);}
+.wd-req-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;}
+.wd-req-name{font-size:13px;font-weight:700;color:var(--n);}
+.wd-req-amt{font-size:13px;font-weight:800;color:var(--g);}
+.wd-req-meta{font-size:10px;color:var(--mu);margin-bottom:7px;}
+.wd-req-btns{display:flex;gap:6px;}
+.btn-wd-approve{flex:1;padding:7px;background:linear-gradient(135deg,var(--g),var(--gl));border:none;border-radius:8px;color:var(--n);font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;}
+.btn-wd-complete{flex:1;padding:7px;background:#dcfce7;border:1px solid #bbf7d0;border-radius:8px;color:#166534;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;}
+.btn-wd-reject{padding:7px 11px;background:#fee2e2;border:1px solid #fecaca;border-radius:8px;color:#dc2626;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;}
+.champ-rank-row{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--bd);}
+.champ-rank-row:last-child{border-bottom:none;}
+.champ-rank-num{width:26px;height:26px;border-radius:50%;background:var(--n);color:var(--g);font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+/* ── CLICKABLE STAT BOXES ─────────────────── */
+.sbox{cursor:pointer;transition:transform .15s,box-shadow .15s;}
+.sbox:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(15,31,61,.14);}
+.sbox:active{transform:scale(.97);}
+/* ── ANALYTICS CLICKABLE ──────────────────── */
+.rev-bar-wrap{cursor:pointer;border-radius:6px;padding:2px;transition:background .15s;}
+.rev-bar-wrap:hover{background:rgba(201,168,76,.1);}
+.bs-row{cursor:pointer;border-radius:8px;padding:3px 4px;transition:background .15s;}
+.bs-row:hover{background:rgba(201,168,76,.08);}
+.stat4-item{cursor:pointer;transition:transform .15s;}
+.stat4-item:hover{transform:translateY(-1px);}
+/* ── DETAIL MODAL ─────────────────────────── */
+.detail-modal{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:9100;display:none;align-items:flex-end;backdrop-filter:blur(4px);}
+.detail-modal.open{display:flex;}
+.detail-modal-box{background:var(--cr);border-radius:20px 20px 0 0;width:100%;max-height:80vh;overflow-y:auto;padding:20px 16px 32px;animation:slideUp .3s ease;}
+.dm-title{font-family:'Playfair Display',serif;font-size:17px;color:var(--n);margin-bottom:4px;}
+.dm-sub{font-size:11px;color:var(--mu);margin-bottom:14px;}
+.dm-handle{width:40px;height:4px;background:var(--bd);border-radius:2px;margin:0 auto 16px;}
+.dm-close{float:right;background:none;border:none;font-size:22px;cursor:pointer;color:var(--mu);line-height:1;margin-top:-4px;}
+.dm-order-item{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--bd);font-size:12px;}
+.dm-order-item:last-child{border-bottom:none;}
+.dm-order-name{color:var(--n);font-weight:600;}
+.dm-order-val{color:var(--mu);}
+.dm-total{display:flex;justify-content:space-between;font-size:14px;font-weight:800;color:var(--n);border-top:2px solid var(--n);padding-top:10px;margin-top:6px;}
 /* DRIVER VIEW */
 .drv-card{background:white;border:1px solid var(--bd);border-radius:14px;padding:14px;margin-bottom:11px;box-shadow:var(--sh);}
 .drv-num{width:26px;height:26px;background:var(--n);color:var(--g);border-radius:50%;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
@@ -513,6 +640,58 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--cr);color:var(-
   .plbl-notes{font-size:9pt;font-family:monospace;color:#555;margin-top:.8mm;}
   .plbl-total{display:flex;justify-content:space-between;font-size:9pt;font-weight:900;font-family:monospace;color:#000;border-top:1px solid #000;padding-top:.8mm;margin-top:.8mm;}
   .plbl-footer{font-size:9pt;font-family:monospace;color:#666;text-align:center;margin-top:.8mm;padding-top:.8mm;border-top:1px dashed #aaa;line-height:1.3;}
+}
+
+/* ════════════════════════════════════════════════════════════
+   DESKTOP RESPONSIVE — admin melebar (sidebar + multi-kolom),
+   tampilan pelanggan tetap lebar HP & di tengah.
+   ════════════════════════════════════════════════════════════ */
+@media (min-width: 900px) {
+  body { max-width: none; }
+
+  /* Semua view non-admin tetap selebar HP, di tengah layar */
+  #lv, #mv, #mdv, #cv, #sv, #hv, #chlv, #chv, #pv, #drv {
+    max-width: 480px; margin-left: auto; margin-right: auto; width: 100%;
+  }
+
+  /* ADMIN: header penuh di atas, sidebar nav kiri, konten kanan */
+  #av.active {
+    display: grid;
+    grid-template-columns: 232px minmax(0, 1fr);
+    grid-template-rows: auto 1fr;
+    grid-template-areas: "hdr hdr" "nav body";
+    max-width: 1240px; margin: 0 auto; width: 100%;
+  }
+  #av .ahdr  { grid-area: hdr; padding: 14px 22px; }
+  #av .abody { grid-area: body; padding: 22px 26px 70px; }
+
+  /* Tab bar jadi sidebar vertikal */
+  #av .atabs {
+    grid-area: nav; flex-direction: column; overflow-x: visible;
+    border-bottom: none; border-right: 2px solid var(--bd);
+    position: sticky; top: 0; align-self: start;
+    height: 100vh; padding: 10px 0; gap: 2px;
+  }
+  #av .atabs .atab {
+    flex: none; text-align: left; padding: 12px 18px; font-size: 12px;
+    border-bottom: none; border-left: 3px solid transparent; border-radius: 0;
+  }
+  #av .atabs .atab.active {
+    border-bottom: none; border-left-color: var(--g); background: var(--gp);
+  }
+  #av .atabs .atab:hover { background: rgba(201,168,76,.08); }
+
+  /* Dashboard pakai kolom (masonry) — stat full-width, kartu lain berdampingan */
+  #av #td { columns: 2; column-gap: 16px; }
+  #av #td > * { break-inside: avoid; }
+  #av #td > .sgrid { column-span: all; grid-template-columns: repeat(5, 1fr); }
+  #av #td > .clkcard { column-span: all; }
+
+  /* Daftar pesanan & dapur 2 kolom */
+  #av #order-list, #av #dapur-list { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; align-items: start; }
+
+  /* Analitik, Staff, Export, Invoice: batasi lebar konten biar enak dibaca */
+  #av #tan > *, #av #tst > *, #av #tex > *, #av #tinv > * { max-width: 760px; }
 }
 </style>
 </head>
@@ -613,8 +792,13 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--cr);color:var(-
     </div>
     <div style="display:flex;gap:6px;">
       <button class="btn-myord" onclick="showMyOrders()" title="Pesanan Saya">📦</button>
-      <button class="ibtn2" onclick="showView('lv')">🚪</button>
+      <button class="ibtn2" onclick="navBack()">🚪</button>
     </div>
+  </div>
+  <!-- PROMO BANNER CAROUSEL -->
+  <div class="banner-carousel" id="banner-carousel" style="display:none;">
+    <div class="banner-slides" id="banner-slides"></div>
+    <div class="banner-dots" id="banner-dots"></div>
   </div>
   <div class="dbanner">
     <div><h3 id="mdtitle">—</h3><p>Pilih menu &amp; tanggal pesanan</p></div>
@@ -637,10 +821,99 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--cr);color:var(-
   </div>
 </div>
 
+<!-- ═══ MENU DETAIL ═══ -->
+<div id="mdv" class="view">
+  <div class="subhdr">
+    <button class="backbtn" onclick="navBack()">&#8249;</button>
+    <h2 id="mdv-title">Detail Menu</h2>
+    <span></span>
+  </div>
+  <div style="flex:1;overflow-y:auto;padding-bottom:100px;">
+    <div class="mdv-img" id="mdv-img"><span id="mdv-emoji">🍱</span></div>
+    <div class="mdv-body">
+      <div class="mdv-cat" id="mdv-cat">Sarapan</div>
+      <div class="mdv-name" id="mdv-name">—</div>
+      <div class="mdv-price">Rp <span id="mdv-price">0</span></div>
+      <div class="mdv-desc" id="mdv-desc" style="display:none;"></div>
+      <div style="font-size:11px;font-weight:800;color:var(--mu);text-transform:uppercase;letter-spacing:.5px;margin-bottom:9px;">Jumlah</div>
+      <div class="mdv-qctrl">
+        <button class="mdv-qbtn" style="background:#eaecf2;color:var(--n);" onclick="mdvChg(-1)">&#8722;</button>
+        <span class="mdv-qnum" id="mdv-qnum">0</span>
+        <button class="mdv-qbtn" style="background:var(--n);color:white;" onclick="mdvChg(1)">+</button>
+      </div>
+      <button class="mdv-add" id="mdv-add-btn" onclick="mdvConfirm()">Tambah ke Pesanan</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ CHAMPION LOGIN ═══ -->
+<div id="chlv" class="view">
+  <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;padding:28px 20px;">
+    <div class="chlcard">
+      <div style="text-align:center;margin-bottom:16px;">
+        <div style="font-size:40px;margin-bottom:8px;">🏆</div>
+        <h2 style="font-family:'Playfair Display',serif;color:white;font-size:20px;margin-bottom:4px;">Champion Portal</h2>
+        <p style="color:rgba(255,255,255,.4);font-size:11px;margin-bottom:20px;">Login untuk lihat dashboard kamu</p>
+      </div>
+      <div class="lf"><label>EMAIL</label><input type="email" id="chl-email" placeholder="email@kamu.com" autocomplete="email"></div>
+      <div class="lf"><label>PASSWORD</label><input type="password" id="chl-pass" placeholder="Password kamu..."></div>
+      <button class="btn-login" onclick="champLogin()" style="margin-top:5px;">Masuk →</button>
+      <p class="lerr" id="chl-err" style="display:none;">Email atau password salah!</p>
+      <button onclick="showView('lv')" style="width:100%;padding:10px;margin-top:10px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);border-radius:10px;color:rgba(255,255,255,.5);font-size:12px;cursor:pointer;font-family:inherit;">← Kembali ke Halaman Utama</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ CHAMPION DASHBOARD ═══ -->
+<div id="chv" class="view">
+  <div class="ch-hdr">
+    <div class="ch-hdr-top">
+      <div>
+        <div style="color:rgba(255,255,255,.5);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px;">Champion Dashboard</div>
+        <div class="ch-hdr-name" id="ch-name">—</div>
+      </div>
+      <div style="display:flex;gap:6px;align-items:center;">
+        <div class="ch-hdr-ref" id="ch-ref-badge">ref: —</div>
+        <button onclick="champLogout()" style="background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);border-radius:7px;padding:5px 11px;color:rgba(255,255,255,.7);font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;">Keluar</button>
+      </div>
+    </div>
+    <div class="ch-stat-row">
+      <div class="ch-stat"><div class="ch-stat-val" id="ch-stat-orders">0</div><div class="ch-stat-lbl">Total Order</div></div>
+      <div class="ch-stat"><div class="ch-stat-val" id="ch-stat-customers">0</div><div class="ch-stat-lbl">Customers</div></div>
+      <div class="ch-stat"><div class="ch-stat-val" id="ch-stat-available">Rp 0</div><div class="ch-stat-lbl">Komisi Bisa Cair</div></div>
+      <div class="ch-stat"><div class="ch-stat-val" id="ch-stat-pending">Rp 0</div><div class="ch-stat-lbl">Komisi Pending</div></div>
+    </div>
+  </div>
+  <div class="ch-body">
+    <div class="ch-card">
+      <div class="ch-card-title">💰 Komisi Saya</div>
+      <div class="ch-komisi-row"><span class="ch-komisi-lbl">✅ Tersedia (bisa dicairkan)</span><span class="ch-komisi-val available" id="ch-avail">Rp 0</span></div>
+      <div class="ch-komisi-row"><span class="ch-komisi-lbl">⏳ Pending (belum dibayar pelanggan)</span><span class="ch-komisi-val pending" id="ch-pend">Rp 0</span></div>
+      <div class="ch-komisi-row" style="border-bottom:none;"><span class="ch-komisi-lbl" style="font-weight:800;color:var(--n);">Total Komisi</span><span class="ch-komisi-val" id="ch-total-komisi">Rp 0</span></div>
+    </div>
+    <div class="ch-card">
+      <div class="ch-card-title">📈 Order Mingguan</div>
+      <div class="ch-week-chart" id="ch-week-chart"></div>
+    </div>
+    <div class="ch-card">
+      <div class="ch-card-title">👥 Pelanggan Kamu <span style="color:var(--mu);font-size:11px;font-weight:600;" id="ch-cust-count">(0)</span></div>
+      <div id="ch-cust-list"><div style="color:var(--mu);font-size:12px;">Belum ada pelanggan.</div></div>
+    </div>
+    <div class="ch-card">
+      <div class="ch-card-title">💸 Cairkan Komisi</div>
+      <div id="ch-wd-info" style="font-size:12px;color:var(--mu);margin-bottom:11px;"></div>
+      <div id="ch-wd-history"></div>
+      <button class="ch-wd-btn" id="ch-wd-btn" onclick="champRequestWithdraw()">💸 Request Pencairan</button>
+      <button class="ch-wd-btn" id="ch-menu-btn" onclick="champRequestMenu()" style="margin-top:8px;background:linear-gradient(135deg,var(--n),var(--n2));color:white;box-shadow:0 4px 16px rgba(15,31,61,.3);">🍱 Tukar dengan Menu</button>
+      <p class="ch-wd-note" id="ch-wd-note">Min. pencairan Rp 50.000. Di bawah itu bisa ditukar menu.</p>
+    </div>
+  </div>
+</div>
+
 <!-- ═══ CART ═══ -->
 <div id="cv" class="view">
   <div class="subhdr">
-    <button class="backbtn" onclick="showView('mv')">&#8249;</button>
+    <button class="backbtn" onclick="navBack()">&#8249;</button>
     <h2>Pesanan Kamu</h2>
     <span id="cart-date-label"></span>
   </div>
@@ -681,10 +954,9 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--cr);color:var(-
     <div class="rtot"><span>Total</span><span id="stotok">Rp 0</span></div>
   </div>
   <!-- Peringatan jika sync Firestore gagal (tersembunyi by default) -->
-  <div id="sync-warn" style="display:none;background:#fff3cd;border:1px solid #ffc107;border-radius:10px;padding:10px 14px;margin:10px 0;font-size:12px;color:#856404;text-align:left;">
+  <div id="sync-warn" style="display:none;background:#fff3cd;border:1px solid #ffc107;border-radius:10px;padding:10px 14px;margin:10px 0;font-size:12px;color:#856404;text-align:left;max-width:340px;">
     ⚠️ <strong>Pesanan tersimpan, tapi gagal terkirim ke server.</strong><br>
-    Hubungi pemilik lewat WhatsApp di bawah untuk konfirmasi manual, atau coba pesan lagi.<br>
-    <small style="color:#a07000;">Kemungkinan penyebab: koneksi internet lemah atau server sedang gangguan.</small>
+    Hubungi pemilik lewat WhatsApp di bawah untuk konfirmasi manual, atau coba pesan lagi.
   </div>
   <!-- WA CONFIRMATION BUTTON -->
   <a class="btn-wa" id="wa-link" href="#" target="_blank" rel="noopener noreferrer">
@@ -698,7 +970,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--cr);color:var(-
 <!-- ═══ PESANAN SAYA ═══ -->
 <div id="hv" class="view">
   <div class="subhdr">
-    <button class="backbtn" onclick="showView('mv')">&#8249;</button>
+    <button class="backbtn" onclick="navBack()">&#8249;</button>
     <h2>Pesanan Saya</h2>
     <span></span>
   </div>
@@ -729,17 +1001,18 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--cr);color:var(-
     <button class="atab" onclick="stab(this,'tex')" data-role="super">📤 Export</button>
     <button class="atab" onclick="stab(this,'tinv')" data-role="super">🧾 Invoice</button>
     <button class="atab" onclick="stab(this,'tst')" data-role="super">👤 Staff</button>
+    <button class="atab" onclick="stab(this,'tchamp')" data-role="super">🏆 Champion</button>
   </div>
   <div class="abody">
 
     <!-- DASHBOARD -->
     <div class="apanel active" id="td">
       <div class="sgrid">
-        <div class="sbox gold"><div class="sval" id="stat-ord">0</div><div class="slbl">Pesanan Hari Ini</div></div>
-        <div class="sbox gold"><div class="sval" id="stat-rev">0</div><div class="slbl">Pendapatan (Rp)</div></div>
-        <div class="sbox"><div class="sval" id="stat-new">0</div><div class="slbl">Baru Masuk</div></div>
-        <div class="sbox"><div class="sval" id="stat-dikirim">0</div><div class="slbl">Dikirim</div></div>
-        <div class="sbox"><div class="sval" id="stat-done">0</div><div class="slbl">Selesai</div></div>
+        <div class="sbox gold" onclick="showStatDetail('orders-today')" title="Tap untuk detail"><div class="sval" id="stat-ord">0</div><div class="slbl">Pesanan Hari Ini</div></div>
+        <div class="sbox gold" onclick="showStatDetail('revenue-today')" title="Tap untuk detail"><div class="sval" id="stat-rev">0</div><div class="slbl">Pendapatan (Rp)</div></div>
+        <div class="sbox" onclick="showStatDetail('orders-new')" title="Tap untuk detail"><div class="sval" id="stat-new">0</div><div class="slbl">Baru Masuk</div></div>
+        <div class="sbox" onclick="showStatDetail('orders-dikirim')" title="Tap untuk detail"><div class="sval" id="stat-dikirim">0</div><div class="slbl">Dikirim</div></div>
+        <div class="sbox" onclick="showStatDetail('orders-done')" title="Tap untuk detail"><div class="sval" id="stat-done">0</div><div class="slbl">Selesai</div></div>
       </div>
       <div class="clkcard">
         <div><div class="clklbl">⏰ Batas Pesanan</div><div class="clkt" id="clkt">--:--</div><div class="clkc" id="clkc">Menghitung...</div></div>
@@ -813,15 +1086,15 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--cr);color:var(-
     <!-- ANALITIK -->
     <div class="apanel" id="tan">
       <div class="ac">
-        <div class="act">💰 Pendapatan 7 Hari Terakhir</div>
+        <div class="act">💰 Pendapatan 7 Hari Terakhir <span style="font-size:9px;color:var(--mu);font-weight:500;">• tap hari untuk detail</span></div>
         <div class="rev-chart"><div class="rev-bars" id="rev-chart"></div></div>
       </div>
       <div class="ac">
-        <div class="act">🏆 Bestseller All-Time</div>
+        <div class="act">🏆 Bestseller All-Time <span style="font-size:9px;color:var(--mu);font-weight:500;">• tap untuk detail</span></div>
         <div class="bschart" id="bs-chart"></div>
       </div>
       <div class="ac">
-        <div class="act">📊 Statistik Keseluruhan</div>
+        <div class="act">📊 Statistik Keseluruhan <span style="font-size:9px;color:var(--mu);font-weight:500;">• tap untuk detail</span></div>
         <div class="stat4" id="all-stats"></div>
       </div>
     </div>
@@ -948,6 +1221,67 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--cr);color:var(-
       </div>
     </div>
 
+    <!-- CHAMPION -->
+    <div class="apanel" id="tchamp">
+      <!-- Champion list -->
+      <div class="champ-card">
+        <div class="act">🏆 Daftar Champion</div>
+        <div id="champ-list"><div style="color:var(--mu);font-size:12px;">Belum ada champion.</div></div>
+        <button class="btn-add-i" onclick="openAddChamp()" style="margin-top:9px;">＋ Tambah Champion</button>
+      </div>
+      <!-- Add/Edit champion form -->
+      <div class="staff-form" id="champ-form" style="display:none;">
+        <div class="staff-form-title" id="champ-form-title">＋ Tambah Champion</div>
+        <input type="hidden" id="champ-edit-id">
+        <div class="sff"><label>Nama Champion</label><input type="text" id="champ-fname" placeholder="Nama lengkap..."></div>
+        <div class="sff"><label>Email</label><input type="email" id="champ-femail" placeholder="email@champion.com"></div>
+        <div class="sff"><label>Password</label><input type="password" id="champ-fpass" placeholder="Password login champion..."></div>
+        <div class="sff"><label>Ref Code (tanpa spasi, huruf kecil)</label><input type="text" id="champ-fref" placeholder="misal: rina atau budi23"></div>
+        <div class="sff"><label>No. Rekening / GoPay (untuk cairkan komisi)</label><input type="text" id="champ-fbank" placeholder="BCA 1234567890 a/n Rina"></div>
+        <div class="staff-form-btns">
+          <button class="btn-sf-cancel" onclick="closeChampForm()">Batal</button>
+          <button class="btn-sf-save" onclick="saveChamp()">💾 Simpan</button>
+        </div>
+      </div>
+      <!-- Withdraw requests -->
+      <div class="champ-card" style="margin-top:0;">
+        <div class="act">💸 Request Pencairan <span class="nbadge" id="wd-badge" style="display:none;">0</span></div>
+        <div id="wd-req-list"><div style="color:var(--mu);font-size:12px;">Tidak ada request.</div></div>
+      </div>
+      <!-- Champion analytics -->
+      <div class="champ-card">
+        <div class="act">📊 Ranking Champion</div>
+        <div id="champ-ranking"><div style="color:var(--mu);font-size:12px;">Belum ada data.</div></div>
+      </div>
+      <!-- Banner management -->
+      <div class="champ-card">
+        <div class="act">🖼️ Promo Banner</div>
+        <div style="font-size:11px;color:var(--mu);margin-bottom:11px;">Banner ditampilkan di halaman menu customer sebagai carousel.</div>
+        <div id="banner-list"></div>
+        <button class="btn-add-i" onclick="openAddBanner()" style="margin-top:9px;">＋ Tambah Banner</button>
+      </div>
+      <!-- Add banner form -->
+      <div class="staff-form" id="banner-form" style="display:none;">
+        <div class="staff-form-title" id="banner-form-title">＋ Tambah Banner</div>
+        <input type="hidden" id="banner-edit-id">
+        <div class="sff"><label>Judul Promosi</label><input type="text" id="banner-ftitle" placeholder="Promo spesial hari ini!"></div>
+        <div class="sff"><label>Deskripsi (opsional)</label><input type="text" id="banner-fdesc" placeholder="Beli 3 gratis 1..."></div>
+        <div class="sff"><label>Emoji / Icon</label><input type="text" id="banner-femoji" placeholder="🎉" value="🎉"></div>
+        <div class="sff"><label>Warna Background</label>
+          <select id="banner-fbg">
+            <option value="navy">Navy (Default)</option>
+            <option value="gold">Gold</option>
+            <option value="green">Hijau</option>
+            <option value="red">Merah</option>
+          </select>
+        </div>
+        <div class="staff-form-btns">
+          <button class="btn-sf-cancel" onclick="closeBannerForm()">Batal</button>
+          <button class="btn-sf-save" onclick="saveBanner()">💾 Simpan</button>
+        </div>
+      </div>
+    </div>
+
     <!-- RUTE ANTAR -->
     <div class="apanel" id="trt">
       <div style="margin-bottom:12px;">
@@ -1028,13 +1362,24 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--cr);color:var(-
   </div>
 </div>
 
+<!-- ═══ DETAIL MODAL ═══ -->
+<div class="detail-modal" id="detail-modal" onclick="closeDetailModal(event)">
+  <div class="detail-modal-box" id="detail-modal-box">
+    <div class="dm-handle"></div>
+    <button class="dm-close" onclick="closeDetailModal()">&#215;</button>
+    <div class="dm-title" id="dm-title">Detail</div>
+    <div class="dm-sub" id="dm-sub"></div>
+    <div id="dm-body"></div>
+  </div>
+</div>
+
 <script>
 // ═══════════════════════════════════════════
 //  CONSTANTS & CONFIG
 // ═══════════════════════════════════════════
 const LOGO_SRC = 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAUDBAQEAwUEBAQFBQUGBwwIBwcHBw8LCwkMEQ8SEhEPERETFhwXExQaFRERGCEYGh0dHx8fExciJCIeJBweHx7/2wBDAQUFBQcGBw4ICA4eFBEUHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh7/wAARCAGQAZADASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwD5GXluKlUc801FxzUiLz1rqRwMMdO1ANNC8g09RzxUijJzgU/OMcU0gHFDinbTtpVwO31p/JHFUIQcKBj8acBzxSfUmnLgjmmAAdPantyuAMUBQfanEDOM80xjcZAHSpQAFwppCBnBwABTlIIzQCF2kd+acBke9AGcUoGA2KAHLjHFOXIGR0pgX5s5p44xzQAoXJzn0FOI4BzjFNAAGeRnNPBznp+VADcjHFSjgEZ4pACOadtAP8A9agAA4wenHWl4PUDIPrTQAD2pScDrQAuD1wTQMZ55pADz/jThx15oAC2euDThhfmPbvSAjt3prEY5FMBwO3PWlA4yO9IAMjHahguORzSAcVG4Y/OgbR1HFIpyozgYpTg5wMUAP64x2owMAHrShTtINAzgigAPB6gH6U4DIA4B9qQqSOtPXGR3AH40ACgZ6UmNwzmkOCAARzSjA74oAXb8v1pM9Dik3HcQF44we9Kp+Y44AFAABx1GfWlABXOOfrSMcg9AfSg5PyjAHuaBinAGc8YoByOAMU0FmfB6DvnrSjOMdz3oAdxj3obgcDrSKcqQe9OO3b82B60AKuD8pPvTsAt0GB7Go12bTkkZ6c0c7Rg/SgBwA3H2qQAjJOf5VGoGMH9KfznacEUAOwACOmPUUEAKSc/hSBirYIANOXIJP6CgBSp/hPNGAG29qQNk8nFHAI9aAHnCrjuKaBngGj7wHUUgX0BoAeMdMjOKeMEA4xTVXtnrTicHPbFMAGCenHtS8Z7UiqCMkfhTu3Sn0ABwRgZPWgZ9qRcjP8AjThj1/KqAUe2cUAnjIxTe3OaUDPFADyD0pRjFNGc1Iu3nNIB2Mng8U9SRj0pg3YwTimlgSQATSAk3Y3A0mQD9abgnk5/CkwenWgBTg0uSPbFNHJ65FLkEk45oAUEkZNGQRTQcdqUZ64oAeTyKaXPpSEqeCCKUAHHHFACgkEdRjvTlxnPH1pgIPJpx4OB+dAC9RgcCnj7uc8GmrgEj86XnPIz2oAkXHTOB0p4J75GKYMDr+VKQCSQcGgBSSemPrTl+7k4qMggdcj3pw3dcjFAC5ByN2BQDhhjjPWmg85/HFKhA3YAznvQA/wCXGQOvpTgQM56DuagGQecc1IoPXoO9MBxJGT9KkHfpzUYAOSefapMcEg5oAGOe3fjNKNwXJJzSHHOM9PSgbhxkD0zigBwwATjJ/Wm7V3Z9PSnrkD07VJ3z0wKBjBx0OBQgDHoeakORg45pFznPb0oARl2cDgfSl6ccHFKM8jp3xmmliuMkYoAMY9+OtN2kZI60hPOD0pQcZzzmgBe/WmkHbgdPWlGCCR0pehINACdR9KcBng8UmQGwcY9M0m7HHQZ70AdWmCenWnAZOMcUzJOOKd06fjQgHAHONxH0pRnOCx/wpqkYzkEd6U57GgBwYL7Dv6UucjAH0puRnOeR2pw4BH61RA4cgUg5x6UjHnrzSq3GSM0wHY55FJQW4wKDweKLAKMj1p4I7c1GOT6U4Ed+aAHjAGacCWPHSmqSOT2pwJOQaBj1G7kAg07gkY6UzPUCl69KAHZz04oC9/ajnAPWnFBjJoAbnrgj2pjxpMNrqCM9DUi7Rk9f1pTsP0oAbHFHEuI0VQfSnhh1p2FHrSAD3oAbEqBeFH4CpNvuaaQD2pRtH+0aAFA6+1OR17gYpvBGelBUAdaAH7hjI5pHVXXaxGKbt/HFKQB3waAJEiSNQFAFOwB0FNBpWLY4oAXFJwe9AJPakJI6kCkA7r0A+lKOBzTc55GaUgkUAPIAI65qRCCMA1Eo4zUoxjIoAeoXt0FIwJbvx0pwBHJ4pCdx2ge9AEY55wKT9acRt4BNJjPJoAYT/ABCjf6ikYk5GKMUAKSfWmHrSmm0AJRRQKAEpaKKAFp6GmU9eKaJYuOKTHNOxSYFMBVGeKdgelIoweafwKLgIvXBpxHrQoFOxx0p3AE4OaeBz6Uh6UvagEOxnpRgdKOlGaYmKPSiikMUcCigdKKAEalH1oA4pRjFACg5NFNFKLAA5ppPNLnNJsJ5JpgOB9Kd+FNUDHNHNHUBy7CeBinKuOtAWnr1pAOR607ANPQ0oOaBuFIPegBi96Xk07Hb0ooEHvS+1A60tIBNuDSnpzRSg0DCkJIxSg0YzQAnUelJSnGaByMGgBgXBJIzS5pzDNNxg0AKBS0c0UAJTxSYoxQAnU0CjFKBQAoHancGm5xS0ABNO9qbTxzQA4gU3APWl5FJk0AFKS1A6UAc0ALjJoJ7UmcUmaAFJ7VJGMjNRg09WxQBMuOlPBHJ9arBgM5p4YDGKAJR0GDml47VCH55pwfnigCUHilznoBURYdzxS7hQBLuGM9aRm46800MvYU0txQA/LUlNDY5PFIQB1JNACkgUE1GSx6Cl5oAC3p3o7UYyeOlAFABnFApOlFABSjtRRQAUvJpKUUgFz2puDilz60dqAEGakHSmYpwHFACijvRRQAnQ9aB+FHWjmgQvcGopWaBHcEA+9TN0psiqw5ANIaOGuIriTJniUKe+OtRW9vO8m5IRtJ5bHFdZfCGCNoZdrIRwR3HtVK1SC3yvlhh6is3T1HzGhpFhCkDQXUMkYkjO0N2GehpPESy2l1DplxBHiLJ3J3BHX8s/nW5pssFyN1xGsik5XcOlSeIRbz+XJFgSHjrxjHQCslFxkyo1OaJxGhWy3WraciGSMsxidjzuGQSP6j1r0m3tbVLQJbIqRsOAtcRoenKNbtnACqJQmD6KSP0NeoqqrnCgU6s3LUUqbiZVjp0FkrCPLFjksxySasvGoTap6UoCqoHpS4AHFZLcllVrbL59cVSmtVlYjOcVpFCR1qrJGU6daYiuluqjgVRXRbWa4llEQDPjIJ6HFajrxjFVDGc8mgBsWj2YBIXH4mklgghXCqKvoMRkVWkXcMHpQBBJPCrBWJ49qS1tUdQwdTntmlCq/UAH1pqiNFwPloAu7WVc560pUev8AjUJdgh5xzUgIx60gHxBec0r8nng+lNWnjn/9dMBpOBjNNHQdTSsc9DxmjpyeaYCelI3WlJGOM0hPGDigBOTxTcY61IWyuCahJ+XjHFABuHc01uh6c04jPSkII60AIen1pOtGO/40o5oAaeTRSmigoASnClFKBQAoGaBQDg1IOlAhKO9FA5oAKXpSUUAFA96KXNABnikzRnIoxSAUHmjOaKBxQApGaTNLmkFACkUlL3pKAFoooHSgApfpRQKAA0UUCgBC3SkLGjbk5pajqA0k0lLijFABRRQKACkopaMgUAFGaSimAbqM0maUUAGaKTNGaAEoPSloBFABilHWkp1ACikpaO1ACUUtFABRSClHSgA7UUvWigBM0ZxRRQAmcUUGjpQAuaUUlHNADhzRnikHWloAUUuaQGjPFAC54zSE0daMUAISMU0mpD3NMoAZQKdijFAChacDmkpaBCkE9aTNHfpS0AJijNKKAKACig0UAJilooFABRRSZoAWiiigAooooAKKKKADNGaKKACiiigAooooA//2Q==';
 const ONGKIR_MIN = 20000, ONGKIR_FEE = 2000;
-const SK = { user:'bn_u', orders:'bn_ord', cal:'bn_cal', photos:'bn_ph', menu:'bn_mn', role:'bn_role', settings:'bn_set', staff:'bn_staff', logo:'bn_logo', mh:'bn_mh', qris:'bn_qris', route:'bn_route' };
+const SK = { user:'bn_u', orders:'bn_ord', cal:'bn_cal', photos:'bn_ph', menu:'bn_mn', role:'bn_role', settings:'bn_set', staff:'bn_staff', logo:'bn_logo', mh:'bn_mh', qris:'bn_qris', route:'bn_route', champions:'bn_champs', commissions:'bn_comms', withdrawals:'bn_wds', banners:'bn_banners' };
 const WA_DEFAULT = '6281234567890';
 
 // Default staff — super admin awal, PIN bisa diubah di CMS
@@ -1095,6 +1440,12 @@ async function createFBAccount(email, password) {
 // ────────────────────────────────────────────────────────
 
 let cart = {}, user = {}, role = 'super';
+let _navHistory = []; // navigation stack for back button
+let _currentMenuDetailItem = null; // for menu detail view
+let _mdvQty = 0; // qty in menu detail
+let _bannerInterval = null; // for banner carousel auto-play
+let _bannerCurrent = 0;
+let _currentChampion = null; // logged-in champion
 let currentStaff = null;
 let editId = null, editB64 = null, editSub = null;
 let selCalDate = null, tapCnt = 0, tapTmr = null, pinStr = '', currentPrintOrder = null;
@@ -1148,7 +1499,16 @@ try {
   firebase.initializeApp(FB_CONFIG);
   db   = firebase.firestore();
   auth = firebase.auth();
+  // Offline persistence — data tetap kebaca saat sinyal jelek, auto-sync saat online (cocok utk PWA)
+  db.enablePersistence({ synchronizeTabs: true }).catch(() => {});
 } catch(e) { console.warn('Firebase init failed:', e); }
+
+// Daftarkan Service Worker (PWA — installable + offline + load cepat)
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('service-worker.js').catch(e => console.warn('SW gagal daftar:', e));
+  });
+}
 
 // Keys that sync to Firestore /config/{doc}
 const FS_MAP = {
@@ -1158,9 +1518,11 @@ const FS_MAP = {
   [SK.menu]:      'menu',
   [SK.cal]:       'calendar',
   [SK.mh]:        'menuHistory',
-  [SK.staff]:     'staff'
+  [SK.staff]:     'staff',
+  [SK.banners]:   'banners'
 };
 // orders handled separately per-document in /orders/{id}
+// champions, commissions, withdrawals handled as Firestore sub-collections
 
 function fsWrite(k, v) {
   const doc = FS_MAP[k];
@@ -1210,8 +1572,7 @@ async function syncFromFirestore() {
       if (data && typeof data === 'object' && !Array.isArray(data) && Object.keys(data).length === 0) return;
       try { localStorage.setItem(keyMap[docs[i]], JSON.stringify(data)); } catch(e) {}
     });
-    // Catatan: pesanan TIDAK lagi dibaca massal di sini.
-    // Membaca seluruh /orders mengekspos PII semua pelanggan ke perangkat anonim.
+    // Catatan: pesanan TIDAK lagi dibaca massal di sini (privasi PII + ditolak rules).
     // Admin/driver memuat pesanan lewat startOrdersListener() setelah login (ter-autentikasi).
   } catch(e) { console.warn('syncFromFirestore:', e); }
 }
@@ -1236,7 +1597,6 @@ function startOrdersListener() {
   if (!db || _ordersUnsub) return;
   _ordersUnsub = db.collection('orders').onSnapshot(snap => {
     // Sort null-safe — kalau ada order tanpa ts, jangan sampai callback ini throw
-    // (kalau throw, daftar pesanan admin berhenti ter-update & seolah "hilang").
     const orders = snap.docs.map(d => d.data())
       .sort((a,b) => String(b && b.ts || '').localeCompare(String(a && a.ts || '')));
     try { localStorage.setItem(SK.orders, JSON.stringify(orders)); } catch(e) {}
@@ -1264,12 +1624,8 @@ async function flushPendingOrders() {
   _flushing = true;
   const stillPending = [];
   for (const order of q) {
-    try {
-      await db.collection('orders').doc(order.id).set(order);
-    } catch(e) {
-      console.warn('flushPendingOrders gagal utk', order.id, e);
-      stillPending.push(order); // gagal lagi → tetap di antrian, coba lain kali
-    }
+    try { await db.collection('orders').doc(order.id).set(order); }
+    catch(e) { console.warn('flushPendingOrders gagal utk', order.id, e); stillPending.push(order); }
   }
   setPendingOrders(stillPending);
   _flushing = false;
@@ -1281,10 +1637,9 @@ function getCal()     { return ls(SK.cal)     || {}; }
 function getSettings(){ return ls(SK.settings) || { waNumber: WA_DEFAULT, sarapanCloseTime: '05:00', siangCloseTime: '08:00', openTime: '12:00' }; }
 function getOrderWindow() {
   const s = getSettings();
-  // Migrasi otomatis dari field closeTime lama ke field baru
-  // closeTime lama dipetakan ke siangCloseTime (gate utama), bukan sarapan
-  const [scH,scM] = (s.sarapanCloseTime || '05:00').split(':').map(Number);
-  const [lcH,lcM] = (s.siangCloseTime || s.closeTime || '08:00').split(':').map(Number);
+  // sarapanCloseTime / siangCloseTime baru menggantikan closeTime lama (migrasi otomatis)
+  const [scH,scM] = (s.sarapanCloseTime || s.closeTime || '05:00').split(':').map(Number);
+  const [lcH,lcM] = (s.siangCloseTime  || '08:00').split(':').map(Number);
   const [oH,oM]   = (s.openTime  || '12:00').split(':').map(Number);
   const now = new Date(), h = now.getHours(), m = now.getMinutes();
   const nowMin = h*60+m, scMin = scH*60+scM, lcMin = lcH*60+lcM, oMin = oH*60+oM;
@@ -1445,6 +1800,15 @@ window.addEventListener('DOMContentLoaded', async () => {
   startConfigListeners();
   initDatePicker();
   setupTap(); renderMenu(); buildCal(); startClock(); checkReturning();
+  // Capture ref link
+  captureRefLink();
+  // Render banners
+  renderBannerCarousel();
+  // Check if ?champion in URL
+  const urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.get('champion') === '1') {
+    showView('chlv');
+  }
   const today = todayStr();
   const de = document.getElementById('dapur-date'); if (de) de.value = today;
   const es = document.getElementById('exp-start');  if (es) es.value = today;
@@ -1597,9 +1961,10 @@ function enterAdmin() {
     const toBtn = document.querySelector('.atab[onclick*="\'to\'"]');
     if (toBtn) stab(toBtn, 'to');
   }
-  showView('av');
+  showView('av', false);
   loadSettings();
   renderAdminMenu(); refreshOrders(); updateStats(); updateDapur(); renderAnalytics();
+  renderChampionAdmin(); renderBannerAdmin();
   if (poll) clearInterval(poll);
   poll = setInterval(() => { refreshOrders(); updateStats(); updateDapur(); }, 30000);
   startOrdersListener();
@@ -1671,11 +2036,24 @@ function finalLogin() {
 // ═══════════════════════════════════════════
 //  VIEWS
 // ═══════════════════════════════════════════
-function showView(id) {
+function showView(id, pushHistory=true) {
+  const current = document.querySelector('.view.active');
+  const currentId = current ? current.id : null;
+  if (pushHistory && currentId && currentId !== id) {
+    _navHistory.push(currentId);
+  }
   document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
   document.getElementById(id).classList.add('active');
   window.scrollTo(0, 0);
   if (id !== 'av' && poll) { clearInterval(poll); poll = null; }
+}
+function navBack() {
+  if (_navHistory.length > 0) {
+    const prev = _navHistory.pop();
+    showView(prev, false);
+  } else {
+    showView('lv', false);
+  }
 }
 function navCart() { renderCart(); showView('cv'); }
 
@@ -1768,17 +2146,19 @@ function mcard(m, ph) {
   const hasImg = !!ph[m.id];
   const imgH   = hasImg ? `<img src="${ph[m.id]}" alt="">` : '';
   const emjH   = hasImg ? '' : `<span>${m.emoji}</span>`;
-  return `<div class="mcard"><div class="mcinner">
+  // Encode id safely for onclick
+  const safeId = m.id.replace(/'/g, "\\'");
+  return `<div class="mcard mcard-clickable" onclick="openMenuDetail('${safeId}')"><div class="mcinner">
     <div class="mebox">${imgH}${emjH}</div>
     <div class="minfo">
       <div class="mname">${escHTML(m.name)}</div>
       ${m.desc ? `<div class="mdesc">${escHTML(m.desc)}</div>` : ''}
       <div class="mbot">
         <div class="mprice"><span class="cur">Rp </span>${fmt(m.price)}</div>
-        <div class="qctrl">
-          <button class="qbtn minus" onclick="chg('${m.id}',-1,${m.price})">&#8722;</button>
+        <div class="qctrl" onclick="event.stopPropagation()">
+          <button class="qbtn minus" onclick="chg('${safeId}',-1,${m.price})">&#8722;</button>
           <span class="qnum" id="q-${m.id}">${cart[m.id] ? cart[m.id].qty : 0}</span>
-          <button class="qbtn" onclick="chg('${m.id}',1,${m.price})">+</button>
+          <button class="qbtn" onclick="chg('${safeId}',1,${m.price})">+</button>
         </div>
       </div>
     </div>
@@ -1959,6 +2339,7 @@ function placeOrder() {
 
   const order = {
     id:        'ord_' + Date.now(),
+    ref:       localStorage.getItem('bn_ref') || null,
     ts:        new Date().toISOString(),
     orderDate: currentOrderDate,
     name:      properCase(document.getElementById('on').value.trim() || user.name || ''),
@@ -1977,13 +2358,10 @@ function placeOrder() {
   if (db) {
     db.collection('orders').doc(order.id).set(order).catch(e => {
       console.warn('order save:', e);
-      // Order tersimpan lokal tapi gagal ke server → masuk antrian retry & tampilkan peringatan
-      enqueuePendingOrder(order);
-      const syncWarn = document.getElementById('sync-warn');
-      if (syncWarn) syncWarn.style.display = 'block';
+      enqueuePendingOrder(order); // gagal ke server → antri retry, jangan hilang
+      const sw = document.getElementById('sync-warn'); if (sw) sw.style.display = 'block';
     });
   } else {
-    // DB belum siap → simpan ke antrian agar ter-upload nanti
     enqueuePendingOrder(order);
   }
 
@@ -2001,9 +2379,8 @@ function placeOrder() {
   document.getElementById('srec').innerHTML    = ih + oh;
   document.getElementById('stotok').textContent = rp(total);
 
-  // Reset sync warning dari order sebelumnya
-  const syncWarn = document.getElementById('sync-warn');
-  if (syncWarn) syncWarn.style.display = 'none';
+  // Reset peringatan sync dari order sebelumnya
+  const sw = document.getElementById('sync-warn'); if (sw) sw.style.display = 'none';
 
   // Set WA confirmation link
   setWALink(order);
@@ -2130,6 +2507,8 @@ function togglePaid(id) {
   if (idx >= 0) {
     orders[idx].paid = !orders[idx].paid; ss(SK.orders, orders);
     if (db) db.collection('orders').doc(id).update({paid: orders[idx].paid}).catch(()=>{});
+    // Update commission status for this order's champion
+    updateCommissionForOrder(orders[idx]);
     toast(orders[idx].paid ? '💰 Sudah Bayar!' : '⏳ Ditandai Belum Bayar');
   }
   refreshOrders();
@@ -2382,12 +2761,17 @@ function updateStats() {
   set('stat-done', tod.filter(o => o.status === 'done').length);
   set('stat-dikirim', tod.filter(o => o.status === 'dikirim').length);
 
+  // Top item BERDASARKAN PENGHASILAN (uang), bukan jumlah porsi
   const ic = {};
-  tod.forEach(o => o.items.forEach(it => { ic[it.name] = (ic[it.name]||0) + it.qty; }));
-  const sorted = Object.entries(ic).sort((a,b) => b[1]-a[1]).slice(0, 5);
+  tod.forEach(o => o.items.forEach(it => {
+    if (!ic[it.name]) ic[it.name] = { qty: 0, rev: 0 };
+    ic[it.name].qty += it.qty;
+    ic[it.name].rev += (it.price || 0) * it.qty;
+  }));
+  const sorted = Object.entries(ic).sort((a,b) => b[1].rev - a[1].rev).slice(0, 5);
   const ti = document.getElementById('dash-top');
   if (ti) ti.innerHTML = sorted.length
-    ? sorted.map(([n,c]) => `<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--bd);font-size:12px;"><span>${escHTML(n)}</span><strong>${c} porsi</strong></div>`).join('')
+    ? sorted.map(([n,v]) => `<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--bd);font-size:12px;"><span>${escHTML(n)} <span style="color:var(--mu);">·${v.qty}x</span></span><strong>${rp(v.rev)}</strong></div>`).join('')
     : '<div style="color:var(--mu);font-size:12px;">Belum ada pesanan hari ini.</div>';
 }
 
@@ -2413,7 +2797,7 @@ function renderRevenueChart() {
     const h   = Math.round((rev/maxRev)*90);
     const lbl = ['Min','Sen','Sel','Rab','Kam','Jum','Sab'][new Date(date+'T12:00:00').getDay()];
     const val = rev >= 1000 ? (rev/1000).toFixed(0)+'k' : (rev||'0');
-    return `<div class="rev-bar-wrap">
+    return `<div class="rev-bar-wrap" onclick="showDayRevenueDetail('${date}','${lbl}')" title="Tap untuk detail ${lbl}">
       <div class="rev-val">${val}</div>
       <div class="rev-bar" style="height:${h}px;"></div>
       <div class="rev-label">${lbl}</div>
@@ -2421,18 +2805,23 @@ function renderRevenueChart() {
   }).join('');
 }
 function renderBestseller() {
+  // Bestseller BERDASARKAN PENGHASILAN (uang), bukan jumlah porsi
   const ic = {};
-  getOrders().forEach(o => o.items.forEach(it => { ic[it.name] = (ic[it.name]||0)+it.qty; }));
-  const sorted = Object.entries(ic).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  getOrders().forEach(o => o.items.forEach(it => {
+    if (!ic[it.name]) ic[it.name] = { qty: 0, rev: 0 };
+    ic[it.name].qty += it.qty;
+    ic[it.name].rev += (it.price || 0) * it.qty;
+  }));
+  const sorted = Object.entries(ic).sort((a,b)=>b[1].rev - a[1].rev).slice(0,8);
   const el = document.getElementById('bs-chart'); if (!el) return;
   if (!sorted.length) { el.innerHTML = '<div style="color:var(--mu);font-size:12px;">Belum ada data.</div>'; return; }
-  const max = sorted[0][1];
-  el.innerHTML = sorted.map(([n,c], i) => {
+  const max = sorted[0][1].rev || 1;
+  el.innerHTML = sorted.map(([n,v], i) => {
     const rank = i===0?'🥇':i===1?'🥈':i===2?'🥉':(i+1)+'';
-    return `<div class="bs-row">
+    return `<div class="bs-row" onclick="showMenuItemDetail('${escHTML(n).replace(/'/g,"\\'")}')" title="Tap untuk detail">
       <div class="bs-rank ${i<3?'gold':''}">${rank}</div>
       <div class="bs-name">${escHTML(n)}</div>
-      <div class="bs-bar-wrap"><div class="bs-bar" style="width:${Math.round((c/max)*100)}%"><span class="bs-val">${c}x</span></div></div>
+      <div class="bs-bar-wrap"><div class="bs-bar" style="width:${Math.round((v.rev/max)*100)}%"><span class="bs-val">${rp(v.rev)}</span></div></div>
     </div>`;
   }).join('');
 }
@@ -2442,10 +2831,10 @@ function renderAllStats() {
   const avgOrder = orders.length ? Math.round(totalRev/orders.length) : 0;
   const el = document.getElementById('all-stats'); if (!el) return;
   el.innerHTML = `
-    <div class="stat4-item"><div class="stat4-val">${orders.length}</div><div class="stat4-lbl">Total Pesanan</div></div>
-    <div class="stat4-item"><div class="stat4-val">${totalRev>=1000?(totalRev/1000).toFixed(0)+'k':totalRev}</div><div class="stat4-lbl">Total Pendapatan</div></div>
-    <div class="stat4-item"><div class="stat4-val">${new Set(orders.map(o=>o.phone)).size}</div><div class="stat4-lbl">Pelanggan Unik</div></div>
-    <div class="stat4-item"><div class="stat4-val">${avgOrder>=1000?(avgOrder/1000).toFixed(0)+'k':avgOrder}</div><div class="stat4-lbl">Avg Order (Rp)</div></div>`;
+    <div class="stat4-item" onclick="showStatDetail('all-orders')" title="Tap untuk detail"><div class="stat4-val">${orders.length}</div><div class="stat4-lbl">Total Pesanan</div></div>
+    <div class="stat4-item" onclick="showStatDetail('all-revenue')" title="Tap untuk detail"><div class="stat4-val">${totalRev>=1000?(totalRev/1000).toFixed(0)+'k':totalRev}</div><div class="stat4-lbl">Total Pendapatan</div></div>
+    <div class="stat4-item" onclick="showStatDetail('all-customers')" title="Tap untuk detail"><div class="stat4-val">${new Set(orders.map(o=>o.phone)).size}</div><div class="stat4-lbl">Pelanggan Unik</div></div>
+    <div class="stat4-item" onclick="showStatDetail('all-avg')" title="Tap untuk detail"><div class="stat4-val">${avgOrder>=1000?(avgOrder/1000).toFixed(0)+'k':avgOrder}</div><div class="stat4-lbl">Avg Order (Rp)</div></div>`;
 }
 
 // ═══════════════════════════════════════════
@@ -3637,6 +4026,816 @@ async function downloadInvoicePDF() {
     console.error('Invoice PDF error', e);
     toast('❌ Gagal buat PDF');
   }
+}
+
+// ═══════════════════════════════════════════
+//  REF LINK TRACKING
+// ═══════════════════════════════════════════
+function captureRefLink() {
+  const params = new URLSearchParams(window.location.search);
+  const ref = params.get('ref');
+  if (ref) {
+    // Cukup simpan kode ref di perangkat. Atribusi ke champion terjadi otomatis
+    // lewat field `order.ref` saat pesan (tidak perlu collection champion_customers).
+    localStorage.setItem('bn_ref', ref.toLowerCase().trim());
+  }
+}
+
+function getRef() { return localStorage.getItem('bn_ref') || null; }
+
+// ═══════════════════════════════════════════
+//  BANNER CAROUSEL
+// ═══════════════════════════════════════════
+function getBanners() { return ls(SK.banners) || []; }
+
+function renderBannerCarousel() {
+  const banners = getBanners().filter(b => b.active !== false);
+  const el = document.getElementById('banner-carousel');
+  const slides = document.getElementById('banner-slides');
+  const dots = document.getElementById('banner-dots');
+  if (!el || !banners.length) { if (el) el.style.display = 'none'; return; }
+  el.style.display = 'block';
+  const bgMap = { navy:'linear-gradient(135deg,var(--n),var(--n2))', gold:'linear-gradient(135deg,#c9a84c,#e8c97a)', green:'linear-gradient(135deg,#166534,#15803d)', red:'linear-gradient(135deg,#991b1b,#dc2626)' };
+  slides.innerHTML = banners.map(b => `
+    <div class="banner-slide">
+      <div class="banner-slide-emoji" style="background:${bgMap[b.bg||'navy']||bgMap.navy}">
+        <span style="font-size:64px;">${escHTML(b.emoji||'🎉')}</span>
+      </div>
+      <div class="banner-slide-overlay">
+        <div class="banner-slide-title">${escHTML(b.title||'')}</div>
+        ${b.desc ? `<div class="banner-slide-desc">${escHTML(b.desc)}</div>` : ''}
+      </div>
+    </div>`).join('');
+  dots.innerHTML = banners.map((_,i) => `<div class="banner-dot ${i===0?'active':''}" onclick="goBannerSlide(${i})"></div>`).join('');
+  _bannerCurrent = 0;
+  if (_bannerInterval) clearInterval(_bannerInterval);
+  if (banners.length > 1) _bannerInterval = setInterval(nextBannerSlide, 3500);
+}
+
+function goBannerSlide(i) {
+  const banners = getBanners().filter(b => b.active !== false);
+  if (!banners.length) return;
+  _bannerCurrent = i;
+  const slides = document.getElementById('banner-slides');
+  const dots = document.querySelectorAll('.banner-dot');
+  if (slides) slides.style.transform = `translateX(-${i * 100}%)`;
+  dots.forEach((d,j) => d.classList.toggle('active', j === i));
+}
+
+function nextBannerSlide() {
+  const banners = getBanners().filter(b => b.active !== false);
+  goBannerSlide((_bannerCurrent + 1) % banners.length);
+}
+
+// ═══════════════════════════════════════════
+//  MENU DETAIL VIEW
+// ═══════════════════════════════════════════
+function openMenuDetail(menuId) {
+  const MENU = getMenuForDate(currentOrderDate), ph = getPh();
+  const m = MENU.find(x => x.id === menuId);
+  if (!m) return;
+  _currentMenuDetailItem = m;
+  _mdvQty = cart[menuId] ? cart[menuId].qty : 0;
+
+  document.getElementById('mdv-title').textContent = m.name;
+  document.getElementById('mdv-name').textContent = m.name;
+  document.getElementById('mdv-price').textContent = fmt(m.price);
+  document.getElementById('mdv-emoji').textContent = m.emoji || '🍱';
+  document.getElementById('mdv-cat').textContent = m.sec === 'sarapan' ? '🍱 Sarapan' : `🍛 Makan Siang · ${m.sub || ''}`;
+
+  const descEl = document.getElementById('mdv-desc');
+  if (m.desc) { descEl.textContent = m.desc; descEl.style.display = 'block'; }
+  else { descEl.style.display = 'none'; }
+
+  const imgEl = document.getElementById('mdv-img');
+  const emojiEl = document.getElementById('mdv-emoji');
+  if (ph[menuId]) {
+    let imgTag = imgEl.querySelector('img');
+    if (!imgTag) { imgTag = document.createElement('img'); imgEl.appendChild(imgTag); }
+    imgTag.src = ph[menuId];
+    imgTag.style.display = 'block';
+    emojiEl.style.display = 'none';
+  } else {
+    const imgTag = imgEl.querySelector('img');
+    if (imgTag) imgTag.style.display = 'none';
+    emojiEl.style.display = '';
+    emojiEl.textContent = m.emoji || '🍱';
+  }
+
+  updateMdvQty();
+  showView('mdv');
+}
+
+function mdvChg(d) {
+  _mdvQty = Math.max(0, _mdvQty + d);
+  updateMdvQty();
+}
+
+function updateMdvQty() {
+  document.getElementById('mdv-qnum').textContent = _mdvQty;
+  const btn = document.getElementById('mdv-add-btn');
+  if (_mdvQty === 0) { btn.textContent = 'Tambah ke Pesanan'; btn.disabled = false; }
+  else { btn.textContent = `Tambah ${_mdvQty} ke Pesanan — ${rp(_mdvQty * (_currentMenuDetailItem?.price||0))}`; btn.disabled = false; }
+}
+
+function mdvConfirm() {
+  if (!_currentMenuDetailItem) return;
+  const m = _currentMenuDetailItem;
+  if (_mdvQty === 0) {
+    // Remove from cart
+    delete cart[m.id];
+    const el = document.getElementById('q-' + m.id);
+    if (el) el.textContent = 0;
+  } else {
+    cart[m.id] = { qty: _mdvQty, price: m.price };
+    const el = document.getElementById('q-' + m.id);
+    if (el) el.textContent = _mdvQty;
+  }
+  updateFloat();
+  navBack();
+  toast(_mdvQty > 0 ? `✅ ${m.name} ×${_mdvQty} ditambahkan!` : `🗑️ ${m.name} dihapus dari pesanan`);
+}
+
+// ═══════════════════════════════════════════
+//  CLICKABLE ANALYTICS — DETAIL MODAL
+// ═══════════════════════════════════════════
+function showDetailModal(title, sub, bodyHTML) {
+  document.getElementById('dm-title').textContent = title;
+  document.getElementById('dm-sub').textContent = sub;
+  document.getElementById('dm-body').innerHTML = bodyHTML;
+  document.getElementById('detail-modal').classList.add('open');
+}
+
+function closeDetailModal(e) {
+  if (!e || e.target === document.getElementById('detail-modal')) {
+    document.getElementById('detail-modal').classList.remove('open');
+  }
+}
+
+function showStatDetail(type) {
+  const orders = getOrders();
+  const today = todayStr();
+  const todOrders = orders.filter(o => (o.orderDate||o.ts.split('T')[0]) === today);
+  
+  let title, sub, bodyHTML;
+  switch(type) {
+    case 'orders-today':
+    case 'all-orders': {
+      const src = type === 'orders-today' ? todOrders : orders;
+      title = type === 'orders-today' ? 'Pesanan Hari Ini' : 'Semua Pesanan';
+      sub = `${src.length} pesanan`;
+      bodyHTML = src.length ? src.slice(0,50).map(o => `
+        <div class="dm-order-item">
+          <div><div class="dm-order-name">${escHTML(o.name)}</div><div class="dm-order-val">${fmtDateLabel(o.orderDate)} · ${new Date(o.ts).toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'})}</div></div>
+          <div style="text-align:right;"><div style="font-weight:700;color:var(--n);">${rp(o.total)}</div><div class="dm-order-val">${statusLabel(o.status)}</div></div>
+        </div>`).join('')
+        : '<div style="color:var(--mu);font-size:12px;padding:10px 0;">Belum ada data.</div>';
+      break;
+    }
+    case 'revenue-today':
+    case 'all-revenue': {
+      const src = type === 'revenue-today' ? todOrders : orders;
+      const rev = src.reduce((s,o) => s+o.total, 0);
+      title = type === 'revenue-today' ? 'Pendapatan Hari Ini' : 'Total Pendapatan';
+      sub = rp(rev);
+      bodyHTML = src.length ? src.slice(0,50).map(o => `
+        <div class="dm-order-item">
+          <div><div class="dm-order-name">${escHTML(o.name)}</div><div class="dm-order-val">${fmtDateLabel(o.orderDate)}</div></div>
+          <div style="font-weight:700;color:var(--g);">${rp(o.total)}</div>
+        </div>`).join('') + `<div class="dm-total"><span>Total</span><span>${rp(rev)}</span></div>`
+        : '<div style="color:var(--mu);font-size:12px;padding:10px 0;">Belum ada data.</div>';
+      break;
+    }
+    case 'orders-new': {
+      const src = todOrders.filter(o => o.status === 'pending' || o.status === 'new');
+      title = 'Pesanan Baru Masuk';
+      sub = `${src.length} pesanan menunggu`;
+      bodyHTML = src.length ? src.map(o => `
+        <div class="dm-order-item">
+          <div><div class="dm-order-name">${escHTML(o.name)}</div><div class="dm-order-val">📍 ${escHTML(o.addr)}</div></div>
+          <div style="font-weight:700;color:var(--n);">${rp(o.total)}</div>
+        </div>`).join('')
+        : '<div style="color:var(--mu);font-size:12px;padding:10px 0;">Tidak ada pesanan baru.</div>';
+      break;
+    }
+    case 'orders-dikirim': {
+      const src = todOrders.filter(o => o.status === 'dikirim');
+      title = 'Pesanan Sedang Dikirim';
+      sub = `${src.length} pesanan`;
+      bodyHTML = src.length ? src.map(o => `
+        <div class="dm-order-item">
+          <div><div class="dm-order-name">${escHTML(o.name)}</div><div class="dm-order-val">📍 ${escHTML(o.addr)}</div></div>
+          <div style="font-weight:700;color:#1d4ed8;">${rp(o.total)}</div>
+        </div>`).join('')
+        : '<div style="color:var(--mu);font-size:12px;padding:10px 0;">Tidak ada pesanan dikirim.</div>';
+      break;
+    }
+    case 'orders-done': {
+      const src = todOrders.filter(o => o.status === 'done');
+      title = 'Pesanan Selesai';
+      sub = `${src.length} pesanan selesai hari ini`;
+      bodyHTML = src.length ? src.map(o => `
+        <div class="dm-order-item">
+          <div><div class="dm-order-name">${escHTML(o.name)}</div></div>
+          <div style="font-weight:700;color:#166534;">${rp(o.total)}</div>
+        </div>`).join('')
+        : '<div style="color:var(--mu);font-size:12px;padding:10px 0;">Belum ada pesanan selesai.</div>';
+      break;
+    }
+    case 'all-customers': {
+      const phones = [...new Set(orders.map(o => o.phone))];
+      title = 'Pelanggan Unik';
+      sub = `${phones.size || phones.length} pelanggan terdaftar`;
+      const custMap = {};
+      orders.forEach(o => {
+        if (!custMap[o.phone]) custMap[o.phone] = { name: o.name, phone: o.phone, count: 0, total: 0 };
+        custMap[o.phone].count++;
+        custMap[o.phone].total += o.total;
+      });
+      const sorted = Object.values(custMap).sort((a,b) => b.count - a.count);
+      bodyHTML = sorted.slice(0,30).map(c => `
+        <div class="dm-order-item">
+          <div><div class="dm-order-name">${escHTML(c.name)}</div><div class="dm-order-val">${c.phone}</div></div>
+          <div style="text-align:right;"><div style="font-weight:700;">${c.count}x order</div><div class="dm-order-val">${rp(c.total)}</div></div>
+        </div>`).join('');
+      break;
+    }
+    case 'all-avg': {
+      const rev = orders.reduce((s,o) => s+o.total, 0);
+      const avg = orders.length ? Math.round(rev/orders.length) : 0;
+      title = 'Rata-rata Order';
+      sub = rp(avg) + ' per transaksi';
+      const buckets = { '<10k':0, '10-20k':0, '20-50k':0, '50-100k':0, '>100k':0 };
+      orders.forEach(o => {
+        if (o.total < 10000) buckets['<10k']++;
+        else if (o.total < 20000) buckets['10-20k']++;
+        else if (o.total < 50000) buckets['20-50k']++;
+        else if (o.total < 100000) buckets['50-100k']++;
+        else buckets['>100k']++;
+      });
+      bodyHTML = Object.entries(buckets).map(([k,v]) => `
+        <div class="dm-order-item"><div class="dm-order-name">${k}</div><div style="font-weight:700;">${v} pesanan</div></div>`).join('');
+      break;
+    }
+    default: title = 'Detail'; sub = ''; bodyHTML = '';
+  }
+  showDetailModal(title, sub, bodyHTML);
+}
+
+function showDayRevenueDetail(date, dayLabel) {
+  const orders = getOrders().filter(o => (o.orderDate||o.ts.split('T')[0]) === date);
+  const rev = orders.reduce((s,o) => s+o.total, 0);
+  const bodyHTML = orders.length ? orders.map(o => `
+    <div class="dm-order-item">
+      <div><div class="dm-order-name">${escHTML(o.name)}</div><div class="dm-order-val">📍 ${escHTML(o.addr)}</div></div>
+      <div style="text-align:right;"><div style="font-weight:700;color:var(--g);">${rp(o.total)}</div><div class="dm-order-val">${o.paid?'✅ Lunas':'⏳ Belum'}</div></div>
+    </div>`).join('') + `<div class="dm-total"><span>Total</span><span>${rp(rev)}</span></div>`
+    : '<div style="color:var(--mu);font-size:12px;padding:10px 0;">Tidak ada pesanan.</div>';
+  showDetailModal(`${dayLabel} — ${fmtDateLabel(date)}`, `${orders.length} pesanan · ${rp(rev)}`, bodyHTML);
+}
+
+function showMenuItemDetail(name) {
+  const orders = getOrders().filter(o => o.items.some(it => it.name === name));
+  let totalQty = 0, totalRev = 0;
+  orders.forEach(o => {
+    const it = o.items.find(x => x.name === name);
+    if (it) { totalQty += it.qty; totalRev += (it.price || 0) * it.qty; }
+  });
+  const bodyHTML = orders.length ? orders.map(o => {
+    const it = o.items.find(x => x.name === name);
+    return `<div class="dm-order-item">
+      <div><div class="dm-order-name">${escHTML(o.name)}</div><div class="dm-order-val">${fmtDateLabel(o.orderDate)}</div></div>
+      <div style="text-align:right;"><div style="font-weight:700;">${it ? it.qty : 1}x</div><div class="dm-order-val">${rp(it ? it.price * it.qty : 0)}</div></div>
+    </div>`;
+  }).join('') + `<div class="dm-total"><span>Total penghasilan</span><span>${rp(totalRev)}</span></div>`
+    : '<div style="color:var(--mu);font-size:12px;">Belum ada data.</div>';
+  showDetailModal(`${name}`, `${rp(totalRev)} · ${totalQty}x terjual all-time`, bodyHTML);
+}
+
+// ═══════════════════════════════════════════
+//  CHAMPION SYSTEM — HELPERS
+// ═══════════════════════════════════════════
+const KOMISI_RATE = 0.05; // 5%
+const WD_MIN_CASH = 50000;
+
+function getChampions() { return ls(SK.champions) || []; }
+function getCommissions() { return ls(SK.commissions) || []; }
+function getWithdrawals() { return ls(SK.withdrawals) || []; }
+
+// Sync PENUH — hanya untuk ADMIN (rules izinkan full read kalau punya claim admin).
+async function syncChampionData() {
+  if (!db) return;
+  try {
+    const [champsSnap, commsSnap, wdsSnap] = await Promise.all([
+      db.collection('champions').get(),
+      db.collection('champion_commissions').get(),
+      db.collection('champion_withdrawals').get()
+    ]);
+    const champs = champsSnap.docs.map(d => ({id:d.id,...d.data()}));
+    const comms  = commsSnap.docs.map(d => ({id:d.id,...d.data()}));
+    const wds    = wdsSnap.docs.map(d => ({id:d.id,...d.data()}));
+    try { localStorage.setItem(SK.champions, JSON.stringify(champs)); } catch(e) {}
+    try { localStorage.setItem(SK.commissions, JSON.stringify(comms)); } catch(e) {}
+    try { localStorage.setItem(SK.withdrawals, JSON.stringify(wds)); } catch(e) {}
+  } catch(e) { console.warn('syncChampionData:', e); }
+}
+
+// Sync TERBATAS — untuk champion yang login (rules cuma izinkan baca data sendiri).
+// Mengembalikan dokumen champion-nya, atau null kalau bukan champion.
+async function syncMyChampionData(email) {
+  if (!db || !email) return null;
+  try {
+    const champSnap = await db.collection('champions').where('email','==',email).limit(1).get();
+    if (champSnap.empty) { try { localStorage.setItem(SK.champions, '[]'); } catch(e) {} return null; }
+    const myChamp = { id: champSnap.docs[0].id, ...champSnap.docs[0].data() };
+    const [commsSnap, wdsSnap] = await Promise.all([
+      db.collection('champion_commissions').where('championEmail','==',email).get(),
+      db.collection('champion_withdrawals').where('championEmail','==',email).get()
+    ]);
+    const comms = commsSnap.docs.map(d => ({id:d.id,...d.data()}));
+    const wds   = wdsSnap.docs.map(d => ({id:d.id,...d.data()}));
+    try { localStorage.setItem(SK.champions, JSON.stringify([myChamp])); } catch(e) {}
+    try { localStorage.setItem(SK.commissions, JSON.stringify(comms)); } catch(e) {}
+    try { localStorage.setItem(SK.withdrawals, JSON.stringify(wds)); } catch(e) {}
+    return myChamp;
+  } catch(e) { console.warn('syncMyChampionData:', e); return null; }
+}
+
+async function updateCommissionForOrder(order) {
+  if (!order.ref || !db) return;
+  const comms = getCommissions();
+  const existing = comms.find(c => c.orderId === order.id);
+  const newStatus = order.paid ? 'available' : 'pending';
+  if (existing) {
+    if (existing.status === newStatus) return;
+    existing.status = newStatus;
+    await db.collection('champion_commissions').doc(existing.id).update({ status: newStatus }).catch(() => {});
+    try { localStorage.setItem(SK.commissions, JSON.stringify(comms)); } catch(e) {}
+  } else {
+    // Find champion by refCode
+    const champs = getChampions();
+    const champ = champs.find(c => c.refCode === order.ref && c.isActive);
+    if (!champ) return;
+    const comm = {
+      championId: champ.id,
+      championEmail: champ.email || '',   // dipakai Security Rules utk batasi baca
+      orderId: order.id,
+      customerId: order.phone,
+      orderValue: (order.subtotal != null ? order.subtotal : order.total),
+      commissionAmount: Math.round((order.subtotal != null ? order.subtotal : order.total) * KOMISI_RATE),
+      status: newStatus,
+      createdAt: new Date().toISOString()
+    };
+    const ref = await db.collection('champion_commissions').add(comm).catch(() => null);
+    if (ref) { comm.id = ref.id; comms.push(comm); try { localStorage.setItem(SK.commissions, JSON.stringify(comms)); } catch(e) {} }
+  }
+}
+
+// ═══════════════════════════════════════════
+//  CHAMPION LOGIN / DASHBOARD
+// ═══════════════════════════════════════════
+async function champLogin() {
+  const email = (document.getElementById('chl-email').value || '').trim();
+  const pass  = (document.getElementById('chl-pass').value || '').trim();
+  const errEl = document.getElementById('chl-err');
+  errEl.style.display = 'none';
+  if (!email || !pass) { errEl.textContent = 'Isi email & password!'; errEl.style.display = 'block'; return; }
+
+  // Auth via Firebase
+  if (!auth) { errEl.textContent = 'Koneksi gagal. Coba lagi.'; errEl.style.display = 'block'; return; }
+  try {
+    await auth.signInWithEmailAndPassword(email, pass);
+  } catch(e) {
+    errEl.textContent = 'Email atau password salah!'; errEl.style.display = 'block'; return;
+  }
+
+  // Ambil HANYA data champion ini (scoped — sesuai rules)
+  const champ = await syncMyChampionData(email);
+  if (!champ) {
+    errEl.textContent = 'Akun ini bukan champion.'; errEl.style.display = 'block';
+    if (auth) auth.signOut().catch(()=>{});
+    return;
+  }
+  if (!champ.isActive) {
+    errEl.textContent = 'Akun champion kamu sedang tidak aktif.'; errEl.style.display = 'block';
+    if (auth) auth.signOut().catch(()=>{});
+    return;
+  }
+
+  _currentChampion = champ;
+  renderChampionDashboard();
+  showView('chv', false);
+}
+
+function champLogout() {
+  _currentChampion = null;
+  if (auth) auth.signOut().catch(()=>{});
+  showView('chlv', false);
+}
+
+function renderChampionDashboard() {
+  const champ = _currentChampion; if (!champ) return;
+  document.getElementById('ch-name').textContent = champ.name;
+  document.getElementById('ch-ref-badge').textContent = 'ref: ' + champ.refCode;
+
+  const comms = getCommissions().filter(c => c.championId === champ.id);
+  const pending   = comms.filter(c => c.status === 'pending').reduce((s,c) => s+c.commissionAmount, 0);
+
+  // Saldo bisa dicairkan (sudah memperhitungkan pencairan yang belum ditolak)
+  const { net: availableNet } = champBalance(champ);
+
+  document.getElementById('ch-stat-available').textContent = rp(availableNet);
+  document.getElementById('ch-stat-pending').textContent = rp(pending);
+  document.getElementById('ch-avail').textContent = rp(availableNet);
+  document.getElementById('ch-pend').textContent = rp(pending);
+  document.getElementById('ch-total-komisi').textContent = rp(availableNet + pending);
+
+  // Get my customers
+  const orders = getOrders().filter(o => o.ref === champ.refCode);
+  const phones = [...new Set(orders.map(o => o.phone))];
+  document.getElementById('ch-stat-orders').textContent = orders.length;
+  document.getElementById('ch-stat-customers').textContent = phones.length;
+
+  // Weekly chart
+  const days = Array.from({length:7}, (_,i) => {
+    const n = new Date(); n.setDate(n.getDate() - (6-i));
+    return localDateStr(n);
+  });
+  const weekData = days.map(d => ({
+    d, count: orders.filter(o => (o.orderDate||o.ts.split('T')[0]) === d).length
+  }));
+  const maxW = Math.max(...weekData.map(x=>x.count), 1);
+  document.getElementById('ch-week-chart').innerHTML = weekData.map(({d,count}) => {
+    const h = Math.round((count/maxW)*70);
+    const lbl = ['Min','Sen','Sel','Rab','Kam','Jum','Sab'][new Date(d+'T12:00:00').getDay()];
+    return `<div class="ch-week-bar-wrap">
+      <div class="ch-week-bar" style="height:${h}px;"></div>
+      <div class="ch-week-lbl">${lbl}</div>
+    </div>`;
+  }).join('');
+
+  // Customers list
+  const custEl = document.getElementById('ch-cust-list');
+  document.getElementById('ch-cust-count').textContent = `(${phones.length})`;
+  if (phones.length) {
+    const custMap = {};
+    orders.forEach(o => {
+      if (!custMap[o.phone]) custMap[o.phone] = { name: o.name, phone: o.phone, count: 0, total: 0, lastOrder: '' };
+      custMap[o.phone].count++;
+      custMap[o.phone].total += o.total;
+      if (o.orderDate > custMap[o.phone].lastOrder) custMap[o.phone].lastOrder = o.orderDate;
+    });
+    custEl.innerHTML = Object.values(custMap).map(c => `
+      <div class="ch-cust-row">
+        <div class="ch-cust-avatar">${c.name[0]||'?'}</div>
+        <div style="flex:1;">
+          <div class="ch-cust-name">${escHTML(c.name)}</div>
+          <div class="ch-cust-meta">${c.count} order · ${rp(c.total)} · Terakhir ${fmtDateLabel(c.lastOrder)}</div>
+        </div>
+      </div>`).join('');
+  } else {
+    custEl.innerHTML = '<div style="color:var(--mu);font-size:12px;">Belum ada pelanggan dari link kamu.</div>';
+  }
+
+  // Withdraw section — tampilkan pencairan yang masih diproses (requested + approved)
+  const { hasPending } = champBalance(champ);
+  const wdReqPending = getWithdrawals().filter(w => w.championId === champ.id && (w.status === 'requested' || w.status === 'approved'));
+  const wdHistHTML = wdReqPending.length ? wdReqPending.map(w => `
+    <div style="background:var(--gp);border:1px solid var(--bd);border-radius:10px;padding:10px 12px;margin-bottom:8px;font-size:12px;">
+      <div style="font-weight:700;color:var(--n);">${w.type === 'menu' ? '🍱 Tukar Menu' : '💸 Transfer'} — ${rp(w.amount)}</div>
+      <div style="color:var(--mu);margin-top:2px;">${w.status === 'approved' ? '✅ Disetujui — menunggu transfer' : '⏳ Menunggu konfirmasi admin'}</div>
+    </div>`).join('') : '';
+  document.getElementById('ch-wd-history').innerHTML = wdHistHTML;
+
+  const wdBtn = document.getElementById('ch-wd-btn');
+  const menuBtn = document.getElementById('ch-menu-btn');
+  const noteEl = document.getElementById('ch-wd-note');
+  const bankInfo = champ.bankAccount || champ.bank || '';
+
+  if (hasPending) {
+    // Ada pencairan berjalan → kunci kedua tombol (cegah double-withdraw)
+    wdBtn.disabled = true; wdBtn.classList.add('disabled');
+    menuBtn.disabled = true; menuBtn.classList.add('disabled');
+    noteEl.textContent = '⏳ Ada pencairan sedang diproses admin. Tunggu selesai sebelum request lagi.';
+  } else if (!bankInfo) {
+    noteEl.textContent = '⚠️ Belum ada info rekening/GoPay. Hubungi admin untuk update.';
+    wdBtn.disabled = true; wdBtn.classList.add('disabled');
+    menuBtn.disabled = true; menuBtn.classList.add('disabled');
+  } else if (availableNet < WD_MIN_CASH) {
+    wdBtn.disabled = true; wdBtn.classList.add('disabled');
+    noteEl.textContent = `Komisi tersedia ${rp(availableNet)} — belum mencapai min. Rp 50.000 untuk transfer. Bisa ditukar menu.`;
+    menuBtn.disabled = availableNet <= 0;
+    if (availableNet <= 0) menuBtn.classList.add('disabled');
+    else menuBtn.classList.remove('disabled');
+  } else {
+    wdBtn.disabled = false; wdBtn.classList.remove('disabled');
+    menuBtn.disabled = false; menuBtn.classList.remove('disabled');
+    noteEl.textContent = `Rekening: ${bankInfo}`;
+  }
+  document.getElementById('ch-wd-info').textContent = bankInfo ? `Pencairan ke: ${bankInfo}` : 'Belum ada rekening terdaftar.';
+}
+
+// Saldo champion — saldo yang BISA dicairkan = komisi available − semua pencairan yang belum ditolak.
+// Pencairan requested/approved/completed semua mengurangi saldo (mencegah double-withdraw).
+function champBalance(champ) {
+  const available = getCommissions()
+    .filter(c => c.championId === champ.id && c.status === 'available')
+    .reduce((s,c) => s + c.commissionAmount, 0);
+  const reserved = getWithdrawals()
+    .filter(w => w.championId === champ.id && w.status !== 'rejected')
+    .reduce((s,w) => s + w.amount, 0);
+  const net = Math.max(0, available - reserved);
+  const hasPending = getWithdrawals()
+    .some(w => w.championId === champ.id && (w.status === 'requested' || w.status === 'approved'));
+  return { available, reserved, net, hasPending };
+}
+
+async function champRequestWithdraw() {
+  const champ = _currentChampion; if (!champ) return;
+  const { net, hasPending } = champBalance(champ);
+  if (hasPending) { toast('Masih ada pencairan menunggu konfirmasi admin. Tunggu selesai dulu ya.'); return; }
+  if (net < WD_MIN_CASH) { toast(`Min. pencairan Rp ${fmt(WD_MIN_CASH)}`); return; }
+  if (!db) { toast('Koneksi gagal'); return; }
+  const wd = { championId: champ.id, championEmail: champ.email || '', amount: net, type: 'cash', status: 'requested', requestedAt: new Date().toISOString() };
+  await db.collection('champion_withdrawals').add(wd).catch(() => {});
+  await syncMyChampionData(champ.email);
+  renderChampionDashboard();
+  toast('✅ Request pencairan terkirim ke admin!');
+}
+
+async function champRequestMenu() {
+  const champ = _currentChampion; if (!champ) return;
+  const { net, hasPending } = champBalance(champ);
+  if (hasPending) { toast('Masih ada pencairan menunggu konfirmasi admin. Tunggu selesai dulu ya.'); return; }
+  if (net <= 0) { toast('Belum ada komisi tersedia'); return; }
+  if (!db) { toast('Koneksi gagal'); return; }
+  const wd = { championId: champ.id, championEmail: champ.email || '', amount: net, type: 'menu', status: 'requested', requestedAt: new Date().toISOString() };
+  await db.collection('champion_withdrawals').add(wd).catch(() => {});
+  await syncMyChampionData(champ.email);
+  renderChampionDashboard();
+  toast('✅ Request tukar menu terkirim ke admin!');
+}
+
+// ═══════════════════════════════════════════
+//  CHAMPION ADMIN MANAGEMENT
+// ═══════════════════════════════════════════
+async function renderChampionAdmin() {
+  await syncChampionData();
+  const champs = getChampions();
+  const wds = getWithdrawals();
+  
+  // Champion list
+  const listEl = document.getElementById('champ-list');
+  if (listEl) {
+    if (!champs.length) {
+      listEl.innerHTML = '<div style="color:var(--mu);font-size:12px;">Belum ada champion. Tambah dulu!</div>';
+    } else {
+      listEl.innerHTML = champs.map(c => {
+        const myComms = getCommissions().filter(x => x.championId === c.id);
+        const myOrders = getOrders().filter(o => o.ref === c.refCode);
+        const totalKomisi = myComms.reduce((s,x) => s+x.commissionAmount, 0);
+        return `<div class="champ-row">
+          <div class="champ-avatar">${c.name[0]||'?'}</div>
+          <div class="champ-info">
+            <div class="champ-name">${escHTML(c.name)} <span class="champ-badge ${c.isActive?'active':'inactive'}">${c.isActive?'Aktif':'Nonaktif'}</span></div>
+            <div class="champ-meta">ref: ${c.refCode} · ${myOrders.length} order · Komisi: ${rp(totalKomisi)}</div>
+          </div>
+          <div class="champ-actions">
+            <button class="btn-champ-edit" onclick="openEditChamp('${c.id}')">✏️</button>
+            <button class="btn-champ-toggle ${c.isActive?'active':'inactive'}" onclick="toggleChamp('${c.id}')">${c.isActive?'Nonaktifkan':'Aktifkan'}</button>
+          </div>
+        </div>`;
+      }).join('');
+    }
+  }
+
+  // Withdraw requests
+  const wdEl = document.getElementById('wd-req-list');
+  const wdBadge = document.getElementById('wd-badge');
+  const pendingWds = wds.filter(w => w.status === 'requested');
+  if (wdBadge) { wdBadge.style.display = pendingWds.length ? 'inline-block' : 'none'; wdBadge.textContent = pendingWds.length; }
+  if (wdEl) {
+    if (!pendingWds.length) {
+      const approvedWds = wds.filter(w => w.status === 'approved');
+      if (!approvedWds.length && !wds.length) {
+        wdEl.innerHTML = '<div style="color:var(--mu);font-size:12px;">Tidak ada request pencairan.</div>';
+      } else {
+        const recentDone = wds.filter(w => w.status === 'completed').slice(0,3);
+        wdEl.innerHTML = recentDone.map(w => {
+          const c = champs.find(x => x.id === w.championId);
+          return `<div class="wd-req-row" style="opacity:.6;">
+            <div class="wd-req-top"><span class="wd-req-name">${c?escHTML(c.name):'?'}</span><span class="wd-req-amt">${rp(w.amount)}</span></div>
+            <div class="wd-req-meta">${w.type==='menu'?'🍱 Tukar Menu':'💸 Transfer'} · ✅ Selesai</div>
+          </div>`;
+        }).join('') || '<div style="color:var(--mu);font-size:12px;">Tidak ada request.</div>';
+      }
+    } else {
+      const allWds = [...pendingWds, ...wds.filter(w => w.status === 'approved')];
+      wdEl.innerHTML = allWds.map(w => {
+        const c = champs.find(x => x.id === w.championId);
+        const isPending = w.status === 'requested';
+        const isApproved = w.status === 'approved';
+        return `<div class="wd-req-row">
+          <div class="wd-req-top"><span class="wd-req-name">${c?escHTML(c.name):'?'}</span><span class="wd-req-amt">${rp(w.amount)}</span></div>
+          <div class="wd-req-meta">${w.type==='menu'?'🍱 Tukar Menu':'💸 Transfer'} · ${new Date(w.requestedAt).toLocaleDateString('id-ID')} · ${isPending?'⏳ Menunggu':isApproved?'✅ Disetujui':''}</div>
+          ${c && c.bankAccount ? `<div class="wd-req-meta" style="color:var(--n);font-weight:700;">Rekening: ${escHTML(c.bankAccount)}</div>` : ''}
+          <div class="wd-req-btns">
+            ${isPending ? `<button class="btn-wd-approve" onclick="approveWd('${w.id}')">✅ Setujui</button>` : ''}
+            ${isApproved ? `<button class="btn-wd-complete" onclick="completeWd('${w.id}')">✔️ Tandai Selesai</button>` : ''}
+            <button class="btn-wd-reject" onclick="rejectWd('${w.id}')">✕</button>
+          </div>
+        </div>`;
+      }).join('');
+    }
+  }
+
+  // Ranking
+  const rankEl = document.getElementById('champ-ranking');
+  if (rankEl) {
+    const allOrders = getOrders();
+    const ranked = champs.map(c => {
+      const myOrds = allOrders.filter(o => o.ref === c.refCode);
+      const rev = myOrds.reduce((s,o) => s+o.total, 0);
+      return { ...c, orderCount: myOrds.length, revenue: rev };
+    }).sort((a,b) => b.orderCount - a.orderCount);
+    rankEl.innerHTML = ranked.length ? ranked.map((c,i) => `
+      <div class="champ-rank-row">
+        <div class="champ-rank-num">${i+1}</div>
+        <div style="flex:1;">
+          <div style="font-size:13px;font-weight:700;color:var(--n);">${escHTML(c.name)}</div>
+          <div style="font-size:10px;color:var(--mu);">ref: ${c.refCode} · ${c.orderCount} order · ${rp(c.revenue)}</div>
+        </div>
+      </div>`).join('') : '<div style="color:var(--mu);font-size:12px;">Belum ada data.</div>';
+  }
+}
+
+function openAddChamp() {
+  document.getElementById('champ-edit-id').value = '';
+  document.getElementById('champ-form-title').textContent = '＋ Tambah Champion';
+  ['champ-fname','champ-femail','champ-fpass','champ-fref','champ-fbank'].forEach(id => { document.getElementById(id).value = ''; });
+  document.getElementById('champ-form').style.display = 'block';
+}
+
+function openEditChamp(id) {
+  const c = getChampions().find(x => x.id === id); if (!c) return;
+  document.getElementById('champ-edit-id').value = id;
+  document.getElementById('champ-form-title').textContent = '✏️ Edit Champion';
+  document.getElementById('champ-fname').value = c.name || '';
+  document.getElementById('champ-femail').value = c.email || '';
+  document.getElementById('champ-fpass').value = '';
+  document.getElementById('champ-fref').value = c.refCode || '';
+  document.getElementById('champ-fbank').value = c.bankAccount || '';
+  document.getElementById('champ-form').style.display = 'block';
+}
+
+function closeChampForm() { document.getElementById('champ-form').style.display = 'none'; }
+
+async function saveChamp() {
+  const editId = document.getElementById('champ-edit-id').value;
+  const name  = document.getElementById('champ-fname').value.trim();
+  const email = document.getElementById('champ-femail').value.trim().toLowerCase();
+  const pass  = document.getElementById('champ-fpass').value;
+  const ref   = document.getElementById('champ-fref').value.trim().toLowerCase().replace(/\s/g,'');
+  const bank  = document.getElementById('champ-fbank').value.trim();
+  if (!name || !email || !ref) { toast('Nama, email & ref code wajib!'); return; }
+  if (!editId && !pass) { toast('Password wajib untuk champion baru!'); return; }
+  if (!db) { toast('Koneksi gagal'); return; }
+
+  // Create Firebase Auth account for champion
+  if (!editId || pass) {
+    const pwd = pass || '';
+    const ok = await createFBAccount(email, pwd);
+    if (!ok) { toast('❌ Gagal buat akun. Email sudah dipakai?'); return; }
+  }
+
+  const data = { name, email, refCode: ref, bankAccount: bank, isActive: true, updatedAt: new Date().toISOString() };
+  if (editId) {
+    await db.collection('champions').doc(editId).update(data).catch(() => {});
+    toast('✅ Champion diupdate!');
+  } else {
+    data.createdAt = new Date().toISOString();
+    await db.collection('champions').add(data).catch(() => {});
+    toast('✅ Champion ditambahkan!');
+  }
+  closeChampForm();
+  await renderChampionAdmin();
+}
+
+async function toggleChamp(id) {
+  const c = getChampions().find(x => x.id === id); if (!c) return;
+  const newVal = !c.isActive;
+  if (!db) return;
+  await db.collection('champions').doc(id).update({ isActive: newVal }).catch(() => {});
+  await syncChampionData();
+  renderChampionAdmin();
+  toast(newVal ? '✅ Champion diaktifkan' : '🔒 Champion dinonaktifkan');
+}
+
+async function approveWd(id) {
+  if (!db) return;
+  await db.collection('champion_withdrawals').doc(id).update({ status: 'approved', approvedAt: new Date().toISOString() }).catch(() => {});
+  await syncChampionData();
+  renderChampionAdmin();
+  toast('✅ Request disetujui!');
+}
+
+async function completeWd(id) {
+  if (!db) return;
+  await db.collection('champion_withdrawals').doc(id).update({ status: 'completed', completedAt: new Date().toISOString() }).catch(() => {});
+  await syncChampionData();
+  renderChampionAdmin();
+  toast('✔️ Pencairan selesai!');
+}
+
+async function rejectWd(id) {
+  if (!confirm('Tolak request pencairan ini?')) return;
+  if (!db) return;
+  await db.collection('champion_withdrawals').doc(id).update({ status: 'rejected', rejectedAt: new Date().toISOString() }).catch(() => {});
+  await syncChampionData();
+  renderChampionAdmin();
+  toast('❌ Request ditolak.');
+}
+
+// ═══════════════════════════════════════════
+//  BANNER ADMIN MANAGEMENT
+// ═══════════════════════════════════════════
+function renderBannerAdmin() {
+  const banners = getBanners();
+  const el = document.getElementById('banner-list'); if (!el) return;
+  if (!banners.length) { el.innerHTML = '<div style="color:var(--mu);font-size:12px;">Belum ada banner.</div>'; return; }
+  const bgLabels = { navy:'Navy', gold:'Gold', green:'Hijau', red:'Merah' };
+  el.innerHTML = banners.map((b,i) => `
+    <div style="display:flex;align-items:center;gap:9px;padding:9px 0;border-bottom:1px solid var(--bd);">
+      <div style="width:36px;height:36px;border-radius:8px;background:${b.bg==='gold'?'linear-gradient(135deg,#c9a84c,#e8c97a)':b.bg==='green'?'#166534':b.bg==='red'?'#991b1b':'var(--n)'};display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">${b.emoji||'🎉'}</div>
+      <div style="flex:1;">
+        <div style="font-size:12px;font-weight:700;color:var(--n);">${escHTML(b.title||'')}</div>
+        <div style="font-size:10px;color:var(--mu);">${escHTML(b.desc||'')} · ${bgLabels[b.bg]||b.bg}</div>
+      </div>
+      <div style="display:flex;gap:5px;">
+        <button onclick="toggleBanner(${i})" style="background:${b.active===false?'#dcfce7':'#fee2e2'};border:none;border-radius:6px;padding:4px 8px;font-size:10px;font-weight:700;cursor:pointer;color:${b.active===false?'#166534':'#dc2626'};">${b.active===false?'Aktifkan':'Nonaktifkan'}</button>
+        <button onclick="editBanner(${i})" style="background:#f0f2f8;border:none;border-radius:6px;padding:4px 8px;font-size:10px;cursor:pointer;">✏️</button>
+        <button onclick="deleteBanner(${i})" style="background:#fee2e2;border:none;border-radius:6px;padding:4px 8px;font-size:10px;cursor:pointer;color:#dc2626;">✕</button>
+      </div>
+    </div>`).join('');
+}
+
+function openAddBanner() {
+  document.getElementById('banner-edit-id').value = '';
+  document.getElementById('banner-form-title').textContent = '＋ Tambah Banner';
+  ['banner-ftitle','banner-fdesc'].forEach(id => { document.getElementById(id).value = ''; });
+  document.getElementById('banner-femoji').value = '🎉';
+  document.getElementById('banner-fbg').value = 'navy';
+  document.getElementById('banner-form').style.display = 'block';
+}
+
+function editBanner(idx) {
+  const b = getBanners()[idx]; if (!b) return;
+  document.getElementById('banner-edit-id').value = idx;
+  document.getElementById('banner-form-title').textContent = '✏️ Edit Banner';
+  document.getElementById('banner-ftitle').value = b.title || '';
+  document.getElementById('banner-fdesc').value = b.desc || '';
+  document.getElementById('banner-femoji').value = b.emoji || '🎉';
+  document.getElementById('banner-fbg').value = b.bg || 'navy';
+  document.getElementById('banner-form').style.display = 'block';
+}
+
+function closeBannerForm() { document.getElementById('banner-form').style.display = 'none'; }
+
+function saveBanner() {
+  const editIdx = document.getElementById('banner-edit-id').value;
+  const title = document.getElementById('banner-ftitle').value.trim();
+  const desc  = document.getElementById('banner-fdesc').value.trim();
+  const emoji = document.getElementById('banner-femoji').value.trim() || '🎉';
+  const bg    = document.getElementById('banner-fbg').value || 'navy';
+  if (!title) { toast('Judul banner wajib!'); return; }
+  const banners = getBanners();
+  const banner = { title, desc, emoji, bg, active: true };
+  if (editIdx !== '') banners[parseInt(editIdx)] = { ...banners[parseInt(editIdx)], ...banner };
+  else banners.push(banner);
+  ss(SK.banners, banners);
+  closeBannerForm();
+  renderBannerAdmin();
+  renderBannerCarousel();
+  toast('✅ Banner disimpan!');
+}
+
+function toggleBanner(idx) {
+  const banners = getBanners();
+  banners[idx].active = !banners[idx].active;
+  ss(SK.banners, banners);
+  renderBannerAdmin();
+  renderBannerCarousel();
+  toast(banners[idx].active ? '✅ Banner diaktifkan' : '🔒 Banner dinonaktifkan');
+}
+
+function deleteBanner(idx) {
+  if (!confirm('Hapus banner ini?')) return;
+  const banners = getBanners();
+  banners.splice(idx, 1);
+  ss(SK.banners, banners);
+  renderBannerAdmin();
+  renderBannerCarousel();
+  toast('🗑️ Banner dihapus.');
 }
 </script>
 </body>

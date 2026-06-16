@@ -1,18 +1,22 @@
 rules_version = '2';
 
 // ════════════════════════════════════════════════════════════════
-//  Beti Nur Catering — Firestore Security Rules
-//  Paste isi file ini di: Firebase Console → Firestore Database →
-//  tab "Rules" → tempel → Publish.
+//  Beti Nur Catering — Firestore Rules (VERSI CHAMPION)
+//  Dipakai HANYA setelah betinur-champion.html di-deploy.
+//  Beda dari firestore.rules biasa: di sini champion JUGA login Firebase
+//  Auth, jadi "sudah login" tidak lagi berarti "staff". Pakai custom claim:
+//    - token.staff == true  → staff internal (super-admin, orders, driver)
+//    - token.admin == true  → super-admin saja
+//  Champion TIDAK punya claim apa pun → otomatis tertolak dari area staff.
 // ════════════════════════════════════════════════════════════════
 
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Staff/admin/driver = sudah login lewat Firebase Auth (PIN → akun FB)
-    function isStaff() {
-      return request.auth != null;
-    }
+    function isStaff() { return request.auth != null && request.auth.token.staff == true; }
+    function isAdmin() { return request.auth != null && request.auth.token.admin == true; }
+    function isSignedIn() { return request.auth != null; }
+    function myEmail() { return request.auth.token.email; }
 
     // Validasi pesanan baru dari pelanggan (anonim) — cegah spam/sampah
     function isValidNewOrder() {
@@ -27,24 +31,46 @@ service cloud.firestore {
           && d.paid == false;
     }
 
-    // ── KONFIGURASI (menu, kalender, settings, logo, qris, menuHistory, staff) ──
+    // ── KONFIGURASI ──
     match /config/{doc} {
-      // Pelanggan butuh baca menu/kalender/settings/logo/qris.
-      // 'staff' berisi hash PIN → tetap perlu dibaca pra-login untuk verifikasi PIN,
-      // tapi isinya hanya hash bergaram (bukan PIN polos).
-      allow read: if true;
-      // Hanya staff terautentikasi yang boleh mengubah konfigurasi.
-      allow write: if isStaff();
+      allow read: if true;            // pelanggan butuh baca menu/kalender/dll
+      allow write: if isAdmin();      // ubah konfig = super-admin saja (champion TIDAK bisa)
     }
 
     // ── PESANAN ──
     match /orders/{orderId} {
-      // Pelanggan anonim boleh BUAT pesanan baru (tervalidasi).
-      allow create: if isValidNewOrder();
-      // Baca/lihat semua pesanan = staff saja (berisi data pribadi pelanggan).
-      allow read: if isStaff();
-      // Ubah status/paid/items & hapus = staff saja.
+      allow create: if isValidNewOrder();   // pelanggan anonim buat order
+      allow read:   if isStaff();            // baca PII = staff saja (champion TIDAK bisa)
       allow update, delete: if isStaff();
+    }
+
+    // ── CHAMPION (data champion) ──
+    match /champions/{id} {
+      // Admin lihat semua; champion cuma boleh baca dokumennya sendiri.
+      allow read:  if isAdmin() || (isSignedIn() && resource.data.email == myEmail());
+      allow write: if isAdmin();             // buat/ubah champion = admin saja
+    }
+
+    // ── KOMISI ──
+    match /champion_commissions/{id} {
+      // Admin lihat semua; champion cuma komisinya sendiri.
+      allow read:   if isAdmin() || (isSignedIn() && resource.data.championEmail == myEmail());
+      // Komisi HANYA boleh ditulis staff (dibuat saat admin tandai order "sudah bayar").
+      // Champion TIDAK bisa bikin/ubah komisi → cegah komisi palsu.
+      allow create, update, delete: if isStaff();
+    }
+
+    // ── PENCAIRAN ──
+    match /champion_withdrawals/{id} {
+      allow read: if isAdmin() || (isSignedIn() && resource.data.championEmail == myEmail());
+      // Champion boleh AJUKAN pencairan atas namanya sendiri, status harus 'requested'.
+      allow create: if isSignedIn()
+                    && request.resource.data.championEmail == myEmail()
+                    && request.resource.data.status == 'requested'
+                    && request.resource.data.amount is number
+                    && request.resource.data.amount > 0;
+      // Approve/complete/reject (pindahkan uang) = admin saja.
+      allow update, delete: if isAdmin();
     }
 
     // ── Tolak path lain ──
