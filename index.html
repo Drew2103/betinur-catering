@@ -680,6 +680,12 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--cr);color:var(-
     <div id="srec"></div>
     <div class="rtot"><span>Total</span><span id="stotok">Rp 0</span></div>
   </div>
+  <!-- Peringatan jika sync Firestore gagal (tersembunyi by default) -->
+  <div id="sync-warn" style="display:none;background:#fff3cd;border:1px solid #ffc107;border-radius:10px;padding:10px 14px;margin:10px 0;font-size:12px;color:#856404;text-align:left;">
+    ⚠️ <strong>Pesanan tersimpan, tapi gagal terkirim ke server.</strong><br>
+    Hubungi pemilik lewat WhatsApp di bawah untuk konfirmasi manual, atau coba pesan lagi.<br>
+    <small style="color:#a07000;">Kemungkinan penyebab: koneksi internet lemah atau server sedang gangguan.</small>
+  </div>
   <!-- WA CONFIRMATION BUTTON -->
   <a class="btn-wa" id="wa-link" href="#" target="_blank" rel="noopener noreferrer">
     <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
@@ -1227,9 +1233,10 @@ function getCal()     { return ls(SK.cal)     || {}; }
 function getSettings(){ return ls(SK.settings) || { waNumber: WA_DEFAULT, sarapanCloseTime: '05:00', siangCloseTime: '08:00', openTime: '12:00' }; }
 function getOrderWindow() {
   const s = getSettings();
-  // sarapanCloseTime / siangCloseTime baru menggantikan closeTime lama (migrasi otomatis)
-  const [scH,scM] = (s.sarapanCloseTime || s.closeTime || '05:00').split(':').map(Number);
-  const [lcH,lcM] = (s.siangCloseTime  || '08:00').split(':').map(Number);
+  // Migrasi otomatis dari field closeTime lama ke field baru
+  // closeTime lama dipetakan ke siangCloseTime (gate utama), bukan sarapan
+  const [scH,scM] = (s.sarapanCloseTime || '05:00').split(':').map(Number);
+  const [lcH,lcM] = (s.siangCloseTime || s.closeTime || '08:00').split(':').map(Number);
   const [oH,oM]   = (s.openTime  || '12:00').split(':').map(Number);
   const now = new Date(), h = now.getHours(), m = now.getMinutes();
   const nowMin = h*60+m, scMin = scH*60+scM, lcMin = lcH*60+lcM, oMin = oH*60+oM;
@@ -1918,7 +1925,14 @@ function placeOrder() {
   };
 
   const orders = getOrders(); orders.unshift(order); ss(SK.orders, orders);
-  if (db) db.collection('orders').doc(order.id).set(order).catch(e => console.warn('order save:', e));
+  if (db) {
+    db.collection('orders').doc(order.id).set(order).catch(e => {
+      console.warn('order save:', e);
+      // Tampilkan peringatan jika Firestore gagal — order tersimpan lokal tapi mungkin belum diterima admin
+      const syncWarn = document.getElementById('sync-warn');
+      if (syncWarn) syncWarn.style.display = 'block';
+    });
+  }
 
   // Persist normalised customer details
   user = { name: order.name, phone: order.phone, addr: order.addr };
@@ -1933,6 +1947,10 @@ function placeOrder() {
   const oh = ongkir ? `<div class="ritem" style="color:var(--mu)"><span>Ongkir</span><span>${rp(ongkir)}</span></div>` : '';
   document.getElementById('srec').innerHTML    = ih + oh;
   document.getElementById('stotok').textContent = rp(total);
+
+  // Reset sync warning dari order sebelumnya
+  const syncWarn = document.getElementById('sync-warn');
+  if (syncWarn) syncWarn.style.display = 'none';
 
   // Set WA confirmation link
   setWALink(order);
