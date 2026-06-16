@@ -1,0 +1,55 @@
+rules_version = '2';
+
+// ════════════════════════════════════════════════════════════════
+//  Beti Nur Catering — Firestore Security Rules
+//  Paste isi file ini di: Firebase Console → Firestore Database →
+//  tab "Rules" → tempel → Publish.
+// ════════════════════════════════════════════════════════════════
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Staff/admin/driver = sudah login lewat Firebase Auth (PIN → akun FB)
+    function isStaff() {
+      return request.auth != null;
+    }
+
+    // Validasi pesanan baru dari pelanggan (anonim) — cegah spam/sampah
+    function isValidNewOrder() {
+      let d = request.resource.data;
+      return d.id is string
+          && d.name is string  && d.name.size() > 0 && d.name.size() < 120
+          && d.phone is string && d.phone.size() < 30
+          && d.addr is string  && d.addr.size() < 400
+          && d.total is number && d.total >= 0 && d.total < 100000000
+          && d.items is list   && d.items.size() > 0 && d.items.size() <= 100
+          && d.status == 'pending'
+          && d.paid == false;
+    }
+
+    // ── KONFIGURASI (menu, kalender, settings, logo, qris, menuHistory, staff) ──
+    match /config/{doc} {
+      // Pelanggan butuh baca menu/kalender/settings/logo/qris.
+      // 'staff' berisi hash PIN → tetap perlu dibaca pra-login untuk verifikasi PIN,
+      // tapi isinya hanya hash bergaram (bukan PIN polos).
+      allow read: if true;
+      // Hanya staff terautentikasi yang boleh mengubah konfigurasi.
+      allow write: if isStaff();
+    }
+
+    // ── PESANAN ──
+    match /orders/{orderId} {
+      // Pelanggan anonim boleh BUAT pesanan baru (tervalidasi).
+      allow create: if isValidNewOrder();
+      // Baca/lihat semua pesanan = staff saja (berisi data pribadi pelanggan).
+      allow read: if isStaff();
+      // Ubah status/paid/items & hapus = staff saja.
+      allow update, delete: if isStaff();
+    }
+
+    // ── Tolak path lain ──
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

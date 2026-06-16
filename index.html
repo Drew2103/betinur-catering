@@ -1165,7 +1165,24 @@ const FS_MAP = {
 function fsWrite(k, v) {
   const doc = FS_MAP[k];
   if (!db || !doc) return;
+  // Calendar ditangani lewat targeted per-day merge (fsCalSet/fsCalDelete) supaya
+  // edit 1 hari TIDAK menimpa seluruh kalender dengan snapshot lokal yang mungkin basi.
+  if (doc === 'calendar') return;
   db.collection('config').doc(doc).set({ data: v }).catch(e => console.warn('fsWrite:', e));
+}
+// Tulis HANYA satu hari ke kalender (deep-merge — hari lain di Firestore tetap aman)
+function fsCalSet(key, dd) {
+  if (!db) return;
+  db.collection('config').doc('calendar')
+    .set({ data: { [key]: dd } }, { merge: true })
+    .catch(e => console.warn('fsCalSet:', e));
+}
+// Hapus HANYA satu hari dari kalender (field delete — hari lain tetap aman)
+function fsCalDelete(key) {
+  if (!db) return;
+  db.collection('config').doc('calendar')
+    .update({ ['data.' + key]: firebase.firestore.FieldValue.delete() })
+    .catch(e => console.warn('fsCalDelete:', e));
 }
 function fsGet(doc) {
   if (!db) return Promise.resolve(null);
@@ -1187,14 +1204,15 @@ async function syncFromFirestore() {
   try {
     const results = await Promise.all(docs.map(d => fsGet(d)));
     results.forEach((data, i) => {
-      if (data !== null) try { localStorage.setItem(keyMap[docs[i]], JSON.stringify(data)); } catch(e) {}
+      // Jangan timpa data lokal yang bagus dengan dokumen kosong/null dari Firestore
+      if (data === null) return;
+      if (Array.isArray(data) && data.length === 0) return;
+      if (data && typeof data === 'object' && !Array.isArray(data) && Object.keys(data).length === 0) return;
+      try { localStorage.setItem(keyMap[docs[i]], JSON.stringify(data)); } catch(e) {}
     });
-    // also load orders
-    const snap = await db.collection('orders').get();
-    if (!snap.empty) {
-      const orders = snap.docs.map(d => d.data()).sort((a,b) => b.ts.localeCompare(a.ts));
-      try { localStorage.setItem(SK.orders, JSON.stringify(orders)); } catch(e) {}
-    }
+    // Catatan: pesanan TIDAK lagi dibaca massal di sini.
+    // Membaca seluruh /orders mengekspos PII semua pelanggan ke perangkat anonim.
+    // Admin/driver memuat pesanan lewat startOrdersListener() setelah login (ter-autentikasi).
   } catch(e) { console.warn('syncFromFirestore:', e); }
 }
 
@@ -1217,7 +1235,10 @@ function startConfigListeners() {
 function startOrdersListener() {
   if (!db || _ordersUnsub) return;
   _ordersUnsub = db.collection('orders').onSnapshot(snap => {
-    const orders = snap.docs.map(d => d.data()).sort((a,b) => b.ts.localeCompare(a.ts));
+    // Sort null-safe — kalau ada order tanpa ts, jangan sampai callback ini throw
+    // (kalau throw, daftar pesanan admin berhenti ter-update & seolah "hilang").
+    const orders = snap.docs.map(d => d.data())
+      .sort((a,b) => String(b && b.ts || '').localeCompare(String(a && a.ts || '')));
     try { localStorage.setItem(SK.orders, JSON.stringify(orders)); } catch(e) {}
     if (role === 'driver') { refreshDriverView(); return; }
     refreshOrders(); updateStats(); updateDapur();
@@ -1225,6 +1246,33 @@ function startOrdersListener() {
 }
 function stopOrdersListener() {
   if (_ordersUnsub) { _ordersUnsub(); _ordersUnsub = null; }
+}
+
+// ── Antrian pesanan yang gagal upload (anti "pesanan hilang") ──
+const SK_PENDING = 'bn_ord_pending';
+function getPendingOrders() { try { return JSON.parse(localStorage.getItem(SK_PENDING)) || []; } catch(e) { return []; } }
+function setPendingOrders(a) { try { localStorage.setItem(SK_PENDING, JSON.stringify(a)); } catch(e) {} }
+function enqueuePendingOrder(order) {
+  const q = getPendingOrders();
+  if (!q.some(o => o.id === order.id)) { q.push(order); setPendingOrders(q); }
+}
+let _flushing = false;
+async function flushPendingOrders() {
+  if (!db || _flushing) return;
+  const q = getPendingOrders();
+  if (!q.length) return;
+  _flushing = true;
+  const stillPending = [];
+  for (const order of q) {
+    try {
+      await db.collection('orders').doc(order.id).set(order);
+    } catch(e) {
+      console.warn('flushPendingOrders gagal utk', order.id, e);
+      stillPending.push(order); // gagal lagi → tetap di antrian, coba lain kali
+    }
+  }
+  setPendingOrders(stillPending);
+  _flushing = false;
 }
 function getMenu()    { return ls(SK.menu)    || DEF_MENU; }
 function getPh()      { return ls(SK.photos)  || {}; }
@@ -1393,6 +1441,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   updateLogos(); updateQRIS();
   await syncFromFirestore();
   updateLogos(); updateQRIS();
+  flushPendingOrders(); // retry pesanan yang sebelumnya gagal upload
   startConfigListeners();
   initDatePicker();
   setupTap(); renderMenu(); buildCal(); startClock(); checkReturning();
@@ -1928,10 +1977,14 @@ function placeOrder() {
   if (db) {
     db.collection('orders').doc(order.id).set(order).catch(e => {
       console.warn('order save:', e);
-      // Tampilkan peringatan jika Firestore gagal — order tersimpan lokal tapi mungkin belum diterima admin
+      // Order tersimpan lokal tapi gagal ke server → masuk antrian retry & tampilkan peringatan
+      enqueuePendingOrder(order);
       const syncWarn = document.getElementById('sync-warn');
       if (syncWarn) syncWarn.style.display = 'block';
     });
+  } else {
+    // DB belum siap → simpan ke antrian agar ter-upload nanti
+    enqueuePendingOrder(order);
   }
 
   // Persist normalised customer details
@@ -2484,6 +2537,8 @@ function saveCalMenu() {
   });
   if (Object.keys(dd).length) cal[key] = dd; else delete cal[key];
   ss(SK.cal, cal);
+  // Targeted Firestore write — cuma hari ini, hari lain aman
+  if (Object.keys(dd).length) fsCalSet(key, dd); else fsCalDelete(key);
   if (Object.keys(dd).length) {
     const hist = getMenuHistory().filter(h => h.key !== key);
     hist.unshift({ key, label: `${selCalDate} ${MONTH_NAMES[calMonth]} ${calYear}`, data: dd, savedAt: Date.now() });
@@ -2496,6 +2551,7 @@ function clearCalMenu() {
   if (!selCalDate || !confirm('Hapus semua menu untuk tanggal ini?')) return;
   const key = `${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(selCalDate).padStart(2,'0')}`;
   const cal = getCal(); delete cal[key]; ss(SK.cal, cal);
+  fsCalDelete(key);
   buildCal(); closeCalE(); toast('🗑️ Menu dihapus.');
 }
 function closeCalE() {
@@ -2535,6 +2591,7 @@ function applyMenuTemplate(idx) {
   const cal = getCal();
   cal[key] = h.data;
   ss(SK.cal, cal);
+  fsCalSet(key, h.data);
   openCalE(selCalDate);
   buildCal();
   toast(`✅ Template "${h.label}" diterapkan ke ${selCalDate} ${MONTH_NAMES[calMonth]}!`);
