@@ -1299,7 +1299,8 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--cr);color:var(-
           <div><label>TANGGAL MULAI</label><input type="date" id="exp-start"></div>
           <div><label>TANGGAL AKHIR</label><input type="date" id="exp-end"></div>
           <button class="btn-export" onclick="previewExport()">👁️ Preview Data</button>
-          <button class="btn-export" onclick="downloadCSV()" style="background:linear-gradient(135deg,var(--g),var(--gl));color:var(--n);">⬇️ Download Spreadsheet (CSV)</button>
+          <button class="btn-export" onclick="downloadCSV()" style="background:linear-gradient(135deg,var(--g),var(--gl));color:var(--n);">⬇️ Download Detail Transaksi (CSV)</button>
+          <button class="btn-export" onclick="downloadDailyRevenue()" style="background:var(--n);color:#fff;">💰 Rekap Pendapatan Harian (CSV)</button>
         </div>
         <div class="export-preview" id="exp-preview"></div>
       </div>
@@ -3224,6 +3225,39 @@ function downloadCSV() {
   downloadBlob(orderCsv, `betinur_pesanan_${start}_sd_${end}.csv`);
   setTimeout(() => downloadBlob(itemCsv, `betinur_items_${start}_sd_${end}.csv`), 250);
   toast('✅ 2 file CSV didownload!');
+}
+
+// ─── Rekap pendapatan HARIAN (1 baris = 1 tanggal) ───
+function downloadDailyRevenue() {
+  const data = getExportData();
+  if (!data.length) { toast('Tidak ada data untuk rentang ini!'); return; }
+  const start = document.getElementById('exp-start').value;
+  const end   = document.getElementById('exp-end').value;
+
+  // Kelompokkan per tanggal antar
+  const byDay = {};
+  data.forEach(o => {
+    const d = o.orderDate || o.ts.split('T')[0];
+    if (!byDay[d]) byDay[d] = { count: 0, paid: 0, unpaid: 0, total: 0 };
+    const t = o.total || 0;
+    byDay[d].count++;
+    byDay[d].total += t;
+    if (o.paid) byDay[d].paid += t; else byDay[d].unpaid += t;
+  });
+
+  const dates = Object.keys(byDay).sort();
+  const HEADERS = ['Tanggal','Jumlah Pesanan','Sudah Bayar (Rp)','Belum Bayar (Rp)','Total Pendapatan (Rp)'];
+  const rows = dates.map(d => [
+    d, byDay[d].count, byDay[d].paid, byDay[d].unpaid, byDay[d].total
+  ]);
+  // Baris GRAND TOTAL
+  const sum = dates.reduce((a,d) => {
+    a.count += byDay[d].count; a.paid += byDay[d].paid; a.unpaid += byDay[d].unpaid; a.total += byDay[d].total; return a;
+  }, { count:0, paid:0, unpaid:0, total:0 });
+  rows.push(['GRAND TOTAL', sum.count, sum.paid, sum.unpaid, sum.total]);
+
+  downloadBlob(toCSV(HEADERS, rows), `betinur_pendapatan_harian_${start}_sd_${end}.csv`);
+  toast(`✅ Rekap ${dates.length} hari didownload!`);
 }
 
 // ═══════════════════════════════════════════
