@@ -42,7 +42,8 @@ tailwind.config={darkMode:"class",corePlugins:{preflight:false},theme:{extend:{c
 :root{--n:#0f1f3d;--n2:#1a3260;--g:#c9a84c;--gl:#e8c97a;--gp:#fdf6e3;--cr:#fefcf7;--tx:#1a1a2e;--mu:#6b7280;--bd:#e8dfc5;--sh:0 2px 12px rgba(15,31,61,.08);--sf:0 8px 32px rgba(15,31,61,.45);}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
 html,body{min-height:100%;}
-body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--cr);color:var(--tx);max-width:480px;margin:0 auto;overflow-x:hidden;}
+body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--cr);color:var(--tx);margin:0 auto;overflow-x:hidden;width:100%;}
+#lv,#mdv,#cv,#sv,#hv,#chlv,#chv,#pv,#drv{max-width:480px;margin:0 auto;}
 .view{display:none;flex-direction:column;min-height:100vh;}.view.active{display:flex;}
 #lv{background:linear-gradient(160deg,var(--n),var(--n2) 55%,#0b2218);align-items:center;justify-content:center;padding:28px 20px;position:relative;overflow:hidden;}
 #lv::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 25% 15%,rgba(201,168,76,.22),transparent 55%),radial-gradient(ellipse at 85% 85%,rgba(201,168,76,.12),transparent 50%);pointer-events:none;}
@@ -658,13 +659,6 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--cr);color:var(-
    tampilan pelanggan tetap lebar HP & di tengah.
    ════════════════════════════════════════════════════════════ */
 @media (min-width: 900px) {
-  body { max-width: none; }
-
-  /* View non-admin (kecuali #mv yg sudah full-width GoFood) tetap selebar HP */
-  #lv, #mdv, #cv, #sv, #hv, #chlv, #chv, #pv, #drv {
-    max-width: 480px; margin-left: auto; margin-right: auto; width: 100%;
-  }
-
   /* ADMIN: header penuh di atas, sidebar nav kiri, konten kanan */
   #av.active {
     display: grid;
@@ -837,7 +831,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--cr);color:var(-
 </div>
 
 <!-- ═══ MENU ═══ -->
-<div id="mv" class="view font-body-md text-on-surface" style="max-width:none;background:#fbf9f4;">
+<div id="mv" class="view font-body-md text-on-surface" style="background:#fbf9f4;">
   <!-- ═══ NAVBAR (replika mockup) ═══ -->
   <header class="sticky top-0 z-50 bg-background/90 backdrop-blur-md border-b border-border-tan">
     <div class="max-w-[1200px] mx-auto px-4 py-3 flex justify-between items-center">
@@ -907,9 +901,9 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--cr);color:var(-
       <section id="gf-promo-section" style="display:none;" class="mb-4"></section>
 
       <!-- CUTOFF BADGE -->
-      <div class="flex items-center justify-between mb-2">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1 mb-2">
         <h4 id="mdtitle" class="text-base lg:text-xl font-bold text-primary">—</h4>
-        <span id="order-cutoff-badge" class="text-[10px] lg:text-xs font-bold text-gold uppercase tracking-widest">⏰ Sarapan s/d 05:00 • Siang s/d 08:00</span>
+        <span id="order-cutoff-badge" class="text-[9px] lg:text-xs font-bold text-gold uppercase tracking-wide text-right">⏰ Sarapan s/d 05:00 • Siang s/d 08:00</span>
       </div>
 
       <!-- MENU SCROLL AREA -->
@@ -2353,12 +2347,15 @@ function showView(id, pushHistory=true) {
   const currentId = current ? current.id : null;
   if (pushHistory && currentId && currentId !== id) {
     _navHistory.push(currentId);
+    try { history.pushState({ view: id }, '', ''); } catch(e) {}
   }
   document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
   document.getElementById(id).classList.add('active');
   window.scrollTo(0, 0);
   if (id !== 'av' && poll) { clearInterval(poll); poll = null; }
 }
+// Native back button (HP)
+window.addEventListener('popstate', () => { navBack(); });
 function navBack() {
   if (_navHistory.length > 0) {
     const prev = _navHistory.pop();
@@ -2557,6 +2554,7 @@ function renderMenu() {
     footerWA.href = 'https://wa.me/' + waNum;
   }
   renderPromoSection();
+  renderBannerCarousel();
 }
 
 function mcard(m, ph) {
@@ -2609,10 +2607,10 @@ function paketCard(m, ph) {
           <span class="text-[9px] font-extrabold text-gold bg-gold/10 px-2 py-0.5 rounded-md uppercase tracking-wider">📦 Paket</span>
         </div>
         <h5 class="text-base lg:text-lg font-extrabold text-primary mb-1">${escHTML(m.name)}</h5>
-        ${m.desc ? `<p class="text-[11px] lg:text-xs text-muted-gray leading-relaxed mb-2">${escHTML(m.desc)}</p>` : ''}
+        ${m.desc ? `<p class="text-[11px] lg:text-xs text-muted-gray leading-relaxed mb-2 break-words">${escHTML(m.desc)}</p>` : ''}
       </div>
-      <div class="flex items-center justify-between" onclick="event.stopPropagation()">
-        <span class="text-lg font-extrabold text-primary">Rp ${fmt(m.price)}</span>
+      <div class="flex items-center justify-between gap-2 flex-wrap" onclick="event.stopPropagation()">
+        <span class="text-lg font-extrabold text-primary whitespace-nowrap">Rp ${fmt(m.price)}</span>
         ${stepperH}
       </div>
     </div>
@@ -4612,11 +4610,20 @@ function renderPromoSection() {
         '<h5 class="text-sm font-bold mb-1">' + escHTML(p.title) + '</h5>' +
         '<p class="text-lg font-display-lg font-extrabold mb-1">' + escHTML(p.priceLabel || rp(p.price)) + '</p>' +
         (p.desc ? '<p class="text-[10px] text-white/60 mb-3 leading-relaxed">' + escHTML(p.desc) + '</p>' : '<div class="mb-3"></div>') +
-        '<button class="w-full py-1.5 bg-gold text-primary font-extrabold text-xs rounded-lg hover:bg-gold-light transition-colors">Pilih Paket</button>' +
+        '<button onclick="orderPaketWA(\'' + escHTML(p.title).replace(/'/g,"&#39;") + '\',' + p.price + ')" class="w-full py-1.5 bg-gold text-primary font-extrabold text-xs rounded-lg hover:bg-gold-light transition-colors active:scale-95">Pilih Paket</button>' +
       '</div>';
     }).join('') +
     '</div></div>' +
     '<span class="material-symbols-outlined" style="position:absolute;bottom:-8px;right:-8px;font-size:140px;opacity:.1;transform:rotate(12deg);pointer-events:none;">calendar_month</span>';
+}
+
+function orderPaketWA(title, price) {
+  const waNum = (getSettings().waNumber || WA_DEFAULT).replace(/\D/g,'');
+  const name = user && user.name ? user.name : '';
+  const msg = encodeURIComponent(
+    `Halo, saya ${name} ingin pesan *${title}* (${rp(price)}).\n\nMohon info lebih lanjut ya. Terima kasih! 🍱`
+  );
+  window.open(`https://wa.me/${waNum}?text=${msg}`, '_blank');
 }
 
 // ═══════════════════════════════════════════
@@ -4706,21 +4713,33 @@ function renderBannerCarousel() {
   const el = document.getElementById('banner-carousel');
   const slides = document.getElementById('banner-slides');
   const dots = document.getElementById('banner-dots');
-  if (!el || !banners.length) { if (el) el.style.display = 'none'; return; }
+  const fallback = document.getElementById('gf-hero-fallback');
+  if (!el || !banners.length) {
+    if (el) el.style.display = 'none';
+    if (fallback) fallback.style.display = '';
+    return;
+  }
+  // Tampilkan carousel, sembunyikan fallback
   el.style.display = 'block';
+  if (fallback) fallback.style.display = 'none';
   const bgMap = { navy:'linear-gradient(135deg,var(--n),var(--n2))', gold:'linear-gradient(135deg,#c9a84c,#e8c97a)', green:'linear-gradient(135deg,#166534,#15803d)', red:'linear-gradient(135deg,#991b1b,#dc2626)' };
-  slides.innerHTML = banners.map(b => `
-    <div class="banner-slide">
-      <div class="banner-slide-emoji" style="background:${bgMap[b.bg||'navy']||bgMap.navy}">
+  slides.style.cssText = 'display:flex;height:100%;transition:transform .4s ease;';
+  slides.innerHTML = banners.map(b => {
+    const bg = b.image ? '' : `background:${bgMap[b.bg||'navy']||bgMap.navy};`;
+    return `<div style="min-width:100%;height:100%;position:relative;overflow:hidden;">
+      <div style="width:100%;height:100%;${bg}display:flex;align-items:center;justify-content:center;position:relative;">
         ${b.image ? `<img src="${b.image}" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0;" alt="">` : ''}
-        <span style="font-size:64px;${b.image ? 'display:none;' : ''}">${escHTML(b.emoji||'🎉')}</span>
+        <span style="font-size:64px;position:relative;z-index:1;${b.image ? 'display:none;' : ''}">${escHTML(b.emoji||'🎉')}</span>
       </div>
-      <div class="banner-slide-overlay">
-        <div class="banner-slide-title">${escHTML(b.title||'')}</div>
-        ${b.desc ? `<div class="banner-slide-desc">${escHTML(b.desc)}</div>` : ''}
+      <div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(15,31,61,.85) 0%,rgba(15,31,61,.3) 50%,transparent);display:flex;align-items:flex-end;padding:16px;">
+        <div>
+          <div style="font-family:'Playfair Display',serif;color:white;font-size:18px;font-weight:700;margin-bottom:4px;">${escHTML(b.title||'')}</div>
+          ${b.desc ? `<div style="color:rgba(255,255,255,.7);font-size:11px;">${escHTML(b.desc)}</div>` : ''}
+        </div>
       </div>
-    </div>`).join('');
-  dots.innerHTML = banners.map((_,i) => `<div class="banner-dot ${i===0?'active':''}" onclick="goBannerSlide(${i})"></div>`).join('');
+    </div>`;
+  }).join('');
+  dots.innerHTML = banners.map((_,i) => `<div class="banner-dot ${i===0?'active':''}" onclick="goBannerSlide(${i})" style="width:8px;height:8px;border-radius:50%;background:${i===0?'var(--g)':'rgba(255,255,255,.4)'};cursor:pointer;"></div>`).join('');
   _bannerCurrent = 0;
   if (_bannerInterval) clearInterval(_bannerInterval);
   if (banners.length > 1) _bannerInterval = setInterval(nextBannerSlide, 3500);
@@ -4733,7 +4752,7 @@ function goBannerSlide(i) {
   const slides = document.getElementById('banner-slides');
   const dots = document.querySelectorAll('.banner-dot');
   if (slides) slides.style.transform = `translateX(-${i * 100}%)`;
-  dots.forEach((d,j) => d.classList.toggle('active', j === i));
+  dots.forEach((d,j) => { d.style.background = j === i ? 'var(--g)' : 'rgba(255,255,255,.4)'; });
 }
 
 function nextBannerSlide() {

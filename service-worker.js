@@ -4,7 +4,7 @@
    - Aset statis & CDN (ikon, font, jsPDF, Firebase libs) → cache-first / stale-while-revalidate
    - Firestore / Firebase API → SELALU lewat network (SDK punya offline cache sendiri)
    Naikkan CACHE_VERSION setiap deploy supaya cache lama dibersihkan otomatis. */
-const CACHE_VERSION = 'bnc-v7';
+const CACHE_VERSION = 'bnc-v8';
 const SHELL = [
   './',
   './index.html',
