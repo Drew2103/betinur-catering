@@ -1022,16 +1022,40 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--cr);color:var(-
 <div id="chlv" class="view">
   <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;padding:28px 20px;">
     <div class="chlcard">
-      <div style="text-align:center;margin-bottom:16px;">
-        <div style="font-size:40px;margin-bottom:8px;">🏆</div>
-        <h2 style="font-family:'Playfair Display',serif;color:white;font-size:20px;margin-bottom:4px;">Champion Portal</h2>
-        <p style="color:rgba(255,255,255,.4);font-size:11px;margin-bottom:20px;">Login untuk lihat dashboard kamu</p>
+      <!-- LOGIN -->
+      <div id="chl-login-form">
+        <div style="text-align:center;margin-bottom:16px;">
+          <div style="font-size:40px;margin-bottom:8px;">🏆</div>
+          <h2 style="font-family:'Playfair Display',serif;color:white;font-size:20px;margin-bottom:4px;">Champion Portal</h2>
+          <p style="color:rgba(255,255,255,.4);font-size:11px;margin-bottom:20px;">Login untuk lihat dashboard kamu</p>
+        </div>
+        <div class="lf"><label>EMAIL</label><input type="email" id="chl-email" placeholder="email@kamu.com" autocomplete="email"></div>
+        <div class="lf"><label>PASSWORD</label><input type="password" id="chl-pass" placeholder="Password kamu..."></div>
+        <button class="btn-login" onclick="champLogin()" style="margin-top:5px;">Masuk →</button>
+        <p class="lerr" id="chl-err" style="display:none;">Email atau password salah!</p>
+        <div style="display:flex;gap:8px;margin-top:12px;">
+          <button onclick="showView('lv')" style="flex:1;padding:10px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);border-radius:10px;color:rgba(255,255,255,.5);font-size:12px;cursor:pointer;font-family:inherit;">← Kembali</button>
+          <button onclick="toggleChampRegister(true)" style="flex:1;padding:10px;background:rgba(201,168,76,.2);border:1px solid rgba(201,168,76,.4);border-radius:10px;color:var(--g);font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">Daftar Baru →</button>
+        </div>
       </div>
-      <div class="lf"><label>EMAIL</label><input type="email" id="chl-email" placeholder="email@kamu.com" autocomplete="email"></div>
-      <div class="lf"><label>PASSWORD</label><input type="password" id="chl-pass" placeholder="Password kamu..."></div>
-      <button class="btn-login" onclick="champLogin()" style="margin-top:5px;">Masuk →</button>
-      <p class="lerr" id="chl-err" style="display:none;">Email atau password salah!</p>
-      <button onclick="showView('lv')" style="width:100%;padding:10px;margin-top:10px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);border-radius:10px;color:rgba(255,255,255,.5);font-size:12px;cursor:pointer;font-family:inherit;">← Kembali ke Halaman Utama</button>
+      <!-- REGISTER -->
+      <div id="chl-register-form" style="display:none;">
+        <div style="text-align:center;margin-bottom:16px;">
+          <div style="font-size:40px;margin-bottom:8px;">✨</div>
+          <h2 style="font-family:'Playfair Display',serif;color:white;font-size:20px;margin-bottom:4px;">Daftar Champion</h2>
+          <p style="color:rgba(255,255,255,.4);font-size:11px;margin-bottom:20px;">Buat akun baru & mulai dapat komisi 5%</p>
+        </div>
+        <div class="lf"><label>NAMA LENGKAP</label><input type="text" id="chr-name" placeholder="Nama kamu..." autocomplete="name"></div>
+        <div class="lf"><label>EMAIL</label><input type="email" id="chr-email" placeholder="email@kamu.com" autocomplete="email"></div>
+        <div class="lf"><label>PASSWORD</label><input type="password" id="chr-pass" placeholder="Minimal 6 karakter..." autocomplete="new-password"></div>
+        <div class="lf"><label>NO. REKENING / GOPAY (opsional)</label><input type="text" id="chr-bank" placeholder="BCA 1234567890 a/n Nama"></div>
+        <button class="btn-login" onclick="champRegister()" style="margin-top:5px;background:linear-gradient(135deg,var(--g),var(--gl));color:var(--n);">Daftar Sekarang →</button>
+        <p class="lerr" id="chr-err" style="display:none;"></p>
+        <p id="chr-success" style="display:none;background:rgba(37,211,102,.15);border:1px solid rgba(37,211,102,.3);border-radius:10px;padding:10px;margin-top:10px;font-size:11px;color:#25d366;text-align:center;"></p>
+        <div style="display:flex;gap:8px;margin-top:12px;">
+          <button onclick="toggleChampRegister(false)" style="flex:1;padding:10px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);border-radius:10px;color:rgba(255,255,255,.5);font-size:12px;cursor:pointer;font-family:inherit;">← Sudah punya akun</button>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -5024,6 +5048,63 @@ async function updateCommissionForOrder(order) {
 // ═══════════════════════════════════════════
 //  CHAMPION LOGIN / DASHBOARD
 // ═══════════════════════════════════════════
+function toggleChampRegister(show) {
+  document.getElementById('chl-login-form').style.display = show ? 'none' : 'block';
+  document.getElementById('chl-register-form').style.display = show ? 'block' : 'none';
+  document.getElementById('chr-err').style.display = 'none';
+  document.getElementById('chr-success').style.display = 'none';
+}
+
+async function champRegister() {
+  const name  = (document.getElementById('chr-name').value || '').trim();
+  const email = (document.getElementById('chr-email').value || '').trim().toLowerCase();
+  const pass  = (document.getElementById('chr-pass').value || '');
+  const bank  = (document.getElementById('chr-bank').value || '').trim();
+  const errEl = document.getElementById('chr-err');
+  const sucEl = document.getElementById('chr-success');
+  errEl.style.display = 'none'; sucEl.style.display = 'none';
+
+  if (!name || !email || !pass) { errEl.textContent = 'Nama, email & password wajib diisi!'; errEl.style.display = 'block'; return; }
+  if (pass.length < 6) { errEl.textContent = 'Password minimal 6 karakter!'; errEl.style.display = 'block'; return; }
+  if (!auth) { errEl.textContent = 'Koneksi gagal. Coba lagi.'; errEl.style.display = 'block'; return; }
+
+  // Buat akun Firebase Auth langsung (champion bikin sendiri)
+  try {
+    await auth.createUserWithEmailAndPassword(email, pass);
+  } catch(e) {
+    if (e.code === 'auth/email-already-in-use') {
+      errEl.textContent = 'Email sudah terdaftar. Coba login.';
+    } else if (e.code === 'auth/weak-password') {
+      errEl.textContent = 'Password terlalu lemah (min. 6 karakter).';
+    } else {
+      errEl.textContent = 'Gagal daftar: ' + (e.message || e.code);
+    }
+    errEl.style.display = 'block'; return;
+  }
+
+  // Generate ref code dari nama
+  const refCode = name.toLowerCase().replace(/[^a-z0-9]/g,'').slice(0,8) + Math.floor(Math.random()*100);
+
+  // Simpan ke Firestore (status pending — admin harus approve)
+  if (db) {
+    await db.collection('champions').add({
+      name, email, refCode, bankAccount: bank,
+      isActive: false,  // PENDING — admin approve dulu
+      createdAt: new Date().toISOString(),
+      selfRegistered: true
+    }).catch(e => console.warn('champion save:', e));
+  }
+
+  // Sign out (champion belum aktif, nggak bisa masuk dashboard)
+  if (auth) auth.signOut().catch(() => {});
+
+  sucEl.innerHTML = '🎉 <strong>Pendaftaran berhasil!</strong><br>Akun kamu sedang menunggu persetujuan admin. Kamu akan dihubungi setelah diaktifkan.';
+  sucEl.style.display = 'block';
+
+  // Reset form
+  ['chr-name','chr-email','chr-pass','chr-bank'].forEach(id => document.getElementById(id).value = '');
+}
+
 async function champLogin() {
   const email = (document.getElementById('chl-email').value || '').trim();
   const pass  = (document.getElementById('chl-pass').value || '').trim();
