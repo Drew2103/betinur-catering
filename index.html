@@ -5230,8 +5230,11 @@ async function renderChampionAdmin() {
             <div class="champ-name">${escHTML(c.name)} <span class="champ-badge ${c.isActive?'active':'inactive'}">${c.isActive?'Aktif':'Nonaktif'}</span></div>
             <div class="champ-meta">ref: ${c.refCode} · ${myOrders.length} order · Komisi: ${rp(totalKomisi)}</div>
           </div>
-          <div class="champ-actions">
+          <div class="champ-actions" style="flex-wrap:wrap;gap:4px;">
+            <button onclick="copyChampLink('${c.refCode}','${escHTML(c.email).replace(/'/g,"&#39;")}')" style="background:#dbeafe;border:none;border-radius:6px;padding:4px 8px;font-size:10px;cursor:pointer;color:#2563eb;font-weight:700;" title="Copy link">🔗 Link</button>
+            <button onclick="sendChampWA('${escHTML(c.name).replace(/'/g,"&#39;")}','${escHTML(c.email).replace(/'/g,"&#39;")}','${c.refCode}')" style="background:#dcfce7;border:none;border-radius:6px;padding:4px 8px;font-size:10px;cursor:pointer;color:#16a34a;font-weight:700;" title="Kirim via WA">💬 WA</button>
             <button class="btn-champ-edit" onclick="openEditChamp('${c.id}')">✏️</button>
+            <button onclick="deleteChamp('${c.id}','${escHTML(c.name).replace(/'/g,"&#39;")}')" style="background:#fee2e2;border:none;border-radius:6px;padding:4px 8px;font-size:10px;cursor:pointer;color:#dc2626;">🗑️</button>
             <button class="btn-champ-toggle ${c.isActive?'active':'inactive'}" onclick="toggleChamp('${c.id}')">${c.isActive?'Nonaktifkan':'Aktifkan'}</button>
           </div>
         </div>`;
@@ -5342,13 +5345,67 @@ async function saveChamp() {
   if (editId) {
     await db.collection('champions').doc(editId).update(data).catch(() => {});
     toast('✅ Champion diupdate!');
+    closeChampForm();
+    await renderChampionAdmin();
   } else {
     data.createdAt = new Date().toISOString();
     await db.collection('champions').add(data).catch(() => {});
-    toast('✅ Champion ditambahkan!');
+    closeChampForm();
+    await renderChampionAdmin();
+    // Tampilkan konfirmasi + kirim WA
+    const loginUrl = `${location.origin}${location.pathname}?champion=1`;
+    const refUrl = `${location.origin}${location.pathname}?ref=${ref}`;
+    const confirmHtml = `<div style="background:white;border:2px solid var(--g);border-radius:16px;padding:20px;margin-bottom:14px;box-shadow:0 8px 30px rgba(15,31,61,.15);">
+      <div style="text-align:center;margin-bottom:12px;">
+        <div style="font-size:36px;margin-bottom:4px;">🎉</div>
+        <h3 style="font-size:16px;font-weight:800;color:var(--n);">Champion Berhasil Ditambahkan!</h3>
+        <p style="font-size:11px;color:var(--mu);margin-top:4px;">${escHTML(name)} (${escHTML(email)})</p>
+      </div>
+      <div style="background:#f7f6f2;border-radius:10px;padding:12px;font-size:11px;margin-bottom:12px;">
+        <div style="font-weight:700;color:var(--n);margin-bottom:6px;">📱 Login Champion:</div>
+        <div style="word-break:break-all;color:#2563eb;margin-bottom:8px;">${escHTML(loginUrl)}</div>
+        <div style="font-weight:700;color:var(--n);margin-bottom:6px;">🔗 Link Referral:</div>
+        <div style="word-break:break-all;color:#2563eb;">${escHTML(refUrl)}</div>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <button onclick="copyChampLink('${ref}','${escHTML(email).replace(/'/g,"&#39;")}')" style="flex:1;padding:10px;background:var(--n);color:white;border:none;border-radius:10px;font-weight:700;font-size:12px;cursor:pointer;font-family:inherit;">📋 Copy Semua</button>
+        <button onclick="sendChampWA('${escHTML(name).replace(/'/g,"&#39;")}','${escHTML(email).replace(/'/g,"&#39;")}','${ref}')" style="flex:1;padding:10px;background:#25d366;color:white;border:none;border-radius:10px;font-weight:700;font-size:12px;cursor:pointer;font-family:inherit;">💬 Kirim via WA</button>
+      </div>
+      <button onclick="this.closest('div[style*=border]').remove()" style="width:100%;margin-top:8px;padding:8px;background:none;border:1px solid var(--bd);border-radius:10px;font-size:11px;color:var(--mu);cursor:pointer;font-family:inherit;">Tutup</button>
+    </div>`;
+    const listEl = document.getElementById('champ-list');
+    if (listEl) listEl.insertAdjacentHTML('beforebegin', confirmHtml);
   }
-  closeChampForm();
-  await renderChampionAdmin();
+}
+
+function copyChampLink(refCode, email) {
+  const loginUrl = `${location.origin}${location.pathname}?champion=1`;
+  const refUrl = `${location.origin}${location.pathname}?ref=${refCode}`;
+  const text = `🏆 Champion Portal\n\n📱 Login: ${loginUrl}\n📧 Email: ${email}\n\n🔗 Link Referral (share ke pelanggan):\n${refUrl}`;
+  navigator.clipboard.writeText(text).then(() => toast('✅ Link & info champion di-copy!')).catch(() => {
+    prompt('Copy teks ini:', text);
+  });
+}
+
+function sendChampWA(name, email, refCode) {
+  const loginUrl = `${location.origin}${location.pathname}?champion=1`;
+  const refUrl = `${location.origin}${location.pathname}?ref=${refCode}`;
+  const msg = encodeURIComponent(
+    `Halo ${name}! 🏆\n\nKamu sudah terdaftar sebagai *Champion Beti Nur Catering*.\n\n` +
+    `📱 *Login Dashboard:*\n${loginUrl}\n\n📧 Email: ${email}\n🔑 Password: (yang sudah diberikan admin)\n\n` +
+    `🔗 *Link Referral kamu* (share ke pelanggan biar dapet komisi):\n${refUrl}\n\n` +
+    `Setiap pelanggan yang pesan lewat link kamu, kamu dapat komisi 5%! 💰`
+  );
+  window.open(`https://wa.me/?text=${msg}`, '_blank');
+}
+
+async function deleteChamp(id, name) {
+  if (!confirm(`Hapus champion "${name}" permanen? Data komisi & pencairan tetap tersimpan.`)) return;
+  if (!db) return;
+  await db.collection('champions').doc(id).delete().catch(() => {});
+  await syncChampionData();
+  renderChampionAdmin();
+  toast('🗑️ Champion dihapus!');
 }
 
 async function toggleChamp(id) {
