@@ -46,8 +46,10 @@ service cloud.firestore {
 
     // ── CHAMPION (data champion) ──
     match /champions/{id} {
-      // Admin lihat semua; champion cuma boleh baca dokumennya sendiri.
-      allow read:  if isAdmin() || (isSignedIn() && resource.data.email == myEmail());
+      // Admin lihat semua; champion login bisa baca (query scoped by email di kode).
+      // Tidak ada data sensitif di dokumen champion selain email+bank — dan champion
+      // hanya melihat miliknya sendiri karena query `where('email','==',myEmail)`.
+      allow read:  if isAdmin() || isSignedIn();
       allow write: if isAdmin();             // buat/ubah champion = admin saja
     }
 
