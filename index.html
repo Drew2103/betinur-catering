@@ -28,6 +28,11 @@
 <meta name="twitter:title" content="Beti Nur Catering · by Homader">
 <meta name="twitter:description" content="Catering harian enak & terjangkau di Serpong. Pesan sekarang di homaderfood.com!">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script>
+tailwind.config={darkMode:"class",corePlugins:{preflight:false},theme:{extend:{colors:{"primary":"#0f1f3d","primary-container":"#0f1f3d","on-primary":"#ffffff","gold":"#c9a84c","gold-light":"#e8c97a","warm-surface":"#fdf6e3","border-tan":"#e8dfc5","muted-gray":"#6b7280","surface":"#fbf9f4","surface-container":"#efeee9","surface-container-low":"#f5f3ee","on-surface":"#1b1c19","on-surface-variant":"#45474e","outline-variant":"#c5c6ce","success-green":"#25d366","secondary-container":"#fed977","background":"#fbf9f4"},fontFamily:{"display-lg":["Playfair Display"],"body-md":["Plus Jakarta Sans"],"label-md":["Plus Jakarta Sans"]},spacing:{"edge-margin":"16px","stack-lg":"24px"}}}}
+</script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
@@ -125,6 +130,12 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--cr);color:var(-
 .qbtn.minus{background:#eaecf2;color:var(--n);}
 .qnum{font-weight:800;font-size:14px;min-width:18px;text-align:center;color:var(--n);}
 .sdiv{height:7px;background:#f2f0eb;border-top:1px solid var(--bd);border-bottom:1px solid var(--bd);margin:7px 0;}
+/* ═══ GoFood-style customer UI (Tailwind handles most, these are extras) ═══ */
+.gf-shadow{box-shadow:0 4px 12px rgba(15,31,61,.08);}
+.gf-float-shadow{box-shadow:0 12px 32px rgba(15,31,61,.25);}
+.gf-hide-scroll::-webkit-scrollbar{display:none;}
+.gf-hide-scroll{-ms-overflow-style:none;scrollbar-width:none;}
+.gf-line-clamp-2{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
 .cfloat{position:fixed;bottom:16px;left:13px;right:13px;max-width:454px;margin:0 auto;background:linear-gradient(135deg,var(--n),var(--n2));border:1.5px solid var(--g);border-radius:15px;padding:12px 15px;display:flex;align-items:center;justify-content:space-between;z-index:200;box-shadow:var(--sf);cursor:pointer;animation:slideUp .3s ease;}
 .cfloat.hidden{display:none;}
 .cfl{display:flex;align-items:center;gap:10px;}
@@ -693,6 +704,45 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--cr);color:var(-
   /* Analitik, Staff, Export, Invoice: batasi lebar konten biar enak dibaca */
   #av #tan > *, #av #tst > *, #av #tex > *, #av #tinv > * { max-width: 760px; }
 }
+
+/* ════════════════════════════════════════════════════════════
+   MOBILE ADMIN — bottom tab bar (app-style navigation)
+   ════════════════════════════════════════════════════════════ */
+@media (max-width: 899px) {
+  #av .atabs {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    top: auto;
+    z-index: 300;
+    background: white;
+    border-bottom: none;
+    border-top: 1px solid var(--bd);
+    padding: 4px 8px env(safe-area-inset-bottom, 4px);
+    box-shadow: 0 -4px 16px rgba(15,31,61,.1);
+    overflow-x: auto;
+    gap: 0;
+  }
+  #av .atabs .atab {
+    padding: 8px 10px 4px;
+    font-size: 9px;
+    border-bottom: none;
+    border-top: 2px solid transparent;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 64px;
+  }
+  #av .atabs .atab.active {
+    border-bottom: none;
+    border-top-color: var(--g);
+    color: var(--g);
+  }
+  #av .abody {
+    padding-bottom: 80px;
+  }
+}
 </style>
 </head>
 <body>
@@ -784,40 +834,138 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--cr);color:var(-
 </div>
 
 <!-- ═══ MENU ═══ -->
-<div id="mv" class="view">
-  <div class="hdr">
-    <div class="hbrand">
-      <div class="hlogo"><img id="logo-hdr" alt="logo"></div>
-      <div><h2>Beti Nur Catering</h2><small>Halo, <span id="uname">—</span>! 👋</small></div>
+<div id="mv" class="view font-body-md text-on-surface" style="max-width:none;background:#fbf9f4;">
+  <!-- ═══ NAVBAR (replika mockup) ═══ -->
+  <header class="sticky top-0 z-50 bg-background/90 backdrop-blur-md border-b border-border-tan">
+    <div class="max-w-[1200px] mx-auto px-4 py-3 flex justify-between items-center">
+      <div class="flex items-center gap-2 lg:gap-8">
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 lg:w-10 lg:h-10 rounded-xl overflow-hidden border border-border-tan flex-shrink-0">
+            <img id="logo-hdr" alt="Logo" class="w-full h-full object-cover">
+          </div>
+          <div class="flex flex-col">
+            <h1 class="font-display-lg text-lg lg:text-2xl font-bold text-primary leading-tight">Beti Nur</h1>
+            <p class="text-[9px] font-bold text-gold tracking-widest uppercase lg:hidden">Premium Catering</p>
+          </div>
+        </div>
+        <nav class="hidden lg:flex items-center gap-6">
+          <a onclick="renderMenu();return false" class="font-label-md text-gold border-b-2 border-gold pb-1 cursor-pointer" href="#">Menu</a>
+          <a onclick="showMyOrders();return false" class="font-label-md text-on-surface-variant hover:text-primary transition-colors cursor-pointer" href="#">Pesanan Saya</a>
+        </nav>
+      </div>
+      <div class="flex items-center gap-2 lg:gap-4">
+        <button onclick="showMyOrders()" class="p-2 rounded-full hover:bg-primary/5 text-primary" title="Pesanan Saya">
+          <span class="material-symbols-outlined text-[22px]">shopping_bag</span>
+        </button>
+        <button onclick="navBack()" class="p-2 rounded-full hover:bg-primary/5 text-primary" title="Keluar">
+          <span class="material-symbols-outlined text-[22px]">logout</span>
+        </button>
+      </div>
     </div>
-    <div style="display:flex;gap:6px;">
-      <button class="btn-myord" onclick="showMyOrders()" title="Pesanan Saya">📦</button>
-      <button class="ibtn2" onclick="navBack()">🚪</button>
+  </header>
+
+  <main class="max-w-[1200px] mx-auto px-4 py-6 flex flex-col lg:flex-row gap-8">
+    <!-- LEFT COLUMN: Menu content -->
+    <div class="flex-1 space-y-6 lg:space-y-8 min-w-0">
+
+      <!-- HERO BANNER / PROMO CAROUSEL -->
+      <section id="gf-hero" class="relative rounded-2xl lg:rounded-3xl overflow-hidden h-[180px] lg:h-[400px] shadow-lg">
+        <div id="banner-carousel" style="display:none;position:absolute;inset:0;">
+          <div id="banner-slides" class="w-full h-full"></div>
+          <div id="banner-dots" class="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-2 z-10"></div>
+        </div>
+        <!-- Fallback hero ketika tidak ada banner -->
+        <div id="gf-hero-fallback" class="w-full h-full bg-gradient-to-br from-primary to-primary-container flex items-end">
+          <div class="absolute inset-0 bg-gradient-to-t from-primary/90 via-primary/40 to-transparent"></div>
+          <div class="relative z-10 p-4 lg:p-10">
+            <p class="text-gold-light text-[10px] lg:text-sm font-extrabold tracking-widest uppercase mb-1 lg:mb-3">by Homader</p>
+            <h2 class="font-display-lg text-white text-2xl lg:text-[42px] font-bold leading-tight mb-2 lg:mb-4">Premium Daily Catering</h2>
+            <p class="text-white/80 text-[11px] lg:text-base leading-relaxed max-w-[280px] lg:max-w-xl">Sajian rumahan premium setiap hari. Higienis, lezat, dan tepat waktu.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- GREETING + DATE STRIP -->
+      <section class="lg:bg-white lg:rounded-2xl lg:p-6 lg:border lg:border-border-tan gf-shadow">
+        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6">
+          <div>
+            <h3 class="text-xl lg:text-2xl font-bold text-primary mb-1">Halo, <span id="uname">—</span>! 👋</h3>
+            <p class="text-muted-gray text-xs lg:text-base">Mau pesan catering untuk kapan?</p>
+          </div>
+          <div id="gf-date-pills" class="flex gap-3 overflow-x-auto gf-hide-scroll pb-2 lg:pb-0">
+            <!-- JS fills date pills -->
+          </div>
+        </div>
+        <!-- CATEGORY TABS -->
+        <div id="gf-cat-tabs" class="flex gap-6 lg:gap-8 border-b border-border-tan overflow-x-auto gf-hide-scroll">
+          <!-- JS fills category tabs -->
+        </div>
+        <input type="hidden" id="order-date" value="">
+      </section>
+
+      <!-- CUTOFF BADGE -->
+      <div class="flex items-center justify-between mb-2">
+        <h4 id="mdtitle" class="text-base lg:text-xl font-bold text-primary">—</h4>
+        <span id="order-cutoff-badge" class="text-[10px] lg:text-xs font-bold text-gold uppercase tracking-widest">⏰ Sarapan s/d 05:00 • Siang s/d 08:00</span>
+      </div>
+
+      <!-- MENU SCROLL AREA -->
+      <div id="mscroll" class="space-y-4 lg:space-y-6 pb-28 lg:pb-8"></div>
     </div>
-  </div>
-  <!-- PROMO BANNER CAROUSEL -->
-  <div class="banner-carousel" id="banner-carousel" style="display:none;">
-    <div class="banner-slides" id="banner-slides"></div>
-    <div class="banner-dots" id="banner-dots"></div>
-  </div>
-  <div class="dbanner">
-    <div><h3 id="mdtitle">—</h3><p>Pilih menu &amp; tanggal pesanan</p></div>
-    <div class="cbadge" id="order-cutoff-badge">⏰ Sarapan s/d 05:00 • Siang s/d 08:00</div>
-  </div>
-  <div class="date-strip">
-    <label>📅 Tanggal Pesanan</label>
-    <div class="date-picker-row">
-      <input type="date" id="order-date" class="date-inp" onchange="onOrderDateChange()">
-      <button class="date-today-btn" onclick="resetToToday()">Hari Ini</button>
-    </div>
-  </div>
-  <div class="mscroll" id="mscroll"></div>
-  <div class="cfloat hidden" id="cfloat" onclick="navCart()">
-    <div class="cfl">
-      <div class="cb2" id="ccount">0</div>
-      <div class="cfinfo"><h4 id="cflbl">0 item</h4><p id="cftot">Rp 0</p></div>
-    </div>
-    <button class="cfcta">Lihat Pesanan →</button>
+
+    <!-- RIGHT COLUMN: Desktop Order Sidebar -->
+    <aside id="gf-sidebar" class="hidden lg:block w-[360px] flex-shrink-0">
+      <div class="sticky top-24 space-y-6">
+        <div class="bg-white rounded-2xl gf-shadow border border-border-tan flex flex-col overflow-hidden">
+          <div class="p-6 border-b border-border-tan">
+            <h3 class="font-display-lg text-xl font-bold text-primary mb-1">Ringkasan Pesanan</h3>
+            <p class="text-sm text-muted-gray">Pesanan untuk: <span id="gf-sidebar-date">—</span></p>
+          </div>
+          <div id="gf-sidebar-items" class="p-6 space-y-3 max-h-[30vh] overflow-y-auto gf-hide-scroll">
+            <p class="text-sm text-muted-gray">Belum ada item dipilih.</p>
+          </div>
+          <div id="gf-sidebar-totals" class="p-6 bg-surface-container-low space-y-3">
+            <div class="flex justify-between text-sm"><span>Subtotal</span><span id="gf-sb-sub">Rp 0</span></div>
+            <div class="flex justify-between text-sm"><span>Ongkir</span><span id="gf-sb-ong" class="text-success-green font-bold">Free</span></div>
+            <div class="flex justify-between font-bold text-primary pt-3 border-t border-border-tan"><span>Total Pembayaran</span><span id="gf-sb-tot">Rp 0</span></div>
+          </div>
+          <div class="p-6">
+            <button onclick="navCart()" class="w-full py-4 bg-primary text-white font-bold rounded-xl gf-float-shadow hover:bg-primary/90 active:scale-95 transition-all flex items-center justify-center gap-2">
+              Pesan Sekarang <span class="material-symbols-outlined text-sm">arrow_forward</span>
+            </button>
+          </div>
+        </div>
+        <!-- WA Help Card -->
+        <div class="bg-gradient-to-br from-secondary-container/30 to-gold-light/20 rounded-2xl p-6 border border-gold/10 relative overflow-hidden">
+          <div class="relative z-10">
+            <h4 class="font-display-lg text-primary mb-2">Butuh Bantuan?</h4>
+            <p class="text-sm text-primary/70 mb-4">Hubungi kami via WhatsApp untuk pesanan kustom.</p>
+            <a id="gf-wa-link" href="#" target="_blank" class="text-gold font-bold flex items-center gap-1 hover:gap-2 transition-all">Chat WhatsApp <span class="material-symbols-outlined text-sm">chat</span></a>
+          </div>
+          <span class="material-symbols-outlined absolute -bottom-4 -right-4 text-[80px] opacity-10 rotate-12 pointer-events-none">headset_mic</span>
+        </div>
+      </div>
+    </aside>
+  </main>
+
+  <!-- FLOATING BASKET BAR (Mobile only, replika mockup) -->
+  <div id="cfloat" class="fixed bottom-6 left-4 right-4 z-[100] hidden lg:hidden" onclick="navCart()">
+    <button class="w-full bg-primary rounded-2xl flex items-center justify-between p-1.5 gf-float-shadow active:scale-[0.97] transition-all">
+      <div class="flex items-center gap-3 pl-3">
+        <div class="relative">
+          <span class="material-symbols-outlined text-gold-light text-[24px]">shopping_basket</span>
+          <span id="ccount" class="absolute -top-1 -right-1 w-4 h-4 bg-gold text-primary text-[9px] font-extrabold flex items-center justify-center rounded-full border-2 border-primary">0</span>
+        </div>
+        <div class="text-left">
+          <p id="cflbl" class="text-white text-[11px] font-bold">0 item dipilih</p>
+          <p id="cftot" class="text-gold-light text-[10px] font-extrabold">Rp 0</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-2 bg-gold px-4 py-3 rounded-xl">
+        <span class="text-primary text-[11px] font-extrabold">LIHAT PESANAN</span>
+        <span class="material-symbols-outlined text-primary text-[16px]">arrow_forward</span>
+      </div>
+    </button>
   </div>
 </div>
 
@@ -1001,6 +1149,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--cr);color:var(-
     <button class="atab" onclick="stab(this,'tex')" data-role="super">📤 Export</button>
     <button class="atab" onclick="stab(this,'tinv')" data-role="super">🧾 Invoice</button>
     <button class="atab" onclick="stab(this,'tst')" data-role="super">👤 Staff</button>
+    <button class="atab" onclick="stab(this,'tbn')" data-role="super">🖼️ Banner</button>
     <button class="atab" onclick="stab(this,'tchamp')" data-role="super">🏆 Champion</button>
   </div>
   <div class="abody">
@@ -1143,6 +1292,12 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--cr);color:var(-
         <button class="cal-save-btn" onclick="saveCalMenu()">💾 Simpan Menu Tanggal Ini</button>
         <button class="cal-clear-btn" onclick="clearCalMenu()">🗑️ Hapus Menu Tanggal Ini</button>
       </div>
+      <!-- Foto Menu Hari Ini (inside calendar) -->
+      <div id="cal-photos" style="display:none;margin-top:16px;">
+        <div class="act">📷 Foto Menu Hari Ini</div>
+        <div style="font-size:11px;color:var(--mu);margin-bottom:10px;">Upload foto untuk menu yang sudah disimpan.</div>
+        <div id="cal-photo-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:10px;"></div>
+      </div>
       <!-- Menu History / Templates -->
       <div class="ac" id="menu-history-card">
         <div class="act" style="cursor:pointer;" onclick="toggleMenuHistory()">
@@ -1253,31 +1408,45 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--cr);color:var(-
         <div class="act">📊 Ranking Champion</div>
         <div id="champ-ranking"><div style="color:var(--mu);font-size:12px;">Belum ada data.</div></div>
       </div>
-      <!-- Banner management -->
-      <div class="champ-card">
-        <div class="act">🖼️ Promo Banner</div>
-        <div style="font-size:11px;color:var(--mu);margin-bottom:11px;">Banner ditampilkan di halaman menu customer sebagai carousel.</div>
-        <div id="banner-list"></div>
-        <button class="btn-add-i" onclick="openAddBanner()" style="margin-top:9px;">＋ Tambah Banner</button>
-      </div>
-      <!-- Add banner form -->
-      <div class="staff-form" id="banner-form" style="display:none;">
-        <div class="staff-form-title" id="banner-form-title">＋ Tambah Banner</div>
-        <input type="hidden" id="banner-edit-id">
-        <div class="sff"><label>Judul Promosi</label><input type="text" id="banner-ftitle" placeholder="Promo spesial hari ini!"></div>
-        <div class="sff"><label>Deskripsi (opsional)</label><input type="text" id="banner-fdesc" placeholder="Beli 3 gratis 1..."></div>
-        <div class="sff"><label>Emoji / Icon</label><input type="text" id="banner-femoji" placeholder="🎉" value="🎉"></div>
-        <div class="sff"><label>Warna Background</label>
-          <select id="banner-fbg">
-            <option value="navy">Navy (Default)</option>
-            <option value="gold">Gold</option>
-            <option value="green">Hijau</option>
-            <option value="red">Merah</option>
-          </select>
+    </div>
+
+    <!-- BANNER -->
+    <div class="apanel" id="tbn">
+      <div class="ac">
+        <div class="champ-card">
+          <div class="act">🖼️ Promo Banner</div>
+          <div style="font-size:11px;color:var(--mu);margin-bottom:11px;">Banner ditampilkan di halaman menu customer sebagai carousel.</div>
+          <div id="banner-list"></div>
+          <button class="btn-add-i" onclick="openAddBanner()" style="margin-top:9px;">＋ Tambah Banner</button>
         </div>
-        <div class="staff-form-btns">
-          <button class="btn-sf-cancel" onclick="closeBannerForm()">Batal</button>
-          <button class="btn-sf-save" onclick="saveBanner()">💾 Simpan</button>
+        <!-- Add banner form -->
+        <div class="staff-form" id="banner-form" style="display:none;">
+          <div class="staff-form-title" id="banner-form-title">＋ Tambah Banner</div>
+          <input type="hidden" id="banner-edit-id">
+          <div class="sff"><label>Judul Promosi</label><input type="text" id="banner-ftitle" placeholder="Promo spesial hari ini!"></div>
+          <div class="sff"><label>Deskripsi (opsional)</label><input type="text" id="banner-fdesc" placeholder="Beli 3 gratis 1..."></div>
+          <div class="sff"><label>Emoji / Icon</label><input type="text" id="banner-femoji" placeholder="🎉" value="🎉"></div>
+          <div class="sff"><label>Gambar Banner (opsional)</label>
+            <div class="logo-upload-wrap" style="margin-top:6px;">
+              <div class="logo-preview" id="banner-img-preview" onclick="document.getElementById('banner-img-inp').click()" style="width:100%;height:80px;border-radius:10px;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:24px;background:#f5f5f5;cursor:pointer;border:2px dashed var(--bd);">
+                <span id="banner-img-placeholder">📷 Upload gambar</span>
+                <img id="banner-img-thumb" style="width:100%;height:100%;object-fit:cover;display:none;" alt="">
+              </div>
+            </div>
+            <input type="file" id="banner-img-inp" accept="image/*" style="display:none" onchange="handleBannerImg(event)">
+          </div>
+          <div class="sff"><label>Warna Background</label>
+            <select id="banner-fbg">
+              <option value="navy">Navy (Default)</option>
+              <option value="gold">Gold</option>
+              <option value="green">Hijau</option>
+              <option value="red">Merah</option>
+            </select>
+          </div>
+          <div class="staff-form-btns">
+            <button class="btn-sf-cancel" onclick="closeBannerForm()">Batal</button>
+            <button class="btn-sf-save" onclick="saveBanner()">💾 Simpan</button>
+          </div>
         </div>
       </div>
     </div>
@@ -2096,11 +2265,90 @@ function getMenuForDate(dateStr) {
 // ═══════════════════════════════════════════
 //  RENDER CUSTOMER MENU
 // ═══════════════════════════════════════════
+function renderDatePills() {
+  const el = document.getElementById('gf-date-pills'); if (!el) return;
+  const DAYS = ['MIN','SEN','SEL','RAB','KAM','JUM','SAB'];
+  const base = currentOrderDate ? new Date(currentOrderDate + 'T12:00:00') : new Date();
+  const pills = [];
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(base);
+    d.setDate(d.getDate() - 2 + i);
+    const ds = localDateStr(d);
+    const isActive = ds === currentOrderDate;
+    const cls = isActive
+      ? 'bg-primary text-white border-primary'
+      : 'bg-white text-primary border-border-tan hover:border-gold';
+    pills.push(`<button onclick="pickDate('${ds}')" class="flex-shrink-0 w-[64px] h-[76px] lg:w-[70px] lg:h-[80px] flex flex-col items-center justify-center rounded-2xl border-2 transition-all ${cls}">
+      <span class="text-[10px] lg:text-[11px] font-bold opacity-70">${DAYS[d.getDay()]}</span>
+      <span class="text-lg lg:text-xl font-extrabold">${d.getDate()}</span>
+      ${isActive ? '<span class="w-1.5 h-1.5 rounded-full bg-gold mt-0.5"></span>' : '<span class="w-1.5 h-1.5 mt-0.5"></span>'}
+    </button>`);
+  }
+  el.innerHTML = pills.join('');
+}
+function pickDate(ds) {
+  currentOrderDate = ds;
+  cart = {};
+  updateMenuDate();
+  renderMenu();
+  updateFloat();
+}
+function renderCatTabs() {
+  const el = document.getElementById('gf-cat-tabs'); if (!el) return;
+  const MENU = getMenuForDate(currentOrderDate);
+  const { sarapanAvailable } = getOrderWindow();
+  const hasSarapan = sarapanAvailable && MENU.some(m => m.sec === 'sarapan');
+  const hasSiang = MENU.some(m => m.sec === 'siang');
+  const tabs = [];
+  if (hasSarapan) tabs.push({ lbl: 'Sarapan', anchor: 'sec-sarapan' });
+  if (hasSiang) tabs.push({ lbl: 'Makan Siang', anchor: 'sec-siang' });
+  el.innerHTML = tabs.map((t, i) => {
+    const cls = i === 0
+      ? 'border-b-2 border-primary text-primary'
+      : 'text-muted-gray hover:text-primary transition-colors';
+    return `<button onclick="document.getElementById('${t.anchor}')?.scrollIntoView({behavior:'smooth',block:'start'})" class="pb-3 px-1 text-xs lg:text-sm font-bold whitespace-nowrap ${cls}">${t.lbl}</button>`;
+  }).join('');
+}
+function updateSidebar() {
+  const dateEl = document.getElementById('gf-sidebar-date');
+  if (dateEl) dateEl.textContent = fmtDateLabel(currentOrderDate);
+  const itemsEl = document.getElementById('gf-sidebar-items');
+  if (!itemsEl) return;
+  const MENU = getMenuForDate(currentOrderDate);
+  const { keys, items, sub, ongkir, total } = cartTotals();
+  if (!keys.length) {
+    itemsEl.innerHTML = '<p class="text-sm text-muted-gray">Belum ada item dipilih.</p>';
+  } else {
+    itemsEl.innerHTML = keys.map(k => {
+      const m = MENU.find(x => x.id === k);
+      const n = m ? m.name : (cart[k].name || k);
+      const p = m ? m.price : (cart[k].price || 0);
+      const isSb = !!(cart[k].isSambal || (m && m.isSambal));
+      if (isSb) return `<div class="flex justify-between text-sm"><span class="text-muted-gray">🌶️ ${escHTML(n)}</span><span class="text-muted-gray text-xs">Gratis</span></div>`;
+      return `<div class="flex justify-between text-sm"><span>${cart[k].qty} &times; ${escHTML(n)}</span><span class="font-bold">${rp(p * cart[k].qty)}</span></div>`;
+    }).join('');
+  }
+  const subEl = document.getElementById('gf-sb-sub');
+  const ongEl = document.getElementById('gf-sb-ong');
+  const totEl = document.getElementById('gf-sb-tot');
+  if (subEl) subEl.textContent = rp(sub);
+  if (ongEl) ongEl.textContent = ongkir ? rp(ongkir) : 'Free';
+  if (totEl) totEl.textContent = rp(total);
+  // WA link
+  const waLink = document.getElementById('gf-wa-link');
+  if (waLink) {
+    const waNum = (getSettings().waNumber || WA_DEFAULT).replace(/\D/g, '');
+    waLink.href = 'https://wa.me/' + waNum;
+  }
+}
 function renderMenu() {
   updateOrderBadge();
+  renderDatePills();
   const { isOpen, oH, oM, sarapanAvailable } = getOrderWindow();
   if (!isOpen) {
-    document.getElementById('mscroll').innerHTML = `<div class="emp" style="padding:50px 20px;"><div class="ee">🔴</div><p style="font-weight:800;color:var(--tx);font-size:15px;margin-bottom:8px;">Pesanan Sedang Tutup</p><p style="font-size:12px;color:var(--mu);">Pemesanan dibuka kembali pukul<br><strong>${String(oH).padStart(2,'0')}:${String(oM).padStart(2,'0')} WIB</strong>.</p></div>`;
+    document.getElementById('mscroll').innerHTML = `<div class="flex flex-col items-center justify-center py-16 px-6 text-center"><span class="text-4xl mb-4">🔴</span><p class="font-extrabold text-primary text-base mb-2">Pesanan Sedang Tutup</p><p class="text-xs text-muted-gray">Pemesanan dibuka kembali pukul<br><strong>${String(oH).padStart(2,'0')}:${String(oM).padStart(2,'0')} WIB</strong>.</p></div>`;
+    renderCatTabs();
+    updateSidebar();
     return;
   }
   const MENU = getMenuForDate(currentOrderDate), ph = getPh();
@@ -2108,9 +2356,9 @@ function renderMenu() {
   const G = [];
   // Sarapan: cuma tampil kalau masih dalam jam pesan DAN admin sudah isi menunya
   if (sarapanAvailable && sarapanItems.length) {
-    G.push({ lbl:'🍱', title:'Sarapan', pill:'Pagi', items: sarapanItems });
+    G.push({ id:'sec-sarapan', lbl:'🍱', title:'Sarapan', date:fmtDateLabel(currentOrderDate), items: sarapanItems });
   }
-  G.push({ lbl:'🍛', title:'Makan Siang', pill:'Siang', subs:[
+  G.push({ id:'sec-siang', lbl:'🍛', title:'Makan Siang', date:fmtDateLabel(currentOrderDate), subs:[
       {key:'nasi',   lbl:'🍚 Nasi Putih'},
       {key:'lauk',   lbl:'🍗 Lauk'},
       {key:'sayur',  lbl:'🥦 Sayur / Pelengkap'},
@@ -2119,51 +2367,62 @@ function renderMenu() {
     ]});
   const blocks = [];
   G.forEach(g => {
-    let gh = `<div class="strow"><span>${g.lbl}</span><h3>${escHTML(g.title)}</h3><span class="spill">${g.pill}</span></div>`;
+    let gh = `<div id="${g.id}"><div class="flex items-center justify-between mb-2"><h4 class="text-base lg:text-xl font-bold text-primary">${escHTML(g.title)}</h4><span class="text-[10px] lg:text-xs font-bold text-gold uppercase tracking-widest">${escHTML(g.date)}</span></div>`;
     if (g.items) {
-      g.items.forEach(m => { gh += mcard(m, ph); });
+      gh += `<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4 lg:gap-6">${g.items.map(m => mcard(m, ph)).join('')}</div>`;
     } else {
       let any = false;
       g.subs.forEach(s => {
         const subItems = MENU.filter(m => m.sec === 'siang' && m.sub === s.key);
         if (!subItems.length) return;
         any = true;
-        gh += `<div class="sublbl"><span>${s.lbl}</span></div>`;
-        subItems.forEach(m => {
-          gh += s.key === 'sambal' ? sambalCard(m) : mcard(m, ph);
-        });
+        gh += `<div class="text-[10px] font-bold text-muted-gray uppercase tracking-widest mt-4 mb-2 px-1">${s.lbl}</div>`;
+        if (s.key === 'sambal') {
+          gh += subItems.map(m => sambalCard(m)).join('');
+        } else {
+          gh += `<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4 lg:gap-6">${subItems.map(m => mcard(m, ph)).join('')}</div>`;
+        }
       });
-      if (!any) return; // skip blok Makan Siang kalau kosong sama sekali
+      if (!any) { return; } // skip blok Makan Siang kalau kosong sama sekali
     }
+    gh += `</div>`;
     blocks.push(gh);
   });
-  let h = blocks.join('<div class="sdiv"></div>');
-  if (!h.includes('mcard'))
-    h = `<div class="emp" style="padding:40px 20px;"><div class="ee">🍽️</div><p style="font-weight:700;color:var(--tx);margin-bottom:6px;">Menu Belum Tersedia</p><p style="font-size:12px;color:var(--mu);">Menu untuk <strong>${fmtDateLabel(currentOrderDate)}</strong><br>belum diupdate oleh admin.<br>Coba pilih tanggal lain atau<br>hubungi kami via WhatsApp.</p></div>`;
+  let h = blocks.join('<div class="h-px bg-border-tan my-6"></div>');
+  if (!h.includes('rounded-3xl') && !h.includes('TAMBAH') && !h.includes('scard'))
+    h = `<div class="flex flex-col items-center justify-center py-16 px-6 text-center"><span class="text-4xl mb-4">🍽️</span><p class="font-extrabold text-primary text-base mb-2">Menu Belum Tersedia</p><p class="text-xs text-muted-gray">Menu untuk <strong>${fmtDateLabel(currentOrderDate)}</strong><br>belum diupdate oleh admin.<br>Coba pilih tanggal lain atau<br>hubungi kami via WhatsApp.</p></div>`;
   document.getElementById('mscroll').innerHTML = h;
+  renderCatTabs();
+  updateSidebar();
 }
 
 function mcard(m, ph) {
   const hasImg = !!ph[m.id];
-  const imgH   = hasImg ? `<img src="${ph[m.id]}" alt="">` : '';
-  const emjH   = hasImg ? '' : `<span>${m.emoji}</span>`;
-  // Encode id safely for onclick
   const safeId = m.id.replace(/'/g, "\\'");
-  return `<div class="mcard mcard-clickable" onclick="openMenuDetail('${safeId}')"><div class="mcinner">
-    <div class="mebox">${imgH}${emjH}</div>
-    <div class="minfo">
-      <div class="mname">${escHTML(m.name)}</div>
-      ${m.desc ? `<div class="mdesc">${escHTML(m.desc)}</div>` : ''}
-      <div class="mbot">
-        <div class="mprice"><span class="cur">Rp </span>${fmt(m.price)}</div>
-        <div class="qctrl" onclick="event.stopPropagation()">
-          <button class="qbtn minus" onclick="chg('${safeId}',-1,${m.price})">&#8722;</button>
-          <span class="qnum" id="q-${m.id}">${cart[m.id] ? cart[m.id].qty : 0}</span>
-          <button class="qbtn" onclick="chg('${safeId}',1,${m.price})">+</button>
-        </div>
+  const qty    = cart[m.id] ? cart[m.id].qty : 0;
+  const imgH   = hasImg
+    ? `<img alt="${escHTML(m.name)}" class="w-full h-full object-cover" src="${ph[m.id]}">`
+    : `<div class="w-full h-full bg-gradient-to-br from-primary to-primary-container flex items-center justify-center"><span style="font-size:48px;filter:drop-shadow(0 3px 8px rgba(0,0,0,.3))">${m.emoji || '🍽️'}</span></div>`;
+  const stepperH = qty
+    ? `<div class="flex items-center bg-primary/5 rounded-full p-1 gap-3">
+        <button onclick="event.stopPropagation();chg('${safeId}',-1,${m.price})" class="w-6 h-6 lg:w-7 lg:h-7 flex items-center justify-center bg-white rounded-full shadow-sm text-primary font-bold hover:scale-110 active:scale-95 transition-all">−</button>
+        <span id="q-${m.id}" class="text-[11px] lg:text-xs font-extrabold">${qty}</span>
+        <button onclick="event.stopPropagation();chg('${safeId}',1,${m.price})" class="w-6 h-6 lg:w-7 lg:h-7 flex items-center justify-center bg-white rounded-full shadow-sm text-primary font-bold hover:scale-110 active:scale-95 transition-all">+</button>
+       </div>`
+    : `<button id="q-${m.id}" data-qty="0" onclick="event.stopPropagation();chg('${safeId}',1,${m.price})" class="bg-primary text-white text-[10px] lg:text-xs font-bold px-4 lg:px-6 py-2 rounded-full active:scale-95 hover:bg-primary/90 transition-all">TAMBAH</button>`;
+  return `<div class="bg-white rounded-3xl p-3 border border-border-tan gf-shadow flex lg:flex-col gap-4 transition-all hover:shadow-lg active:scale-[0.98] cursor-pointer" onclick="openMenuDetail('${safeId}')">
+    <div class="w-24 h-24 lg:w-full lg:h-48 rounded-2xl overflow-hidden flex-shrink-0 relative">${imgH}</div>
+    <div class="flex flex-col justify-between flex-1 lg:p-2">
+      <div>
+        <h5 class="text-sm lg:text-base font-extrabold text-primary mb-1">${escHTML(m.name)}</h5>
+        ${m.desc ? `<p class="text-[10px] lg:text-xs text-muted-gray leading-tight gf-line-clamp-2">${escHTML(m.desc)}</p>` : ''}
+      </div>
+      <div class="flex items-center justify-between mt-4" onclick="event.stopPropagation()">
+        <span class="text-sm lg:text-base font-extrabold text-primary">Rp ${fmt(m.price)}</span>
+        ${stepperH}
       </div>
     </div>
-  </div></div>`;
+  </div>`;
 }
 function sambalCard(m) {
   const checked = !!cart[m.id];
@@ -2264,8 +2523,7 @@ function chg(id, d, price) {
   if (!cart[id]) cart[id] = { qty:0, price };
   cart[id].qty = Math.max(0, cart[id].qty + d);
   if (cart[id].qty === 0) delete cart[id];
-  const el = document.getElementById('q-' + id);
-  if (el) el.textContent = cart[id] ? cart[id].qty : 0;
+  renderMenu();
   updateFloat();
 }
 function toggleSambal(id, checked, name) {
@@ -2287,11 +2545,12 @@ function cartTotals() {
 function updateFloat() {
   const { items, total } = cartTotals();
   const f = document.getElementById('cfloat');
-  if (items === 0) { f.classList.add('hidden'); return; }
-  f.classList.remove('hidden');
+  if (items === 0) { f.classList.add('hidden'); }
+  else { f.classList.remove('hidden'); }
   document.getElementById('ccount').textContent = items;
-  document.getElementById('cflbl').textContent  = items + ' item dipilih';
+  document.getElementById('cflbl').textContent  = items + ' Item Terpilih';
   document.getElementById('cftot').textContent  = rp(total);
+  updateSidebar();
 }
 function renderCart() {
   const MENU = getMenuForDate(currentOrderDate);
@@ -2885,6 +3144,7 @@ function openCalE(d) {
   const ed = document.getElementById('cal-editor');
   ed.style.display = 'block';
   ed.scrollIntoView({behavior:'smooth', block:'nearest'});
+  renderCalPhotos();
 }
 function calRowH(cat, idx, name, price) {
   if (cat === 'sambal') {
@@ -2936,6 +3196,7 @@ function saveCalMenu() {
     renderMenuHistory();
   }
   buildCal(); toast(`✅ Menu ${selCalDate} ${MONTH_NAMES[calMonth]} tersimpan!`);
+  renderCalPhotos();
 }
 function clearCalMenu() {
   if (!selCalDate || !confirm('Hapus semua menu untuk tanggal ini?')) return;
@@ -2946,6 +3207,8 @@ function clearCalMenu() {
 }
 function closeCalE() {
   document.getElementById('cal-editor').style.display = 'none';
+  const calPhotos = document.getElementById('cal-photos');
+  if (calPhotos) calPhotos.style.display = 'none';
   document.querySelectorAll('.cald.sel').forEach(el => el.classList.remove('sel'));
   selCalDate = null;
 }
@@ -3509,6 +3772,7 @@ function stab(btn, pid) {
   else if (pid === 'tst') renderStaffList();
   else if (pid === 'trt') renderRouteTab();
   else if (pid === 'tinv') invInitDates();
+  else if (pid === 'tbn') renderBannerAdmin();
 }
 
 // ═══════════════════════════════════════════
@@ -4093,7 +4357,8 @@ function renderBannerCarousel() {
   slides.innerHTML = banners.map(b => `
     <div class="banner-slide">
       <div class="banner-slide-emoji" style="background:${bgMap[b.bg||'navy']||bgMap.navy}">
-        <span style="font-size:64px;">${escHTML(b.emoji||'🎉')}</span>
+        ${b.image ? `<img src="${b.image}" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0;" alt="">` : ''}
+        <span style="font-size:64px;${b.image ? 'display:none;' : ''}">${escHTML(b.emoji||'🎉')}</span>
       </div>
       <div class="banner-slide-overlay">
         <div class="banner-slide-title">${escHTML(b.title||'')}</div>
@@ -4791,6 +5056,80 @@ async function rejectWd(id) {
 }
 
 // ═══════════════════════════════════════════
+//  BANNER IMAGE UPLOAD
+// ═══════════════════════════════════════════
+let _bannerImgB64 = null;
+function handleBannerImg(ev) {
+  const f = ev.target.files[0]; if (!f) return;
+  const r = new FileReader();
+  r.onload = e => {
+    _bannerImgB64 = e.target.result;
+    const thumb = document.getElementById('banner-img-thumb');
+    thumb.src = _bannerImgB64; thumb.style.display = 'block';
+    document.getElementById('banner-img-placeholder').style.display = 'none';
+  };
+  r.readAsDataURL(f); ev.target.value = '';
+}
+
+// ═══════════════════════════════════════════
+//  FOTO MENU KALENDER (integrated in calendar editor)
+// ═══════════════════════════════════════════
+function renderCalPhotos() {
+  const container = document.getElementById('cal-photos');
+  const grid = document.getElementById('cal-photo-grid');
+  if (!container || !grid || !selCalDate) { if(container) container.style.display='none'; return; }
+  const key = `${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(selCalDate).padStart(2,'0')}`;
+  const calDay = getCal()[key];
+  if (!calDay || !Object.keys(calDay).length) { container.style.display='none'; return; }
+  container.style.display='block';
+  const ph = getPh();
+  let html = '';
+  const cats = ['sarapan','nasi','lauk','sayur','goreng','sambal'];
+  cats.forEach(cat => {
+    if (!calDay[cat] || !calDay[cat].length) return;
+    calDay[cat].forEach((item, i) => {
+      const photoId = `cal_${cat}_${i}`;
+      const hasPhoto = !!ph[photoId];
+      html += `<div style="background:#fff;border:1px solid var(--bd);border-radius:10px;overflow:hidden;cursor:pointer;box-shadow:var(--sh);" onclick="uploadCalPhoto('${photoId}')">
+        <div style="aspect-ratio:1;background:${hasPhoto ? '' : 'linear-gradient(135deg,var(--n),var(--n2))'};display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative;">
+          ${hasPhoto ? `<img src="${ph[photoId]}" style="width:100%;height:100%;object-fit:cover;">` : `<span style="font-size:28px;opacity:.7;">📷</span>`}
+        </div>
+        <div style="padding:6px 8px;">
+          <div style="font-size:10px;font-weight:700;color:var(--n);line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escHTML(item.name)}</div>
+          <div style="font-size:9px;color:${hasPhoto ? 'var(--g)' : 'var(--mu)'};">${hasPhoto ? '✅ Foto' : 'Tap upload'}</div>
+        </div>
+      </div>`;
+    });
+  });
+  grid.innerHTML = html || '<div style="color:var(--mu);font-size:11px;">Simpan menu dulu.</div>';
+}
+
+let _calPhotoTarget = null;
+function uploadCalPhoto(photoId) {
+  _calPhotoTarget = photoId;
+  let inp = document.getElementById('cal-photo-inp');
+  if (!inp) {
+    inp = document.createElement('input');
+    inp.type='file'; inp.accept='image/*'; inp.id='cal-photo-inp'; inp.style.display='none';
+    inp.onchange = function(ev) {
+      const f = ev.target.files[0]; if (!f || !_calPhotoTarget) return;
+      const r = new FileReader();
+      r.onload = e => {
+        const ph = getPh();
+        ph[_calPhotoTarget] = e.target.result;
+        ss(SK.photos, ph);
+        renderCalPhotos();
+        toast('✅ Foto diupdate!');
+        _calPhotoTarget = null;
+      };
+      r.readAsDataURL(f);
+    };
+    document.body.appendChild(inp);
+  }
+  inp.value = ''; inp.click();
+}
+
+// ═══════════════════════════════════════════
 //  BANNER ADMIN MANAGEMENT
 // ═══════════════════════════════════════════
 function renderBannerAdmin() {
@@ -4800,7 +5139,7 @@ function renderBannerAdmin() {
   const bgLabels = { navy:'Navy', gold:'Gold', green:'Hijau', red:'Merah' };
   el.innerHTML = banners.map((b,i) => `
     <div style="display:flex;align-items:center;gap:9px;padding:9px 0;border-bottom:1px solid var(--bd);">
-      <div style="width:36px;height:36px;border-radius:8px;background:${b.bg==='gold'?'linear-gradient(135deg,#c9a84c,#e8c97a)':b.bg==='green'?'#166534':b.bg==='red'?'#991b1b':'var(--n)'};display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">${b.emoji||'🎉'}</div>
+      <div style="width:36px;height:36px;border-radius:8px;background:${b.bg==='gold'?'linear-gradient(135deg,#c9a84c,#e8c97a)':b.bg==='green'?'#166534':b.bg==='red'?'#991b1b':'var(--n)'};display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;overflow:hidden;">${b.image ? `<img src="${b.image}" style="width:100%;height:100%;object-fit:cover;">` : (b.emoji||'🎉')}</div>
       <div style="flex:1;">
         <div style="font-size:12px;font-weight:700;color:var(--n);">${escHTML(b.title||'')}</div>
         <div style="font-size:10px;color:var(--mu);">${escHTML(b.desc||'')} · ${bgLabels[b.bg]||b.bg}</div>
@@ -4819,6 +5158,9 @@ function openAddBanner() {
   ['banner-ftitle','banner-fdesc'].forEach(id => { document.getElementById(id).value = ''; });
   document.getElementById('banner-femoji').value = '🎉';
   document.getElementById('banner-fbg').value = 'navy';
+  _bannerImgB64 = null;
+  document.getElementById('banner-img-thumb').style.display = 'none';
+  document.getElementById('banner-img-placeholder').style.display = 'block';
   document.getElementById('banner-form').style.display = 'block';
 }
 
@@ -4830,6 +5172,15 @@ function editBanner(idx) {
   document.getElementById('banner-fdesc').value = b.desc || '';
   document.getElementById('banner-femoji').value = b.emoji || '🎉';
   document.getElementById('banner-fbg').value = b.bg || 'navy';
+  _bannerImgB64 = null;
+  if (b.image) {
+    document.getElementById('banner-img-thumb').src = b.image;
+    document.getElementById('banner-img-thumb').style.display = 'block';
+    document.getElementById('banner-img-placeholder').style.display = 'none';
+  } else {
+    document.getElementById('banner-img-thumb').style.display = 'none';
+    document.getElementById('banner-img-placeholder').style.display = 'block';
+  }
   document.getElementById('banner-form').style.display = 'block';
 }
 
@@ -4843,10 +5194,12 @@ function saveBanner() {
   const bg    = document.getElementById('banner-fbg').value || 'navy';
   if (!title) { toast('Judul banner wajib!'); return; }
   const banners = getBanners();
-  const banner = { title, desc, emoji, bg, active: true };
+  const existing = editIdx !== '' ? (banners[parseInt(editIdx)] || {}) : {};
+  const banner = { title, desc, emoji, bg, active: true, image: _bannerImgB64 || existing.image || null };
   if (editIdx !== '') banners[parseInt(editIdx)] = { ...banners[parseInt(editIdx)], ...banner };
   else banners.push(banner);
   ss(SK.banners, banners);
+  _bannerImgB64 = null;
   closeBannerForm();
   renderBannerAdmin();
   renderBannerCarousel();
