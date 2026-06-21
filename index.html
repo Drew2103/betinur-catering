@@ -1535,6 +1535,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--cr);color:var(-
         <div class="sff"><label>Judul (contoh: 5 Hari Siang)</label><input type="text" id="pkg-ftitle" placeholder="5 Hari (Siang)"></div>
         <div class="sff"><label>Harga (Rp)</label><input type="number" id="pkg-fprice" placeholder="110000"></div>
         <div class="sff"><label>Label Harga (contoh: Rp 110k)</label><input type="text" id="pkg-fpricelbl" placeholder="Rp 110k"></div>
+        <div class="sff"><label>Durasi (hari)</label><input type="number" id="pkg-fdays" placeholder="5" value="5" min="1" max="30"></div>
         <div class="sff"><label>Deskripsi (opsional)</label><input type="text" id="pkg-fdesc" placeholder="Gratis ongkir, menu bervariasi..."></div>
         <div class="staff-form-btns">
           <button class="btn-sf-cancel" onclick="closePkgForm()">Batal</button>
@@ -2470,7 +2471,8 @@ function updateSidebar() {
       const p = m ? m.price : (cart[k].price || 0);
       const isSb = !!(cart[k].isSambal || (m && m.isSambal));
       if (isSb) return `<div class="flex justify-between text-sm"><span class="text-muted-gray">🌶️ ${escHTML(n)}</span><span class="text-muted-gray text-xs">Gratis</span></div>`;
-      return `<div class="flex justify-between text-sm"><span>${cart[k].qty} &times; ${escHTML(n)}</span><span class="font-bold">${rp(p * cart[k].qty)}</span></div>`;
+      const label = cart[k].isPkg ? '📦 ' + escHTML(n) + ' (' + (cart[k].pkgData && cart[k].pkgData.days || 5) + ' hari)' : cart[k].qty + ' &times; ' + escHTML(n);
+      return `<div class="flex justify-between text-sm"><span>${label}</span><span class="font-bold">${rp(p * cart[k].qty)}</span></div>`;
     }).join('');
   }
   const subEl = document.getElementById('gf-sb-sub');
@@ -2718,6 +2720,16 @@ function chg(id, d, price) {
   renderMenu();
   updateFloat();
 }
+function addPaketToCart(idx) {
+  var pkgs = getPackages();
+  var p = pkgs[idx]; if (!p) return;
+  var cartId = 'pkg_' + idx;
+  if (!cart[cartId]) cart[cartId] = { qty: 0, price: p.price, name: p.title, isPkg: true, pkgData: p };
+  cart[cartId].qty = 1;
+  renderMenu();
+  updateFloat();
+  toast('✅ ' + p.title + ' ditambahkan ke keranjang!');
+}
 function toggleSambal(id, checked, name) {
   if (checked) cart[id] = { qty: 1, price: 0, isSambal: true, name: name };
   else delete cart[id];
@@ -2762,8 +2774,10 @@ function renderCart() {
           <div class="cir"><div class="cip" style="font-size:11px;color:var(--mu);">Gratis</div></div>
         </div>`;
       }
+      const cinName = cart[k].isPkg ? '📦 ' + escHTML(n) : escHTML(n);
+      const cinSub = cart[k].isPkg ? (cart[k].pkgData && cart[k].pkgData.days || 5) + ' hari langganan' : cart[k].qty + ' &times; ' + rp(p);
       return `<div class="citem">
-        <div><div class="cin">${escHTML(n)}</div><div class="cis">${cart[k].qty} &times; ${rp(p)}</div></div>
+        <div><div class="cin">${cinName}</div><div class="cis">${cinSub}</div></div>
         <div class="cir"><div class="cip">${rp(p * cart[k].qty)}</div><div class="ciq">&times;${cart[k].qty}</div></div>
       </div>`;
     }).join('');
@@ -2815,6 +2829,46 @@ function placeOrder() {
     });
   } else {
     enqueuePendingOrder(order);
+  }
+
+  // Auto-generate daily orders for subscription packages
+  var pkgItems = Object.entries(cart).filter(function(e) { return e[1].isPkg && e[1].pkgData; });
+  if (pkgItems.length) {
+    var subOrders = [];
+    pkgItems.forEach(function(entry) {
+      var cartId = entry[0], pkg = entry[1];
+      var p = pkg.pkgData;
+      var totalDays = p.days || 5;
+      var startDate = new Date(currentOrderDate + 'T12:00:00');
+      var generated = 0, offset = 0;
+      while (generated < totalDays) {
+        var date = new Date(startDate);
+        date.setDate(date.getDate() + offset);
+        offset++;
+        if (date.getDay() === 0) continue; // Skip Sunday
+        generated++;
+        subOrders.push({
+          id: 'ord_' + (Date.now() + generated) + '_s' + generated,
+          ts: new Date().toISOString(),
+          orderDate: localDateStr(date),
+          name: order.name, phone: order.phone, addr: order.addr,
+          notes: '📦 Langganan: ' + p.title,
+          items: [{ id: cartId, name: p.title, price: Math.round(p.price / totalDays), qty: 1, sec: 'paket' }],
+          subtotal: Math.round(p.price / totalDays), ongkir: 0,
+          total: Math.round(p.price / totalDays),
+          status: 'confirmed', paid: true,
+          isSubscription: true, subscriptionParent: order.id
+        });
+      }
+    });
+    if (subOrders.length) {
+      var allOrd = getOrders();
+      subOrders.forEach(function(so) {
+        allOrd.push(so);
+        if (db) db.collection('orders').doc(so.id).set(so).catch(function(e) { enqueuePendingOrder(so); });
+      });
+      ss(SK.orders, allOrd);
+    }
   }
 
   // Persist normalised customer details
@@ -4609,8 +4663,9 @@ function renderPromoSection() {
         '<p class="text-[9px] text-gold-light font-extrabold uppercase tracking-tight mb-0.5">' + escHTML(p.label || 'PAKET') + '</p>' +
         '<h5 class="text-sm font-bold mb-1">' + escHTML(p.title) + '</h5>' +
         '<p class="text-lg font-display-lg font-extrabold mb-1">' + escHTML(p.priceLabel || rp(p.price)) + '</p>' +
+        (p.days ? '<p class="text-[10px] text-white/50 mb-1">' + p.days + ' hari</p>' : '') +
         (p.desc ? '<p class="text-[10px] text-white/60 mb-3 leading-relaxed">' + escHTML(p.desc) + '</p>' : '<div class="mb-3"></div>') +
-        '<button onclick="orderPaketWA(\'' + escHTML(p.title).replace(/'/g,"&#39;") + '\',' + p.price + ')" class="w-full py-1.5 bg-gold text-primary font-extrabold text-xs rounded-lg hover:bg-gold-light transition-colors active:scale-95">Pilih Paket</button>' +
+        (function(){ var cartId = 'pkg_' + i; var inCart = !!cart[cartId]; return inCart ? '<div class="w-full py-2 bg-white/20 text-white font-extrabold text-xs rounded-xl text-center">✅ Dalam Keranjang</div>' : '<button onclick="addPaketToCart(' + i + ')" class="w-full py-2 bg-gold text-primary font-extrabold text-xs rounded-xl hover:bg-gold-light transition-colors active:scale-95">Pilih Paket</button>'; })() +
       '</div>';
     }).join('') +
     '</div></div>' +
@@ -4651,6 +4706,7 @@ function openAddPkg() {
   document.getElementById('pkg-edit-id').value = '';
   document.getElementById('pkg-form-title').textContent = '＋ Tambah Paket';
   ['pkg-flabel','pkg-ftitle','pkg-fprice','pkg-fpricelbl','pkg-fdesc'].forEach(function(id) { document.getElementById(id).value = ''; });
+  document.getElementById('pkg-fdays').value = 5;
   document.getElementById('pkg-form').style.display = 'block';
 }
 
@@ -4664,6 +4720,7 @@ function editPkg(idx) {
   document.getElementById('pkg-fprice').value = p.price || '';
   document.getElementById('pkg-fpricelbl').value = p.priceLabel || '';
   document.getElementById('pkg-fdesc').value = p.desc || '';
+  document.getElementById('pkg-fdays').value = p.days || 5;
   document.getElementById('pkg-form').style.display = 'block';
 }
 
@@ -4680,7 +4737,8 @@ function savePkg() {
   if (!title || !price) { toast('Judul & harga wajib!'); return; }
   var pkgs = getPackages();
   var editId = document.getElementById('pkg-edit-id').value;
-  var pkg = { label: label, title: title, price: price, priceLabel: priceLabel || rp(price), desc: desc };
+  var days = parseInt(document.getElementById('pkg-fdays').value) || 5;
+  var pkg = { label: label, title: title, price: price, priceLabel: priceLabel || rp(price), desc: desc, days: days };
   if (editId !== '') {
     pkgs[parseInt(editId)] = pkg;
   } else {
