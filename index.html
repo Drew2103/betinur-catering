@@ -41,7 +41,7 @@ tailwind.config={darkMode:"class",corePlugins:{preflight:false},theme:{extend:{c
 <style>
 :root{--n:#0f1f3d;--n2:#1a3260;--g:#c9a84c;--gl:#e8c97a;--gp:#fdf6e3;--cr:#fefcf7;--tx:#1a1a2e;--mu:#6b7280;--bd:#e8dfc5;--sh:0 2px 12px rgba(15,31,61,.08);--sf:0 8px 32px rgba(15,31,61,.45);}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
-html,body{height:100%;}
+html,body{min-height:100%;}
 body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--cr);color:var(--tx);max-width:480px;margin:0 auto;overflow-x:hidden;}
 .view{display:none;flex-direction:column;min-height:100vh;}.view.active{display:flex;}
 #lv{background:linear-gradient(160deg,var(--n),var(--n2) 55%,#0b2218);align-items:center;justify-content:center;padding:28px 20px;position:relative;overflow:hidden;}
@@ -660,8 +660,8 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--cr);color:var(-
 @media (min-width: 900px) {
   body { max-width: none; }
 
-  /* Semua view non-admin tetap selebar HP, di tengah layar */
-  #lv, #mv, #mdv, #cv, #sv, #hv, #chlv, #chv, #pv, #drv {
+  /* View non-admin (kecuali #mv yg sudah full-width GoFood) tetap selebar HP */
+  #lv, #mdv, #cv, #sv, #hv, #chlv, #chv, #pv, #drv {
     max-width: 480px; margin-left: auto; margin-right: auto; width: 100%;
   }
 
@@ -710,38 +710,27 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--cr);color:var(-
    ════════════════════════════════════════════════════════════ */
 @media (max-width: 899px) {
   #av .atabs {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    top: auto;
-    z-index: 300;
-    background: white;
-    border-bottom: none;
-    border-top: 1px solid var(--bd);
-    padding: 4px 8px env(safe-area-inset-bottom, 4px);
-    box-shadow: 0 -4px 16px rgba(15,31,61,.1);
+    position: fixed; bottom: 0; left: 0; right: 0; top: auto;
+    z-index: 300; background: white;
+    border-bottom: none; border-top: 1px solid var(--bd);
+    padding: 4px 0 env(safe-area-inset-bottom, 4px);
+    justify-content: flex-start; gap: 0;
+    box-shadow: 0 -4px 16px rgba(15,31,61,.08);
     overflow-x: auto;
-    gap: 0;
   }
+  #av .atabs::-webkit-scrollbar { display: none; }
+  #av .atabs { -ms-overflow-style: none; scrollbar-width: none; }
   #av .atabs .atab {
-    padding: 8px 10px 4px;
-    font-size: 9px;
+    flex: none; min-width: 68px; padding: 6px 4px 4px;
+    font-size: 9px; letter-spacing: 0;
+    display: flex; flex-direction: column; align-items: center; gap: 2px;
     border-bottom: none;
-    border-top: 2px solid transparent;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    min-width: 64px;
   }
+  #av .atabs .atab .material-symbols-outlined { font-size: 22px; }
   #av .atabs .atab.active {
-    border-bottom: none;
-    border-top-color: var(--g);
-    color: var(--g);
+    border-bottom: none; color: var(--g);
   }
-  #av .abody {
-    padding-bottom: 80px;
-  }
+  #av .abody { padding-bottom: 76px; }
 }
 </style>
 </head>
@@ -848,10 +837,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--cr);color:var(-
             <p class="text-[9px] font-bold text-gold tracking-widest uppercase lg:hidden">Premium Catering</p>
           </div>
         </div>
-        <nav class="hidden lg:flex items-center gap-6">
-          <a onclick="renderMenu();return false" class="font-label-md text-gold border-b-2 border-gold pb-1 cursor-pointer" href="#">Menu</a>
-          <a onclick="showMyOrders();return false" class="font-label-md text-on-surface-variant hover:text-primary transition-colors cursor-pointer" href="#">Pesanan Saya</a>
-        </nav>
+        <nav class="hidden" style="display:none!important;"></nav>
       </div>
       <div class="flex items-center gap-2 lg:gap-4">
         <button onclick="showMyOrders()" class="p-2 rounded-full hover:bg-primary/5 text-primary" title="Pesanan Saya">
@@ -903,6 +889,9 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--cr);color:var(-
         <input type="hidden" id="order-date" value="">
       </section>
 
+      <!-- Subscription Promo (dynamic) -->
+      <section id="gf-promo-section" style="display:none;" class="mb-4"></section>
+
       <!-- CUTOFF BADGE -->
       <div class="flex items-center justify-between mb-2">
         <h4 id="mdtitle" class="text-base lg:text-xl font-bold text-primary">—</h4>
@@ -947,6 +936,27 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--cr);color:var(-
       </div>
     </aside>
   </main>
+
+  <!-- Footer -->
+  <footer class="bg-surface-container py-12 border-t border-border-tan mt-12">
+    <div class="max-w-[1200px] mx-auto px-4 text-center space-y-6">
+      <h2 class="font-display-lg text-2xl text-primary font-bold">Beti Nur Catering</h2>
+      <div class="flex flex-wrap justify-center gap-6">
+        <span class="text-xs font-bold text-muted-gray hover:text-gold cursor-pointer transition-colors">About Us</span>
+        <span class="text-xs font-bold text-muted-gray hover:text-gold cursor-pointer transition-colors">Contact</span>
+        <span class="text-xs font-bold text-muted-gray hover:text-gold cursor-pointer transition-colors">Langganan</span>
+      </div>
+      <div class="flex justify-center gap-3">
+        <a id="gf-footer-wa" href="#" target="_blank" class="w-8 h-8 flex items-center justify-center border border-border-tan rounded-full text-primary hover:bg-primary hover:text-white transition-all">
+          <span class="material-symbols-outlined" style="font-size:16px;">chat</span>
+        </a>
+        <span class="w-8 h-8 flex items-center justify-center border border-border-tan rounded-full text-primary hover:bg-primary hover:text-white transition-all cursor-pointer">
+          <span class="material-symbols-outlined" style="font-size:16px;">location_on</span>
+        </span>
+      </div>
+      <p class="text-[10px] text-muted-gray">&copy; 2026 Beti Nur Catering Premium by Homader Food Service.</p>
+    </div>
+  </footer>
 
   <!-- FLOATING BASKET BAR (Mobile only, replika mockup) -->
   <div id="cfloat" class="fixed bottom-6 left-4 right-4 z-[100] hidden lg:hidden" onclick="navCart()">
@@ -1140,34 +1150,102 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--cr);color:var(-
     <button class="btn-logout" onclick="adminLogout()">Keluar</button>
   </div>
   <div class="atabs" id="atabs-bar">
-    <button class="atab active" onclick="stab(this,'td')"  data-role="super">📊 Dashboard</button>
-    <button class="atab" onclick="stab(this,'tan')" data-role="super">📈 Analitik</button>
-    <button class="atab" onclick="stab(this,'to')"  data-role="both">🔴 Pesanan</button>
-    <button class="atab" onclick="stab(this,'tc')"  data-role="super">📅 Menu Kalender</button>
-    <button class="atab" onclick="stab(this,'tdp')" data-role="super">👨‍🍳 Dapur</button>
-    <button class="atab" onclick="stab(this,'trt')" data-role="super">🚗 Rute Antar</button>
-    <button class="atab" onclick="stab(this,'tex')" data-role="super">📤 Export</button>
-    <button class="atab" onclick="stab(this,'tinv')" data-role="super">🧾 Invoice</button>
-    <button class="atab" onclick="stab(this,'tst')" data-role="super">👤 Staff</button>
-    <button class="atab" onclick="stab(this,'tbn')" data-role="super">🖼️ Banner</button>
-    <button class="atab" onclick="stab(this,'tchamp')" data-role="super">🏆 Champion</button>
+    <button class="atab active" onclick="stab(this,'td')" data-role="super"><span class="material-symbols-outlined" style="font-size:20px;">dashboard</span><span>Dashboard</span></button>
+    <button class="atab" onclick="stab(this,'tan')" data-role="super"><span class="material-symbols-outlined" style="font-size:20px;">analytics</span><span>Analitik</span></button>
+    <button class="atab" onclick="stab(this,'to')" data-role="both"><span class="material-symbols-outlined" style="font-size:20px;">receipt_long</span><span>Pesanan</span></button>
+    <button class="atab" onclick="stab(this,'tc')" data-role="super"><span class="material-symbols-outlined" style="font-size:20px;">calendar_month</span><span>Kalender</span></button>
+    <button class="atab" onclick="stab(this,'tdp')" data-role="super"><span class="material-symbols-outlined" style="font-size:20px;">restaurant</span><span>Dapur</span></button>
+    <button class="atab" onclick="stab(this,'trt')" data-role="super"><span class="material-symbols-outlined" style="font-size:20px;">local_shipping</span><span>Rute</span></button>
+    <button class="atab" onclick="stab(this,'tex')" data-role="super"><span class="material-symbols-outlined" style="font-size:20px;">download</span><span>Export</span></button>
+    <button class="atab" onclick="stab(this,'tinv')" data-role="super"><span class="material-symbols-outlined" style="font-size:20px;">description</span><span>Invoice</span></button>
+    <button class="atab" onclick="stab(this,'tst')" data-role="super"><span class="material-symbols-outlined" style="font-size:20px;">group</span><span>Staff</span></button>
+    <button class="atab" onclick="stab(this,'tpkg')" data-role="super"><span class="material-symbols-outlined" style="font-size:20px;">loyalty</span><span>Paket</span></button>
+    <button class="atab" onclick="stab(this,'tbn')" data-role="super"><span class="material-symbols-outlined" style="font-size:20px;">image</span><span>Banner</span></button>
+    <button class="atab" onclick="stab(this,'tchamp')" data-role="super"><span class="material-symbols-outlined" style="font-size:20px;">emoji_events</span><span>Champion</span></button>
   </div>
   <div class="abody">
 
     <!-- DASHBOARD -->
     <div class="apanel active" id="td">
-      <div class="sgrid">
-        <div class="sbox gold" onclick="showStatDetail('orders-today')" title="Tap untuk detail"><div class="sval" id="stat-ord">0</div><div class="slbl">Pesanan Hari Ini</div></div>
-        <div class="sbox gold" onclick="showStatDetail('revenue-today')" title="Tap untuk detail"><div class="sval" id="stat-rev">0</div><div class="slbl">Pendapatan (Rp)</div></div>
-        <div class="sbox" onclick="showStatDetail('orders-new')" title="Tap untuk detail"><div class="sval" id="stat-new">0</div><div class="slbl">Baru Masuk</div></div>
-        <div class="sbox" onclick="showStatDetail('orders-dikirim')" title="Tap untuk detail"><div class="sval" id="stat-dikirim">0</div><div class="slbl">Dikirim</div></div>
-        <div class="sbox" onclick="showStatDetail('orders-done')" title="Tap untuk detail"><div class="sval" id="stat-done">0</div><div class="slbl">Selesai</div></div>
+  <!-- Revenue Hero Banner -->
+  <div style="background:linear-gradient(135deg,var(--n),var(--n2));border-radius:20px;padding:20px;margin-bottom:16px;position:relative;overflow:hidden;">
+    <div style="position:relative;z-index:1;">
+      <p style="color:var(--g);font-size:10px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:4px;">Pendapatan Hari Ini</p>
+      <div id="stat-rev" style="font-family:'Playfair Display',serif;color:white;font-size:32px;font-weight:700;margin-bottom:6px;">Rp 0</div>
+      <div id="stat-rev-change" style="display:inline-flex;align-items:center;gap:4px;background:rgba(255,255,255,.15);padding:4px 10px;border-radius:20px;font-size:10px;font-weight:700;color:#56e24b;">
+        <span class="material-symbols-outlined" style="font-size:14px;">trending_up</span>
+        <span>vs kemarin</span>
       </div>
-      <div class="clkcard">
-        <div><div class="clklbl">⏰ Batas Pesanan</div><div class="clkt" id="clkt">--:--</div><div class="clkc" id="clkc">Menghitung...</div></div>
-        <div style="font-size:46px;">🌙</div>
+    </div>
+    <span class="material-symbols-outlined" style="position:absolute;bottom:-10px;right:-10px;font-size:120px;color:rgba(255,255,255,.05);transform:rotate(12deg);">payments</span>
+  </div>
+
+  <!-- Stat Cards Grid -->
+  <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:16px;">
+    <div onclick="showStatDetail('orders-today')" style="background:white;border:1px solid var(--bd);border-radius:16px;padding:14px;cursor:pointer;box-shadow:var(--sh);transition:transform .15s;" onmouseenter="this.style.transform='translateY(-2px)'" onmouseleave="this.style.transform=''">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+        <div style="width:36px;height:36px;background:var(--gp);border-radius:10px;display:flex;align-items:center;justify-content:center;"><span class="material-symbols-outlined" style="color:var(--g);font-size:20px;">shopping_bag</span></div>
+        <span id="stat-ord-badge" style="font-size:9px;font-weight:700;color:#16a34a;background:#dcfce7;padding:2px 8px;border-radius:12px;">0</span>
       </div>
-      <div class="ac"><div class="act">📈 Top Item Hari Ini</div><div id="dash-top"></div></div>
+      <div id="stat-ord" style="font-family:'Playfair Display',serif;font-size:24px;font-weight:700;color:var(--n);">0</div>
+      <div style="font-size:10px;color:var(--mu);font-weight:600;text-transform:uppercase;letter-spacing:.3px;margin-top:2px;">Pesanan Hari Ini</div>
+    </div>
+    <div onclick="showStatDetail('orders-new')" style="background:white;border:1px solid var(--bd);border-radius:16px;padding:14px;cursor:pointer;box-shadow:var(--sh);transition:transform .15s;" onmouseenter="this.style.transform='translateY(-2px)'" onmouseleave="this.style.transform=''">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+        <div style="width:36px;height:36px;background:#fef3c7;border-radius:10px;display:flex;align-items:center;justify-content:center;"><span class="material-symbols-outlined" style="color:#f59e0b;font-size:20px;">notification_important</span></div>
+        <span style="font-size:9px;font-weight:700;color:#dc2626;background:#fee2e2;padding:2px 8px;border-radius:12px;">Baru</span>
+      </div>
+      <div id="stat-new" style="font-family:'Playfair Display',serif;font-size:24px;font-weight:700;color:var(--n);">0</div>
+      <div style="font-size:10px;color:var(--mu);font-weight:600;text-transform:uppercase;letter-spacing:.3px;margin-top:2px;">Baru Masuk</div>
+    </div>
+    <div onclick="showStatDetail('orders-dikirim')" style="background:white;border:1px solid var(--bd);border-radius:16px;padding:14px;cursor:pointer;box-shadow:var(--sh);transition:transform .15s;" onmouseenter="this.style.transform='translateY(-2px)'" onmouseleave="this.style.transform=''">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+        <div style="width:36px;height:36px;background:#dbeafe;border-radius:10px;display:flex;align-items:center;justify-content:center;"><span class="material-symbols-outlined" style="color:#2563eb;font-size:20px;">local_shipping</span></div>
+      </div>
+      <div id="stat-dikirim" style="font-family:'Playfair Display',serif;font-size:24px;font-weight:700;color:var(--n);">0</div>
+      <div style="font-size:10px;color:var(--mu);font-weight:600;text-transform:uppercase;letter-spacing:.3px;margin-top:2px;">Dikirim</div>
+    </div>
+    <div onclick="showStatDetail('orders-done')" style="background:white;border:1px solid var(--bd);border-radius:16px;padding:14px;cursor:pointer;box-shadow:var(--sh);transition:transform .15s;" onmouseenter="this.style.transform='translateY(-2px)'" onmouseleave="this.style.transform=''">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+        <div style="width:36px;height:36px;background:#dcfce7;border-radius:10px;display:flex;align-items:center;justify-content:center;"><span class="material-symbols-outlined" style="color:#16a34a;font-size:20px;">check_circle</span></div>
+      </div>
+      <div id="stat-done" style="font-family:'Playfair Display',serif;font-size:24px;font-weight:700;color:var(--n);">0</div>
+      <div style="font-size:10px;color:var(--mu);font-weight:600;text-transform:uppercase;letter-spacing:.3px;margin-top:2px;">Selesai</div>
+    </div>
+  </div>
+
+  <!-- Order Window Clock -->
+  <div class="clkcard">
+    <div><div class="clklbl">⏰ Batas Pesanan</div><div class="clkt" id="clkt">--:--</div><div class="clkc" id="clkc">Menghitung...</div></div>
+    <div style="font-size:46px;">🌙</div>
+  </div>
+
+  <!-- Quick Actions -->
+  <div style="margin-bottom:16px;">
+    <div style="font-weight:800;font-size:13px;color:var(--n);margin-bottom:10px;">Quick Actions</div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;">
+      <div onclick="stab(document.querySelector('.atab[onclick*=to]'),'to')" style="background:white;border:1px solid var(--bd);border-radius:14px;padding:14px 8px;text-align:center;cursor:pointer;box-shadow:var(--sh);transition:transform .12s;" onmouseenter="this.style.transform='scale(1.03)'" onmouseleave="this.style.transform=''">
+        <div style="width:40px;height:40px;background:var(--gp);border-radius:12px;display:flex;align-items:center;justify-content:center;margin:0 auto 6px;"><span class="material-symbols-outlined" style="color:var(--g);font-size:22px;">receipt_long</span></div>
+        <div style="font-size:9px;font-weight:700;color:var(--n);">Pesanan</div>
+      </div>
+      <div onclick="stab(document.querySelector('.atab[onclick*=tc]'),'tc')" style="background:white;border:1px solid var(--bd);border-radius:14px;padding:14px 8px;text-align:center;cursor:pointer;box-shadow:var(--sh);transition:transform .12s;" onmouseenter="this.style.transform='scale(1.03)'" onmouseleave="this.style.transform=''">
+        <div style="width:40px;height:40px;background:#dbeafe;border-radius:12px;display:flex;align-items:center;justify-content:center;margin:0 auto 6px;"><span class="material-symbols-outlined" style="color:#2563eb;font-size:22px;">calendar_month</span></div>
+        <div style="font-size:9px;font-weight:700;color:var(--n);">Kalender</div>
+      </div>
+      <div onclick="stab(document.querySelector('.atab[onclick*=tex]'),'tex')" style="background:white;border:1px solid var(--bd);border-radius:14px;padding:14px 8px;text-align:center;cursor:pointer;box-shadow:var(--sh);transition:transform .12s;" onmouseenter="this.style.transform='scale(1.03)'" onmouseleave="this.style.transform=''">
+        <div style="width:40px;height:40px;background:#fef3c7;border-radius:12px;display:flex;align-items:center;justify-content:center;margin:0 auto 6px;"><span class="material-symbols-outlined" style="color:#f59e0b;font-size:22px;">download</span></div>
+        <div style="font-size:9px;font-weight:700;color:var(--n);">Export</div>
+      </div>
+      <div onclick="stab(document.querySelector('.atab[onclick*=tbn]'),'tbn')" style="background:white;border:1px solid var(--bd);border-radius:14px;padding:14px 8px;text-align:center;cursor:pointer;box-shadow:var(--sh);transition:transform .12s;" onmouseenter="this.style.transform='scale(1.03)'" onmouseleave="this.style.transform=''">
+        <div style="width:40px;height:40px;background:#fce7f3;border-radius:12px;display:flex;align-items:center;justify-content:center;margin:0 auto 6px;"><span class="material-symbols-outlined" style="color:#ec4899;font-size:22px;">campaign</span></div>
+        <div style="font-size:9px;font-weight:700;color:var(--n);">Banner</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Top Items (Ledger Style) -->
+  <div class="ac"><div class="act">📈 Top Item Hari Ini</div><div id="dash-top"></div></div>
+
       <!-- SETTINGS CARD -->
       <div class="ac" style="border-color:rgba(201,168,76,.5);background:var(--gp);">
         <div class="act">⚙️ Pengaturan Bisnis</div>
@@ -1410,6 +1488,29 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--cr);color:var(-
       </div>
     </div>
 
+    <!-- PAKET PROMO -->
+    <div class="apanel" id="tpkg">
+      <div class="ac">
+        <div class="act">🎁 Kelola Paket Promo</div>
+        <div style="font-size:11px;color:var(--mu);margin-bottom:11px;">Paket ditampilkan di halaman menu customer. Tambah, edit, atau hapus paket.</div>
+        <div id="pkg-list"></div>
+        <button class="btn-add-i" onclick="openAddPkg()" style="margin-top:9px;">＋ Tambah Paket</button>
+      </div>
+      <div class="staff-form" id="pkg-form" style="display:none;">
+        <div class="staff-form-title" id="pkg-form-title">＋ Tambah Paket</div>
+        <input type="hidden" id="pkg-edit-id" value="">
+        <div class="sff"><label>Label (contoh: PAKET HEMAT)</label><input type="text" id="pkg-flabel" placeholder="PAKET HEMAT"></div>
+        <div class="sff"><label>Judul (contoh: 5 Hari Siang)</label><input type="text" id="pkg-ftitle" placeholder="5 Hari (Siang)"></div>
+        <div class="sff"><label>Harga (Rp)</label><input type="number" id="pkg-fprice" placeholder="110000"></div>
+        <div class="sff"><label>Label Harga (contoh: Rp 110k)</label><input type="text" id="pkg-fpricelbl" placeholder="Rp 110k"></div>
+        <div class="sff"><label>Deskripsi (opsional)</label><input type="text" id="pkg-fdesc" placeholder="Gratis ongkir, menu bervariasi..."></div>
+        <div class="staff-form-btns">
+          <button class="btn-sf-cancel" onclick="closePkgForm()">Batal</button>
+          <button class="btn-sf-save" onclick="savePkg()">💾 Simpan</button>
+        </div>
+      </div>
+    </div>
+
     <!-- BANNER -->
     <div class="apanel" id="tbn">
       <div class="ac">
@@ -1549,7 +1650,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--cr);color:var(-
 // ═══════════════════════════════════════════
 const LOGO_SRC = 'data:image/jpeg;base64,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Vjp0FkrCPLFjksxySasvGoTap6UoCqoHpS4AHFZLcllVrbL59cVSmtVlYjOcVpFCR1qrJGU6daYiuluqjgVRXRbWa4llEQDPjIJ6HFajrxjFVDGc8mgBsWj2YBIXH4mklgghXCqKvoMRkVWkXcMHpQBBJPCrBWJ49qS1tUdQwdTntmlCq/UAH1pqiNFwPloAu7WVc560pUev8AjUJdgh5xzUgIx60gHxBec0r8nng+lNWnjn/9dMBpOBjNNHQdTSsc9DxmjpyeaYCelI3WlJGOM0hPGDigBOTxTcY61IWyuCahJ+XjHFABuHc01uh6c04jPSkII60AIen1pOtGO/40o5oAaeTRSmigoASnClFKBQAoGaBQDg1IOlAhKO9FA5oAKXpSUUAFA96KXNABnikzRnIoxSAUHmjOaKBxQApGaTNLmkFACkUlL3pKAFoooHSgApfpRQKAA0UUCgBC3SkLGjbk5pajqA0k0lLijFABRRQKACkopaMgUAFGaSimAbqM0maUUAGaKTNGaAEoPSloBFABilHWkp1ACikpaO1ACUUtFABRSClHSgA7UUvWigBM0ZxRRQAmcUUGjpQAuaUUlHNADhzRnikHWloAUUuaQGjPFAC54zSE0daMUAISMU0mpD3NMoAZQKdijFAChacDmkpaBCkE9aTNHfpS0AJijNKKAKACig0UAJilooFABRRSZoAWiiigAooooAKKKKADNGaKKACiiigAooooA//2Q==';
 const ONGKIR_MIN = 20000, ONGKIR_FEE = 2000;
-const SK = { user:'bn_u', orders:'bn_ord', cal:'bn_cal', photos:'bn_ph', menu:'bn_mn', role:'bn_role', settings:'bn_set', staff:'bn_staff', logo:'bn_logo', mh:'bn_mh', qris:'bn_qris', route:'bn_route', champions:'bn_champs', commissions:'bn_comms', withdrawals:'bn_wds', banners:'bn_banners' };
+const SK = { user:'bn_u', orders:'bn_ord', cal:'bn_cal', photos:'bn_ph', menu:'bn_mn', role:'bn_role', settings:'bn_set', staff:'bn_staff', logo:'bn_logo', mh:'bn_mh', qris:'bn_qris', route:'bn_route', champions:'bn_champs', commissions:'bn_comms', withdrawals:'bn_wds', banners:'bn_banners', packages:'bn_pkg' };
 const WA_DEFAULT = '6281234567890';
 
 // Default staff — super admin awal, PIN bisa diubah di CMS
@@ -1640,6 +1741,7 @@ const DEF_MENU = [
   {id:'perkedel',    name:'Perkedel Kentang',      desc:'Perkedel kentang renyah luar, lembut dalam',       price:3000,  emoji:'🥔', sec:'siang',   sub:'goreng'},
 ];
 const CAL_CATS = [
+  {key:'paket',   lbl:'📦 Paket Harian (ada deskripsi isi)', hasDesc:true},
   {key:'sarapan', lbl:'🍱 Sarapan'},   {key:'nasi',   lbl:'🍚 Nasi'},
   {key:'lauk',    lbl:'🍗 Lauk'},      {key:'sayur',  lbl:'🥦 Sayur / Pelengkap'},
   {key:'goreng',  lbl:'🥟 Gorengan'},
@@ -1689,7 +1791,8 @@ const FS_MAP = {
   [SK.cal]:       'calendar',
   [SK.mh]:        'menuHistory',
   [SK.staff]:     'staff',
-  [SK.banners]:   'banners'
+  [SK.banners]:   'banners',
+  [SK.packages]:  'packages'
 };
 // orders handled separately per-document in /orders/{id}
 // champions, commissions, withdrawals handled as Firestore sub-collections
@@ -1761,6 +1864,7 @@ function startConfigListeners() {
   _configUnsubs.push(fsListen('logo',     d => { try{localStorage.setItem(SK.logo, JSON.stringify(d));}catch(e){} updateLogos(); }));
   _configUnsubs.push(fsListen('qris',     d => { try{localStorage.setItem(SK.qris, JSON.stringify(d));}catch(e){} updateQRIS(); }));
   _configUnsubs.push(fsListen('staff',    d => { try{localStorage.setItem(SK.staff, JSON.stringify(d));}catch(e){} }));
+  _configUnsubs.push(fsListen('packages', d => { try{localStorage.setItem(SK.packages, JSON.stringify(d));}catch(e){} renderPromoSection(); }));
 }
 
 function startOrdersListener() {
@@ -2134,7 +2238,7 @@ function enterAdmin() {
   showView('av', false);
   loadSettings();
   renderAdminMenu(); refreshOrders(); updateStats(); updateDapur(); renderAnalytics();
-  renderChampionAdmin(); renderBannerAdmin();
+  renderChampionAdmin(); renderBannerAdmin(); renderPkgAdmin();
   if (poll) clearInterval(poll);
   poll = setInterval(() => { refreshOrders(); updateStats(); updateDapur(); }, 30000);
   startOrdersListener();
@@ -2238,10 +2342,16 @@ function getMenuForDate(dateStr) {
   if (!calDay || !Object.keys(calDay).length) return [];
 
   const items = [];
+  // Paket harian — ditampilkan paling atas, punya deskripsi isi
+  if (calDay.paket && calDay.paket.length) {
+    calDay.paket.forEach((ci, i) =>
+      items.push({ id:`cal_paket_${i}`, name:ci.name, desc:ci.desc||'', price:ci.price||0, emoji:'📦', sec:'paket', sub:null, isPaket:true })
+    );
+  }
   const calCat = (key, emoji, sec, sub) => {
     if (calDay[key] && calDay[key].length) {
       calDay[key].forEach((ci, i) =>
-        items.push({ id:`cal_${key}_${i}`, name:ci.name, desc:'', price:ci.price||0, emoji, sec, sub, isSambal: key === 'sambal' })
+        items.push({ id:`cal_${key}_${i}`, name:ci.name, desc:ci.desc||'', price:ci.price||0, emoji, sec, sub, isSambal: key === 'sambal' })
       );
     } else {
       MENU.filter(m => sub ? (m.sub === sub) : (m.sec === sec && !m.sub))
@@ -2352,8 +2462,13 @@ function renderMenu() {
     return;
   }
   const MENU = getMenuForDate(currentOrderDate), ph = getPh();
+  const paketItems = MENU.filter(m => m.isPaket);
   const sarapanItems = MENU.filter(m => m.sec === 'sarapan');
   const G = [];
+  // Paket harian: tampil paling atas kalau ada
+  if (paketItems.length) {
+    G.push({ id:'sec-paket', lbl:'📦', title:'Paket Harian', date:fmtDateLabel(currentOrderDate), items: paketItems, isPaket:true });
+  }
   // Sarapan: cuma tampil kalau masih dalam jam pesan DAN admin sudah isi menunya
   if (sarapanAvailable && sarapanItems.length) {
     G.push({ id:'sec-sarapan', lbl:'🍱', title:'Sarapan', date:fmtDateLabel(currentOrderDate), items: sarapanItems });
@@ -2369,7 +2484,11 @@ function renderMenu() {
   G.forEach(g => {
     let gh = `<div id="${g.id}"><div class="flex items-center justify-between mb-2"><h4 class="text-base lg:text-xl font-bold text-primary">${escHTML(g.title)}</h4><span class="text-[10px] lg:text-xs font-bold text-gold uppercase tracking-widest">${escHTML(g.date)}</span></div>`;
     if (g.items) {
-      gh += `<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4 lg:gap-6">${g.items.map(m => mcard(m, ph)).join('')}</div>`;
+      if (g.isPaket) {
+        gh += `<div class="space-y-3">${g.items.map(m => paketCard(m, ph)).join('')}</div>`;
+      } else {
+        gh += `<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4 lg:gap-6">${g.items.map(m => mcard(m, ph)).join('')}</div>`;
+      }
     } else {
       let any = false;
       g.subs.forEach(s => {
@@ -2394,6 +2513,12 @@ function renderMenu() {
   document.getElementById('mscroll').innerHTML = h;
   renderCatTabs();
   updateSidebar();
+  const footerWA = document.getElementById('gf-footer-wa');
+  if (footerWA) {
+    const waNum = (getSettings().waNumber || WA_DEFAULT).replace(/\D/g,'');
+    footerWA.href = 'https://wa.me/' + waNum;
+  }
+  renderPromoSection();
 }
 
 function mcard(m, ph) {
@@ -2411,7 +2536,7 @@ function mcard(m, ph) {
        </div>`
     : `<button id="q-${m.id}" data-qty="0" onclick="event.stopPropagation();chg('${safeId}',1,${m.price})" class="bg-primary text-white text-[10px] lg:text-xs font-bold px-4 lg:px-6 py-2 rounded-full active:scale-95 hover:bg-primary/90 transition-all">TAMBAH</button>`;
   return `<div class="bg-white rounded-3xl p-3 border border-border-tan gf-shadow flex lg:flex-col gap-4 transition-all hover:shadow-lg active:scale-[0.98] cursor-pointer" onclick="openMenuDetail('${safeId}')">
-    <div class="w-24 h-24 lg:w-full lg:h-48 rounded-2xl overflow-hidden flex-shrink-0 relative">${imgH}</div>
+    <div class="w-24 h-24 lg:w-full lg:h-48 rounded-2xl overflow-hidden flex-shrink-0 relative">${imgH}${m.tag ? `<span class="absolute top-2 left-2 text-[8px] lg:text-[10px] font-extrabold text-white px-2 py-0.5 rounded-full ${m.tag==='BEST SELLER'?'bg-success-green':'bg-primary'}">${escHTML(m.tag)}</span>` : ''}</div>
     <div class="flex flex-col justify-between flex-1 lg:p-2">
       <div>
         <h5 class="text-sm lg:text-base font-extrabold text-primary mb-1">${escHTML(m.name)}</h5>
@@ -2419,6 +2544,37 @@ function mcard(m, ph) {
       </div>
       <div class="flex items-center justify-between mt-4" onclick="event.stopPropagation()">
         <span class="text-sm lg:text-base font-extrabold text-primary">Rp ${fmt(m.price)}</span>
+        ${stepperH}
+      </div>
+    </div>
+  </div>`;
+}
+function paketCard(m, ph) {
+  const hasImg = !!ph[m.id];
+  const safeId = m.id.replace(/'/g, "\\'");
+  const qty = cart[m.id] ? cart[m.id].qty : 0;
+  const imgH = hasImg
+    ? `<img alt="${escHTML(m.name)}" class="w-full h-full object-cover" src="${ph[m.id]}">`
+    : `<div class="w-full h-full bg-gradient-to-br from-primary to-primary-container flex items-center justify-center"><span style="font-size:36px;">📦</span></div>`;
+  const stepperH = qty
+    ? `<div class="flex items-center bg-primary/5 rounded-full p-1 gap-3">
+        <button onclick="event.stopPropagation();chg('${safeId}',-1,${m.price})" class="w-7 h-7 flex items-center justify-center bg-white rounded-full shadow-sm text-primary font-bold hover:scale-110 active:scale-95 transition-all">−</button>
+        <span id="q-${m.id}" class="text-xs font-extrabold">${qty}</span>
+        <button onclick="event.stopPropagation();chg('${safeId}',1,${m.price})" class="w-7 h-7 flex items-center justify-center bg-white rounded-full shadow-sm text-primary font-bold hover:scale-110 active:scale-95 transition-all">+</button>
+       </div>`
+    : `<button id="q-${m.id}" data-qty="0" onclick="event.stopPropagation();chg('${safeId}',1,${m.price})" class="bg-gold text-primary text-xs font-extrabold px-6 py-2.5 rounded-full active:scale-95 hover:bg-gold-light transition-all shadow-md">PESAN PAKET</button>`;
+  return `<div class="bg-gradient-to-br from-white to-warm-surface rounded-2xl border-2 border-gold/30 p-4 gf-shadow flex gap-4 transition-all hover:shadow-lg active:scale-[0.99] cursor-pointer" onclick="openMenuDetail('${safeId}')">
+    <div class="w-20 h-20 lg:w-24 lg:h-24 rounded-xl overflow-hidden flex-shrink-0">${imgH}</div>
+    <div class="flex-1 min-w-0 flex flex-col justify-between">
+      <div>
+        <div class="flex items-center gap-2 mb-1">
+          <span class="text-[9px] font-extrabold text-gold bg-gold/10 px-2 py-0.5 rounded-md uppercase tracking-wider">📦 Paket</span>
+        </div>
+        <h5 class="text-base lg:text-lg font-extrabold text-primary mb-1">${escHTML(m.name)}</h5>
+        ${m.desc ? `<p class="text-[11px] lg:text-xs text-muted-gray leading-relaxed mb-2">${escHTML(m.desc)}</p>` : ''}
+      </div>
+      <div class="flex items-center justify-between" onclick="event.stopPropagation()">
+        <span class="text-lg font-extrabold text-primary">Rp ${fmt(m.price)}</span>
         ${stepperH}
       </div>
     </div>
@@ -2719,19 +2875,30 @@ function refreshOrders() {
     const waOrdBtn = custWA
       ? `<a class="btn-wa-ord" href="https://wa.me/${custWA}?text=${custMsg}" target="_blank" rel="noopener">💬 WA</a>` : '';
 
-    return `<div class="oe" id="oe-${o.id}">
-      <div class="oetop">
-        <div style="display:flex;align-items:flex-start;gap:7px;">
-          <div class="oe-check ${chked?'checked':''}" onclick="toggleCheck('${o.id}')">${chked?'&#10003;':''}</div>
-          <div><div class="ocn">${odLbl}${escHTML(o.name)}</div><div class="ometa">📍 ${escHTML(o.addr)} &middot; ${t}</div></div>
-        </div>
-        <button class="btn-po" onclick="printOrder('${o.id}')">🖨️</button>
+    return `<div style="background:white;border:1px solid var(--bd);border-radius:16px;padding:14px;margin-bottom:10px;box-shadow:var(--sh);" id="oe-${o.id}">
+  <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px;">
+    <div style="display:flex;align-items:flex-start;gap:10px;">
+      <div class="oe-check ${chked?'checked':''}" onclick="toggleCheck('${o.id}')">${chked?'&#10003;':''}</div>
+      <div>
+        <div style="font-size:13px;font-weight:800;color:var(--n);">${odLbl}${escHTML(o.name)}</div>
+        <div style="font-size:10px;color:var(--mu);margin-top:2px;">📍 ${escHTML(o.addr)} · ${t}</div>
       </div>
-      <div style="font-size:10px;color:var(--mu);margin:3px 0 2px;">${items}</div>
-      <div>${chip}${paidChip}</div>
-      <div class="oact"><div class="otot">${rp(o.total)}</div>${confBtn}${dkirimBtn}${dBtn}${waOrdBtn}${editBtn}${delBtn}</div>
-      ${notesH}
-    </div>`;
+    </div>
+    <div style="text-align:right;">
+      <div style="font-size:14px;font-weight:800;color:var(--n);">${rp(o.total)}</div>
+      <div style="font-size:9px;color:var(--mu);margin-top:1px;">ID: ${o.id.slice(-6)}</div>
+    </div>
+  </div>
+  <div style="font-size:10px;color:var(--mu);margin-bottom:6px;line-height:1.5;">${items}</div>
+  ${notesH}
+  <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:8px;">
+    ${chip}${paidChip}
+  </div>
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-top:10px;padding-top:10px;border-top:1px solid var(--bd);">
+    <div style="display:flex;gap:6px;">${confBtn}${dkirimBtn}${dBtn}${waOrdBtn}</div>
+    <div style="display:flex;gap:4px;">${editBtn}${delBtn}<button class="btn-po" onclick="printOrder('${o.id}')" style="border-radius:10px;">🖨️</button></div>
+  </div>
+</div>`;
   }).join('');
 }
 function toggleCheck(id) {
@@ -3016,10 +3183,29 @@ function updateStats() {
   const rev    = tod.reduce((s, o) => s + o.total, 0);
   const set = (id, val) => { const e = document.getElementById(id); if (e) e.textContent = val; };
   set('stat-ord',  tod.length);
-  set('stat-rev',  rev >= 1000 ? (rev/1000).toFixed(0)+'k' : rev);
+  set('stat-rev',  rp(rev));
   set('stat-new',  tod.filter(o => o.status === 'pending' || o.status === 'new').length);
   set('stat-done', tod.filter(o => o.status === 'done').length);
   set('stat-dikirim', tod.filter(o => o.status === 'dikirim').length);
+
+  // Yesterday revenue comparison
+  const yesterday = new Date(); yesterday.setDate(yesterday.getDate()-1);
+  const yRev = orders.filter(o => (o.orderDate||o.ts.split('T')[0]) === localDateStr(yesterday)).reduce((s,o)=>s+o.total,0);
+  const changeEl = document.getElementById('stat-rev-change');
+  if (changeEl) {
+    if (yRev > 0) {
+      const pct = Math.round(((rev - yRev) / yRev) * 100);
+      const up = pct >= 0;
+      changeEl.innerHTML = `<span class="material-symbols-outlined" style="font-size:14px;">${up?'trending_up':'trending_down'}</span><span>${up?'+':''}${pct}% vs kemarin</span>`;
+      changeEl.style.color = up ? '#56e24b' : '#ef4444';
+    } else {
+      changeEl.innerHTML = '<span>Hari pertama!</span>';
+    }
+  }
+
+  // Order badge
+  const ordBadge = document.getElementById('stat-ord-badge');
+  if (ordBadge) ordBadge.textContent = tod.length > 0 ? `+${tod.length}` : '0';
 
   // Top item BERDASARKAN PENGHASILAN (uang), bukan jumlah porsi
   const ic = {};
@@ -3031,8 +3217,17 @@ function updateStats() {
   const sorted = Object.entries(ic).sort((a,b) => b[1].rev - a[1].rev).slice(0, 5);
   const ti = document.getElementById('dash-top');
   if (ti) ti.innerHTML = sorted.length
-    ? sorted.map(([n,v]) => `<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--bd);font-size:12px;"><span>${escHTML(n)} <span style="color:var(--mu);">·${v.qty}x</span></span><strong>${rp(v.rev)}</strong></div>`).join('')
-    : '<div style="color:var(--mu);font-size:12px;">Belum ada pesanan hari ini.</div>';
+    ? sorted.map(([n,v], i) => `<div style="display:flex;align-items:center;gap:12px;padding:10px 0;${i < sorted.length-1 ? 'border-bottom:1px solid var(--bd);':''}">
+      <div style="width:36px;height:36px;background:${i===0?'var(--gp)':i===1?'#dbeafe':'#f3f4f6'};border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+        <span style="font-size:14px;font-weight:800;color:${i===0?'var(--g)':i===1?'#2563eb':'var(--mu)'};">${i+1}</span>
+      </div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:12px;font-weight:700;color:var(--n);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escHTML(n)}</div>
+        <div style="font-size:10px;color:var(--mu);">${v.qty}x terjual</div>
+      </div>
+      <div style="font-size:13px;font-weight:800;color:var(--n);white-space:nowrap;">${rp(v.rev)}</div>
+    </div>`).join('')
+    : '<div style="color:var(--mu);font-size:12px;padding:10px 0;">Belum ada pesanan hari ini.</div>';
 }
 
 // ═══════════════════════════════════════════
@@ -3137,8 +3332,8 @@ function openCalE(d) {
   let body = '';
   CAL_CATS.forEach(cat => {
     body += `<div class="cas-lbl">${cat.lbl}</div><div id="calrows-${cat.key}">`;
-    (dd[cat.key]||[]).forEach((item,i) => { body += calRowH(cat.key, i, item.name, item.price); });
-    body += `</div><button class="btn-add-row" onclick="addCalRow('${cat.key}')">+ Tambah item</button>`;
+    (dd[cat.key]||[]).forEach((item,i) => { body += calRowH(cat.key, i, item.name, item.price, item.desc); });
+    body += `</div><button class="btn-add-row" onclick="addCalRow('${cat.key}')">+ Tambah ${cat.key === 'paket' ? 'paket' : 'item'}</button>`;
   });
   document.getElementById('cae-body').innerHTML = body;
   const ed = document.getElementById('cal-editor');
@@ -3146,11 +3341,19 @@ function openCalE(d) {
   ed.scrollIntoView({behavior:'smooth', block:'nearest'});
   renderCalPhotos();
 }
-function calRowH(cat, idx, name, price) {
+function calRowH(cat, idx, name, price, desc) {
   if (cat === 'sambal') {
     return `<div class="cal-row" id="crow-${cat}-${idx}">
       <input type="text" placeholder="Nama sambal..." value="${escHTML(name||'')}" style="flex:1;">
       <button class="btn-del-row" onclick="this.closest('.cal-row').remove()">&#215;</button>
+    </div>`;
+  }
+  if (cat === 'paket') {
+    return `<div class="cal-row" id="crow-${cat}-${idx}" style="flex-wrap:wrap;">
+      <input type="text" placeholder="Nama paket (cth: Paket Hemat)" value="${escHTML(name||'')}" style="flex:1;min-width:120px;">
+      <input type="number" placeholder="Harga" value="${price||''}" style="width:80px;">
+      <button class="btn-del-row" onclick="this.closest('.cal-row').remove()">&#215;</button>
+      <textarea placeholder="Deskripsi isi paket (cth: Nasi + Ayam Goreng + Sayur Lodeh + Sambal)" style="width:100%;margin-top:4px;padding:7px 10px;border:1.5px solid var(--bd);border-radius:8px;font-size:11px;font-family:inherit;resize:vertical;min-height:38px;">${escHTML(desc||'')}</textarea>
     </div>`;
   }
   return `<div class="cal-row" id="crow-${cat}-${idx}">
@@ -3178,6 +3381,11 @@ function saveCalMenu() {
       if (!nm) return;
       if (cat.key === 'sambal') {
         items.push({name:nm});
+      } else if (cat.key === 'paket') {
+        const pr = ins[1] ? parseInt(ins[1].value)||0 : 0;
+        const ta = row.querySelector('textarea');
+        const desc = ta ? ta.value.trim() : '';
+        items.push({name:nm, price:pr, desc});
       } else {
         const pr = ins[1] ? parseInt(ins[1].value)||0 : 0;
         items.push({name:nm, price:pr});
@@ -3773,6 +3981,7 @@ function stab(btn, pid) {
   else if (pid === 'trt') renderRouteTab();
   else if (pid === 'tinv') invInitDates();
   else if (pid === 'tbn') renderBannerAdmin();
+  else if (pid === 'tpkg') renderPkgAdmin();
 }
 
 // ═══════════════════════════════════════════
@@ -4340,6 +4549,114 @@ function captureRefLink() {
 }
 
 function getRef() { return localStorage.getItem('bn_ref') || null; }
+
+// ═══════════════════════════════════════════
+//  PAKET PROMO
+// ═══════════════════════════════════════════
+function getPackages() { return ls(SK.packages) || []; }
+
+function renderPromoSection() {
+  var pkgs = getPackages();
+  var el = document.getElementById('gf-promo-section');
+  if (!el) return;
+  if (!pkgs.length) { el.style.display = 'none'; return; }
+  el.style.display = 'block';
+  el.className = 'bg-gradient-to-br from-primary to-primary-container text-white rounded-3xl p-5 lg:p-6 relative overflow-hidden shadow-lg border border-white/5 mb-4';
+  el.innerHTML = '<div class="relative z-10">' +
+    '<div class="inline-flex items-center gap-1 bg-gold/20 text-gold-light px-2.5 py-1 rounded-full text-[9px] lg:text-xs font-extrabold uppercase tracking-wider mb-3 border border-gold/30">' +
+      '<span class="material-symbols-outlined" style="font-size:12px;">workspace_premium</span> PAKET SPESIAL</div>' +
+    '<h4 class="text-lg lg:text-xl font-display-lg font-bold mb-1">Hemat dengan Paket!</h4>' +
+    '<p class="text-[11px] lg:text-sm text-white/70 mb-5 max-w-sm leading-relaxed">Pilih paket langganan untuk kemudahan pesan tanpa repot.</p>' +
+    '<div class="grid grid-cols-2 gap-3">' +
+    pkgs.map(function(p, i) {
+      return '<div class="p-4 rounded-xl ' + (i === 0 ? 'bg-white/5 border border-white/10' : 'bg-white/10 border border-gold/30') + ' backdrop-blur-sm">' +
+        '<p class="text-[9px] text-gold-light font-extrabold uppercase tracking-tight mb-0.5">' + escHTML(p.label || 'PAKET') + '</p>' +
+        '<h5 class="text-sm font-bold mb-1">' + escHTML(p.title) + '</h5>' +
+        '<p class="text-lg font-display-lg font-extrabold mb-1">' + escHTML(p.priceLabel || rp(p.price)) + '</p>' +
+        (p.desc ? '<p class="text-[10px] text-white/60 mb-3 leading-relaxed">' + escHTML(p.desc) + '</p>' : '<div class="mb-3"></div>') +
+        '<button class="w-full py-1.5 bg-gold text-primary font-extrabold text-xs rounded-lg hover:bg-gold-light transition-colors">Pilih Paket</button>' +
+      '</div>';
+    }).join('') +
+    '</div></div>' +
+    '<span class="material-symbols-outlined" style="position:absolute;bottom:-8px;right:-8px;font-size:140px;opacity:.1;transform:rotate(12deg);pointer-events:none;">calendar_month</span>';
+}
+
+// ═══════════════════════════════════════════
+//  PAKET PROMO ADMIN
+// ═══════════════════════════════════════════
+function renderPkgAdmin() {
+  var pkgs = getPackages();
+  var el = document.getElementById('pkg-list'); if (!el) return;
+  if (!pkgs.length) { el.innerHTML = '<div style="color:var(--mu);font-size:12px;">Belum ada paket.</div>'; return; }
+  el.innerHTML = pkgs.map(function(p, i) {
+    return '<div style="display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--bd);">' +
+      '<div>' +
+        '<div style="font-size:12px;font-weight:800;color:var(--n);">' + escHTML(p.title) + '</div>' +
+        '<div style="font-size:10px;color:var(--mu);">' + escHTML(p.label || '') + ' · ' + escHTML(p.priceLabel || rp(p.price)) + '</div>' +
+      '</div>' +
+      '<div style="display:flex;gap:4px;">' +
+        '<button onclick="editPkg(' + i + ')" style="background:#f0f2f8;border:none;border-radius:6px;padding:4px 8px;font-size:10px;cursor:pointer;">✏️</button>' +
+        '<button onclick="deletePkg(' + i + ')" style="background:#fee2e2;border:none;border-radius:6px;padding:4px 8px;font-size:10px;cursor:pointer;color:#dc2626;">✕</button>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+}
+
+function openAddPkg() {
+  document.getElementById('pkg-edit-id').value = '';
+  document.getElementById('pkg-form-title').textContent = '＋ Tambah Paket';
+  ['pkg-flabel','pkg-ftitle','pkg-fprice','pkg-fpricelbl','pkg-fdesc'].forEach(function(id) { document.getElementById(id).value = ''; });
+  document.getElementById('pkg-form').style.display = 'block';
+}
+
+function editPkg(idx) {
+  var pkgs = getPackages();
+  var p = pkgs[idx]; if (!p) return;
+  document.getElementById('pkg-edit-id').value = idx;
+  document.getElementById('pkg-form-title').textContent = '✏️ Edit Paket';
+  document.getElementById('pkg-flabel').value = p.label || '';
+  document.getElementById('pkg-ftitle').value = p.title || '';
+  document.getElementById('pkg-fprice').value = p.price || '';
+  document.getElementById('pkg-fpricelbl').value = p.priceLabel || '';
+  document.getElementById('pkg-fdesc').value = p.desc || '';
+  document.getElementById('pkg-form').style.display = 'block';
+}
+
+function closePkgForm() {
+  document.getElementById('pkg-form').style.display = 'none';
+}
+
+function savePkg() {
+  var label = document.getElementById('pkg-flabel').value.trim();
+  var title = document.getElementById('pkg-ftitle').value.trim();
+  var price = parseInt(document.getElementById('pkg-fprice').value) || 0;
+  var priceLabel = document.getElementById('pkg-fpricelbl').value.trim();
+  var desc = document.getElementById('pkg-fdesc').value.trim();
+  if (!title || !price) { toast('Judul & harga wajib!'); return; }
+  var pkgs = getPackages();
+  var editId = document.getElementById('pkg-edit-id').value;
+  var pkg = { label: label, title: title, price: price, priceLabel: priceLabel || rp(price), desc: desc };
+  if (editId !== '') {
+    pkgs[parseInt(editId)] = pkg;
+  } else {
+    pkgs.push(pkg);
+  }
+  ss(SK.packages, pkgs);
+  closePkgForm();
+  renderPkgAdmin();
+  renderPromoSection();
+  toast('✅ Paket disimpan!');
+}
+
+function deletePkg(idx) {
+  if (!confirm('Hapus paket ini?')) return;
+  var pkgs = getPackages();
+  pkgs.splice(idx, 1);
+  ss(SK.packages, pkgs);
+  renderPkgAdmin();
+  renderPromoSection();
+  toast('🗑️ Paket dihapus!');
+}
 
 // ═══════════════════════════════════════════
 //  BANNER CAROUSEL
