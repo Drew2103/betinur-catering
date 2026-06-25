@@ -5465,7 +5465,7 @@ async function renderChampionAdmin() {
         return `<div class="champ-row">
           <div class="champ-avatar">${c.name[0]||'?'}</div>
           <div class="champ-info">
-            <div class="champ-name">${escHTML(c.name)} <span class="champ-badge ${c.isActive?'active':'inactive'}">${c.isActive?'Aktif':'Nonaktif'}</span></div>
+            <div class="champ-name" style="cursor:pointer;" onclick="showChampDetail('${c.id}')">${escHTML(c.name)} <span class="champ-badge ${c.isActive?'active':'inactive'}">${c.isActive?'Aktif':'Nonaktif'}</span></div>
             <div class="champ-meta">ref: ${c.refCode} · ${myOrders.length} order · Komisi: ${rp(totalKomisi)}</div>
             <div style="font-size:9px;color:${unpaidTotal > 0 ? '#dc2626' : '#16a34a'};font-weight:700;margin-top:2px;">
               ${unpaidTotal > 0 ? '⏳ Belum bayar: ' + rp(unpaidTotal) + ' (' + unpaidOrders.length + ' order)' : '✅ Semua lunas'}
@@ -5656,6 +5656,114 @@ function sendChampWA(name, email, refCode) {
     `Setiap pelanggan yang pesan lewat link kamu, kamu dapat komisi 5%! 💰`
   );
   window.open(`https://wa.me/?text=${msg}`, '_blank');
+}
+
+function showChampDetail(champId) {
+  const champs = getChampions();
+  const c = champs.find(x => x.id === champId); if (!c) return;
+  const allOrders = getOrders().filter(o => o.ref === c.refCode);
+  const comms = getCommissions().filter(x => x.championId === c.id);
+  const totalKomisi = comms.reduce((s,x) => s + x.commissionAmount, 0);
+  const totalRev = allOrders.reduce((s,o) => s + o.total, 0);
+  const paidTotal = allOrders.filter(o => o.paid).reduce((s,o) => s + o.total, 0);
+  const unpaidTotal = allOrders.filter(o => !o.paid).reduce((s,o) => s + o.total, 0);
+  const unpaidCount = allOrders.filter(o => !o.paid).length;
+
+  // Revenue chart: last 14 days
+  const chartDays = Array.from({length:14}, (_,i) => {
+    const d = new Date(); d.setDate(d.getDate() - (13-i)); return localDateStr(d);
+  });
+  const chartData = chartDays.map(d => ({
+    d, rev: allOrders.filter(o => (o.orderDate||o.ts.split('T')[0]) === d).reduce((s,o) => s + o.total, 0),
+    count: allOrders.filter(o => (o.orderDate||o.ts.split('T')[0]) === d).length
+  }));
+  const maxRev = Math.max(...chartData.map(x => x.rev), 1);
+  const chartH = chartData.map(({d, rev, count}) => {
+    const h = Math.round((rev / maxRev) * 80);
+    const lbl = ['Min','Sen','Sel','Rab','Kam','Jum','Sab'][new Date(d+'T12:00:00').getDay()];
+    const dt = new Date(d+'T12:00:00').getDate();
+    return `<div style="display:flex;flex-direction:column;align-items:center;gap:2px;flex:1;min-width:18px;">
+      <div style="font-size:8px;color:var(--n);font-weight:700;">${rev > 0 ? (rev >= 1000 ? Math.round(rev/1000)+'k' : rev) : ''}</div>
+      <div style="width:100%;max-width:20px;height:${h}px;background:${rev > 0 ? 'linear-gradient(to top,var(--g),var(--gl))' : 'var(--bd)'};border-radius:4px 4px 0 0;min-height:2px;"></div>
+      <div style="font-size:7px;color:var(--mu);font-weight:600;">${dt}</div>
+    </div>`;
+  }).join('');
+
+  // Customers grouped
+  const custMap = {};
+  allOrders.forEach(o => {
+    if (!custMap[o.phone]) custMap[o.phone] = { name:o.name, phone:o.phone, orders:[], paid:0, unpaid:0 };
+    custMap[o.phone].orders.push(o);
+    if (o.paid) custMap[o.phone].paid += o.total; else custMap[o.phone].unpaid += o.total;
+  });
+  const custList = Object.values(custMap).sort((a,b) => b.orders.length - a.orders.length);
+  const custH = custList.map(cu => {
+    const total = cu.paid + cu.unpaid;
+    const orderDetail = cu.orders.slice(0,8).map(o => {
+      const items = o.items.map(it => it.name + (it.qty > 1 ? ' x'+it.qty : '')).join(', ');
+      return `<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid rgba(0,0,0,.05);font-size:10px;">
+        <div style="flex:1;min-width:0;">
+          <div style="color:var(--n);font-weight:600;">${fmtDateLabel(o.orderDate||o.ts.split('T')[0])}</div>
+          <div style="color:var(--mu);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escHTML(items)}</div>
+        </div>
+        <div style="text-align:right;flex-shrink:0;margin-left:8px;">
+          <div style="font-weight:700;">${rp(o.total)}</div>
+          ${o.paid ? '<div style="color:#16a34a;font-size:9px;">✅ Lunas</div>' : '<div style="color:#dc2626;font-size:9px;">⏳ Belum</div>'}
+        </div>
+      </div>`;
+    }).join('');
+    const moreH = cu.orders.length > 8 ? `<div style="font-size:9px;color:var(--mu);padding:3px 0;">...+${cu.orders.length-8} pesanan lain</div>` : '';
+    return `<div style="background:white;border:1px solid var(--bd);border-radius:12px;padding:12px;margin-bottom:8px;">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+        <div style="width:32px;height:32px;background:var(--gp);border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;color:var(--g);font-size:13px;flex-shrink:0;">${cu.name[0]||'?'}</div>
+        <div style="flex:1;">
+          <div style="font-size:12px;font-weight:800;color:var(--n);">${escHTML(cu.name)}</div>
+          <div style="font-size:10px;color:var(--mu);">${escHTML(cu.phone)} · ${cu.orders.length} pesanan</div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-size:12px;font-weight:800;color:var(--n);">${rp(total)}</div>
+          ${cu.unpaid > 0 ? `<div style="font-size:9px;color:#dc2626;font-weight:700;">Belum: ${rp(cu.unpaid)}</div>` : '<div style="font-size:9px;color:#16a34a;">✅ Lunas</div>'}
+        </div>
+      </div>
+      ${orderDetail}${moreH}
+    </div>`;
+  }).join('');
+
+  const html = `
+    <div style="text-align:center;margin-bottom:16px;">
+      <div style="width:56px;height:56px;background:var(--gp);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800;color:var(--g);margin:0 auto 8px;">${c.name[0]||'?'}</div>
+      <h3 style="font-family:'Playfair Display',serif;font-size:20px;color:var(--n);margin-bottom:2px;">${escHTML(c.name)}</h3>
+      <p style="font-size:11px;color:var(--mu);">${escHTML(c.email)} · ref: ${c.refCode}</p>
+    </div>
+    <!-- Stat cards -->
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px;">
+      <div style="background:white;border:1px solid var(--bd);border-radius:12px;padding:10px;text-align:center;">
+        <div style="font-size:9px;color:var(--mu);font-weight:700;text-transform:uppercase;margin-bottom:4px;">Total Pesanan</div>
+        <div style="font-size:18px;font-weight:800;color:var(--n);">${allOrders.length}</div>
+      </div>
+      <div style="background:white;border:1px solid var(--bd);border-radius:12px;padding:10px;text-align:center;">
+        <div style="font-size:9px;color:var(--mu);font-weight:700;text-transform:uppercase;margin-bottom:4px;">Pendapatan</div>
+        <div style="font-size:18px;font-weight:800;color:var(--n);">${totalRev >= 1000000 ? (totalRev/1000000).toFixed(1)+'jt' : totalRev >= 1000 ? Math.round(totalRev/1000)+'k' : totalRev}</div>
+      </div>
+      <div style="background:white;border:1px solid var(--bd);border-radius:12px;padding:10px;text-align:center;">
+        <div style="font-size:9px;color:var(--mu);font-weight:700;text-transform:uppercase;margin-bottom:4px;">Komisi</div>
+        <div style="font-size:18px;font-weight:800;color:var(--g);">${totalKomisi >= 1000 ? Math.round(totalKomisi/1000)+'k' : totalKomisi}</div>
+      </div>
+    </div>
+    ${unpaidTotal > 0 ? `<div style="background:#fee2e2;border:1px solid #fca5a5;border-radius:10px;padding:10px 12px;margin-bottom:14px;font-size:11px;color:#dc2626;font-weight:700;">⏳ Belum dibayar: ${rp(unpaidTotal)} (${unpaidCount} pesanan)</div>` : ''}
+    <!-- Revenue chart 14 hari -->
+    <div style="background:white;border:1px solid var(--bd);border-radius:12px;padding:14px;margin-bottom:14px;">
+      <div style="font-size:11px;font-weight:800;color:var(--n);margin-bottom:10px;">📈 Pendapatan 14 Hari Terakhir</div>
+      <div style="display:flex;align-items:flex-end;gap:2px;height:100px;">${chartH}</div>
+    </div>
+    <!-- Customer list -->
+    <div style="margin-bottom:8px;">
+      <div style="font-size:11px;font-weight:800;color:var(--n);margin-bottom:8px;">👥 Pelanggan (${custList.length})</div>
+      ${custH || '<div style="color:var(--mu);font-size:11px;">Belum ada pelanggan.</div>'}
+    </div>
+  `;
+  document.getElementById('detail-modal-box').innerHTML = `<div class="dm-handle" style="width:40px;height:4px;background:var(--bd);border-radius:2px;margin:0 auto 16px;"></div>` + html;
+  document.getElementById('detail-modal').classList.add('open');
 }
 
 async function deleteChamp(id, name) {
