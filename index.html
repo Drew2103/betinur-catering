@@ -2846,40 +2846,43 @@ function placeOrder() {
   }
 
   // Auto-generate daily orders for subscription packages
-  var pkgItems = Object.entries(cart).filter(function(e) { return e[1].isPkg && e[1].pkgData; });
+  const pkgItems = Object.entries(cart).filter(([k,c]) => c.isPkg && c.pkgData);
   if (pkgItems.length) {
-    var subOrders = [];
-    pkgItems.forEach(function(entry) {
-      var cartId = entry[0], pkg = entry[1];
-      var p = pkg.pkgData;
-      var totalDays = p.days || 5;
-      var startDate = new Date(currentOrderDate + 'T12:00:00');
-      var generated = 0, offset = 0;
+    const subOrders = [];
+    pkgItems.forEach(([cartId, pkg]) => {
+      const p = pkg.pkgData;
+      const totalDays = p.days || 5;
+      const qty = pkg.qty || 1;
+      const startDate = new Date(currentOrderDate + 'T12:00:00');
+      let generated = 0, offset = 0;
       while (generated < totalDays) {
-        var date = new Date(startDate);
+        const date = new Date(startDate);
         date.setDate(date.getDate() + offset);
         offset++;
-        if (date.getDay() === 0) continue; // Skip Sunday
+        if (date.getDay() === 0) continue; // skip Sunday
         generated++;
+        const dayLabel = p.title + ' ' + generated + '/' + totalDays + (qty > 1 ? ' x' + qty : '');
+        const isFirstDay = generated === 1;
+        const dailyPrice = isFirstDay ? p.price * qty : 0;
         subOrders.push({
-          id: 'ord_' + (Date.now() + generated) + '_s' + generated,
+          id: 'ord_' + (Date.now() + offset) + '_s' + generated,
           ts: new Date().toISOString(),
           orderDate: localDateStr(date),
           name: order.name, phone: order.phone, addr: order.addr,
-          notes: '📦 Langganan: ' + p.title,
-          items: [{ id: cartId, name: p.title, price: Math.round(p.price / totalDays), qty: 1, sec: 'paket' }],
-          subtotal: Math.round(p.price / totalDays), ongkir: 0,
-          total: Math.round(p.price / totalDays),
+          notes: '📦 Langganan: ' + dayLabel,
+          items: [{ id: cartId, name: dayLabel, price: isFirstDay ? p.price * qty : 0, qty: 1, sec: 'paket' }],
+          subtotal: dailyPrice, ongkir: 0, total: dailyPrice,
           status: 'confirmed', paid: true,
-          isSubscription: true, subscriptionParent: order.id
+          isSubscription: true, subscriptionParent: order.id,
+          subscriptionDay: generated, subscriptionTotal: totalDays
         });
       }
     });
     if (subOrders.length) {
-      var allOrd = getOrders();
-      subOrders.forEach(function(so) {
+      const allOrd = getOrders();
+      subOrders.forEach(so => {
         allOrd.push(so);
-        if (db) db.collection('orders').doc(so.id).set(so).catch(function(e) { enqueuePendingOrder(so); });
+        if (db) db.collection('orders').doc(so.id).set(so).catch(e => { enqueuePendingOrder(so); });
       });
       ss(SK.orders, allOrd);
     }
@@ -4814,7 +4817,7 @@ function renderBannerCarousel() {
   dots.innerHTML = banners.map((_,i) => `<div class="banner-dot ${i===0?'active':''}" onclick="goBannerSlide(${i})" style="width:8px;height:8px;border-radius:50%;background:${i===0?'var(--g)':'rgba(255,255,255,.4)'};cursor:pointer;"></div>`).join('');
   _bannerCurrent = 0;
   if (_bannerInterval) clearInterval(_bannerInterval);
-  if (banners.length > 1) _bannerInterval = setInterval(nextBannerSlide, 3500);
+  if (banners.length > 1) _bannerInterval = setInterval(nextBannerSlide, 4000);
 }
 
 function goBannerSlide(i) {
@@ -5276,25 +5279,55 @@ function renderChampionDashboard() {
     </div>`;
   }).join('');
 
-  // Customers list
+  // Customers & orders detail
   const custEl = document.getElementById('ch-cust-list');
   document.getElementById('ch-cust-count').textContent = `(${phones.length})`;
   if (phones.length) {
     const custMap = {};
     orders.forEach(o => {
-      if (!custMap[o.phone]) custMap[o.phone] = { name: o.name, phone: o.phone, count: 0, total: 0, lastOrder: '' };
-      custMap[o.phone].count++;
-      custMap[o.phone].total += o.total;
-      if (o.orderDate > custMap[o.phone].lastOrder) custMap[o.phone].lastOrder = o.orderDate;
+      if (!custMap[o.phone]) custMap[o.phone] = { name: o.name, phone: o.phone, orders: [], totalPaid: 0, totalUnpaid: 0 };
+      custMap[o.phone].orders.push(o);
+      if (o.paid) custMap[o.phone].totalPaid += o.total;
+      else custMap[o.phone].totalUnpaid += o.total;
     });
-    custEl.innerHTML = Object.values(custMap).map(c => `
-      <div class="ch-cust-row">
-        <div class="ch-cust-avatar">${c.name[0]||'?'}</div>
-        <div style="flex:1;">
-          <div class="ch-cust-name">${escHTML(c.name)}</div>
-          <div class="ch-cust-meta">${c.count} order · ${rp(c.total)} · Terakhir ${fmtDateLabel(c.lastOrder)}</div>
+    const custList = Object.values(custMap).sort((a,b) => b.orders.length - a.orders.length);
+    custEl.innerHTML = custList.map(c => {
+      const totalAll = c.totalPaid + c.totalUnpaid;
+      const orderRows = c.orders.slice(0, 10).map(o => {
+        const items = o.items.map(it => it.name + (it.qty > 1 ? ' x' + it.qty : '')).join(', ');
+        const paidBadge = o.paid
+          ? '<span style="color:#16a34a;font-weight:700;">✅ Lunas</span>'
+          : '<span style="color:#dc2626;font-weight:700;">⏳ Belum</span>';
+        return `<div style="display:flex;justify-content:space-between;align-items:flex-start;padding:6px 0;border-bottom:1px solid rgba(0,0,0,.06);font-size:10px;">
+          <div style="flex:1;min-width:0;">
+            <div style="color:var(--n);font-weight:600;">${fmtDateLabel(o.orderDate||o.ts.split('T')[0])}</div>
+            <div style="color:var(--mu);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escHTML(items)}</div>
+          </div>
+          <div style="text-align:right;flex-shrink:0;margin-left:8px;">
+            <div style="font-weight:700;color:var(--n);">${rp(o.total)}</div>
+            ${paidBadge}
+          </div>
+        </div>`;
+      }).join('');
+      const moreOrders = c.orders.length > 10 ? `<div style="font-size:9px;color:var(--mu);padding:4px 0;">... dan ${c.orders.length - 10} pesanan lain</div>` : '';
+      return `<div style="background:white;border:1px solid var(--bd);border-radius:12px;padding:12px;margin-bottom:10px;box-shadow:var(--sh);">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+          <div class="ch-cust-avatar">${c.name[0]||'?'}</div>
+          <div style="flex:1;">
+            <div style="font-size:13px;font-weight:800;color:var(--n);">${escHTML(c.name)}</div>
+            <div style="font-size:10px;color:var(--mu);">${escHTML(c.phone)} · ${c.orders.length} pesanan</div>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-size:12px;font-weight:800;color:var(--n);">${rp(totalAll)}</div>
+            ${c.totalUnpaid > 0 ? `<div style="font-size:9px;color:#dc2626;font-weight:700;">Belum bayar: ${rp(c.totalUnpaid)}</div>` : '<div style="font-size:9px;color:#16a34a;font-weight:700;">Semua lunas</div>'}
+          </div>
         </div>
-      </div>`).join('');
+        <div style="max-height:200px;overflow-y:auto;">
+          ${orderRows}
+          ${moreOrders}
+        </div>
+      </div>`;
+    }).join('');
   } else {
     custEl.innerHTML = '<div style="color:var(--mu);font-size:12px;">Belum ada pelanggan dari link kamu.</div>';
   }
@@ -5396,11 +5429,35 @@ async function renderChampionAdmin() {
         const myComms = getCommissions().filter(x => x.championId === c.id);
         const myOrders = getOrders().filter(o => o.ref === c.refCode);
         const totalKomisi = myComms.reduce((s,x) => s+x.commissionAmount, 0);
+        const paidOrders = myOrders.filter(o => o.paid);
+        const unpaidOrders = myOrders.filter(o => !o.paid);
+        const unpaidTotal = unpaidOrders.reduce((s,o) => s+o.total, 0);
         return `<div class="champ-row">
           <div class="champ-avatar">${c.name[0]||'?'}</div>
           <div class="champ-info">
             <div class="champ-name">${escHTML(c.name)} <span class="champ-badge ${c.isActive?'active':'inactive'}">${c.isActive?'Aktif':'Nonaktif'}</span></div>
             <div class="champ-meta">ref: ${c.refCode} · ${myOrders.length} order · Komisi: ${rp(totalKomisi)}</div>
+            <div style="font-size:9px;color:${unpaidTotal > 0 ? '#dc2626' : '#16a34a'};font-weight:700;margin-top:2px;">
+              ${unpaidTotal > 0 ? '⏳ Belum bayar: ' + rp(unpaidTotal) + ' (' + unpaidOrders.length + ' order)' : '✅ Semua lunas'}
+            </div>
+            <details style="margin-top:6px;font-size:10px;">
+              <summary style="cursor:pointer;color:var(--g);font-weight:700;">Lihat ${myOrders.length} pesanan →</summary>
+              <div style="margin-top:6px;max-height:200px;overflow-y:auto;border-top:1px solid var(--bd);padding-top:6px;">
+                ${myOrders.slice(0,20).map(o => {
+                  const items = o.items.map(it => it.name).join(', ');
+                  return '<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid rgba(0,0,0,.05);">' +
+                    '<div style="flex:1;min-width:0;">' +
+                      '<div style="font-weight:600;color:var(--n);">' + escHTML(o.name) + '</div>' +
+                      '<div style="color:var(--mu);">' + fmtDateLabel(o.orderDate||o.ts.split('T')[0]) + ' · ' + escHTML(items).substring(0,40) + '</div>' +
+                    '</div>' +
+                    '<div style="text-align:right;flex-shrink:0;margin-left:6px;">' +
+                      '<div style="font-weight:700;">' + rp(o.total) + '</div>' +
+                      (o.paid ? '<div style="color:#16a34a;">✅</div>' : '<div style="color:#dc2626;">⏳</div>') +
+                    '</div></div>';
+                }).join('')}
+                ${myOrders.length > 20 ? '<div style="color:var(--mu);padding:4px 0;">...dan ' + (myOrders.length-20) + ' lagi</div>' : ''}
+              </div>
+            </details>
           </div>
           <div class="champ-actions" style="flex-wrap:wrap;gap:4px;">
             <button onclick="copyChampLink('${c.refCode}','${escHTML(c.email).replace(/'/g,"&#39;")}')" style="background:#dbeafe;border:none;border-radius:6px;padding:4px 8px;font-size:10px;cursor:pointer;color:#2563eb;font-weight:700;" title="Copy link">🔗 Link</button>
