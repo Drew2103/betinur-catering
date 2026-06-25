@@ -256,6 +256,9 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--cr);color:var(-
 .ord-filter input[type=date]{flex:1;padding:7px 10px;border:1.5px solid var(--bd);border-radius:9px;font-size:12px;font-family:inherit;color:var(--n);outline:none;}
 .ord-filter input[type=date]:focus{border-color:var(--g);}
 .ord-filter-btn{padding:7px 12px;background:var(--n);color:var(--g);border:none;border-radius:9px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;}
+.ord-pill{padding:6px 12px;background:white;border:1.5px solid var(--bd);border-radius:20px;font-size:10px;font-weight:700;color:var(--mu);cursor:pointer;font-family:inherit;transition:all .15s;white-space:nowrap;}
+.ord-pill.active{background:var(--n);color:var(--g);border-color:var(--n);}
+.ord-pill:hover{border-color:var(--g);}
 .mia-row{display:flex;align-items:center;gap:11px;padding:9px 0;border-bottom:1px solid var(--bd);}
 .mia-row:last-child{border-bottom:none;}
 .mia-photo{width:48px;height:48px;border-radius:9px;background:linear-gradient(135deg,#f5ead0,#edddb5);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;overflow:hidden;cursor:pointer;position:relative;border:2px dashed var(--bd);}
@@ -1382,6 +1385,15 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--cr);color:var(-
           <input type="date" id="ord-filter-date">
           <button class="ord-filter-btn" onclick="refreshOrders()">Filter</button>
           <button class="ord-filter-btn" onclick="setOrdFilterToday()" style="background:rgba(15,31,61,.12);color:var(--n);">Hari Ini</button>
+        </div>
+        <div id="ord-status-filters" style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap;">
+          <button onclick="setOrdFilter('all')" class="ord-pill active" data-f="all">Semua</button>
+          <button onclick="setOrdFilter('unpaid')" class="ord-pill" data-f="unpaid">⏳ Belum Bayar</button>
+          <button onclick="setOrdFilter('paid')" class="ord-pill" data-f="paid">💰 Sudah Bayar</button>
+          <button onclick="setOrdFilter('pending')" class="ord-pill" data-f="pending">🔔 Menunggu</button>
+          <button onclick="setOrdFilter('confirmed')" class="ord-pill" data-f="confirmed">✅ Dikonfirmasi</button>
+          <button onclick="setOrdFilter('dikirim')" class="ord-pill" data-f="dikirim">📦 Dikirim</button>
+          <button onclick="setOrdFilter('done')" class="ord-pill" data-f="done">✔️ Selesai</button>
         </div>
         <div class="batch-bar">
           <span id="batch-info">Pilih pesanan untuk batch print</span>
@@ -2920,6 +2932,12 @@ function resetHome() {
 // ═══════════════════════════════════════════
 //  LIVE ORDERS (ADMIN)
 // ═══════════════════════════════════════════
+let _ordStatusFilter = 'all';
+function setOrdFilter(f) {
+  _ordStatusFilter = f;
+  document.querySelectorAll('.ord-pill').forEach(b => b.classList.toggle('active', b.dataset.f === f));
+  refreshOrders();
+}
 function setOrdFilterToday() {
   const f = document.getElementById('ord-filter-date'); if (f) f.value = todayStr();
   refreshOrders();
@@ -2929,15 +2947,27 @@ function refreshOrders() {
   const fDate = document.getElementById('ord-filter-date');
   const fd    = fDate ? fDate.value : '';
   const target = fd || todayStr();
-  const filtered = allOrders.filter(o => (o.orderDate || o.ts.split('T')[0]) === target);
+  let filtered = allOrders.filter(o => (o.orderDate || o.ts.split('T')[0]) === target);
 
   const newC = filtered.filter(o => o.status === 'pending' || o.status === 'new').length;
   const b = document.getElementById('nbadge');
   if (b) { b.style.display = newC > 0 ? 'inline-block' : 'none'; b.textContent = newC; }
 
+  // Apply status/payment filter
+  if (_ordStatusFilter === 'unpaid') filtered = filtered.filter(o => !o.paid);
+  else if (_ordStatusFilter === 'paid') filtered = filtered.filter(o => o.paid);
+  else if (_ordStatusFilter === 'pending') filtered = filtered.filter(o => o.status === 'pending' || o.status === 'new');
+  else if (_ordStatusFilter === 'confirmed') filtered = filtered.filter(o => o.status === 'confirmed');
+  else if (_ordStatusFilter === 'dikirim') filtered = filtered.filter(o => o.status === 'dikirim');
+  else if (_ordStatusFilter === 'done') filtered = filtered.filter(o => o.status === 'done');
+
+  // Show filter count
+  const totalForDate = allOrders.filter(o => (o.orderDate || o.ts.split('T')[0]) === target).length;
+  const filterInfo = _ordStatusFilter !== 'all' ? ` (${filtered.length}/${totalForDate})` : '';
+
   const list = document.getElementById('order-list'); if (!list) return;
   if (!filtered.length) {
-    list.innerHTML = '<div class="emp-ord"><div class="ee">📭</div><p>Belum ada pesanan.</p></div>'; return;
+    list.innerHTML = `<div class="emp-ord"><div class="ee">📭</div><p>${_ordStatusFilter !== 'all' ? 'Tidak ada pesanan dengan filter ini.' : 'Belum ada pesanan.'}</p></div>`; return;
   }
 
   const bi = document.getElementById('batch-info');
