@@ -879,7 +879,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--cr);color:var(-
     <div class="flex-1 space-y-6 lg:space-y-8 min-w-0">
 
       <!-- HERO BANNER / PROMO CAROUSEL -->
-      <section id="gf-hero" class="relative rounded-2xl lg:rounded-3xl overflow-hidden h-[180px] lg:h-[400px] shadow-lg">
+      <section id="gf-hero" class="relative rounded-2xl lg:rounded-3xl overflow-hidden h-[240px] lg:h-[400px] shadow-lg">
         <div id="banner-carousel" style="display:none;position:absolute;inset:0;">
           <div id="banner-slides" class="w-full h-full"></div>
           <div id="banner-dots" class="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-2 z-10"></div>
@@ -1850,7 +1850,8 @@ const FS_MAP = {
   [SK.mh]:        'menuHistory',
   [SK.staff]:     'staff',
   [SK.banners]:   'banners',
-  [SK.packages]:  'packages'
+  [SK.packages]:  'packages',
+  [SK.photos]:    'photos'
 };
 // orders handled separately per-document in /orders/{id}
 // champions, commissions, withdrawals handled as Firestore sub-collections
@@ -1892,8 +1893,8 @@ let _ordersUnsub  = null;
 
 async function syncFromFirestore() {
   if (!db) return;
-  const docs = ['settings','logo','menu','calendar','menuHistory','staff','banners','packages'];
-  const keyMap = { settings:SK.settings, logo:SK.logo, menu:SK.menu, calendar:SK.cal, menuHistory:SK.mh, staff:SK.staff, banners:SK.banners, packages:SK.packages };
+  const docs = ['settings','logo','menu','calendar','menuHistory','staff','banners','packages','photos'];
+  const keyMap = { settings:SK.settings, logo:SK.logo, menu:SK.menu, calendar:SK.cal, menuHistory:SK.mh, staff:SK.staff, banners:SK.banners, packages:SK.packages, photos:SK.photos };
   try {
     const results = await Promise.all(docs.map(d => fsGet(d)));
     results.forEach((data, i) => {
@@ -1924,6 +1925,7 @@ function startConfigListeners() {
   _configUnsubs.push(fsListen('staff',    d => { try{localStorage.setItem(SK.staff, JSON.stringify(d));}catch(e){} }));
   _configUnsubs.push(fsListen('packages', d => { try{localStorage.setItem(SK.packages, JSON.stringify(d));}catch(e){} renderPromoSection(); }));
   _configUnsubs.push(fsListen('banners',  d => { try{localStorage.setItem(SK.banners, JSON.stringify(d));}catch(e){} renderBannerCarousel(); }));
+  _configUnsubs.push(fsListen('photos',   d => { try{localStorage.setItem(SK.photos, JSON.stringify(d));}catch(e){} renderMenu(); }));
 }
 
 function startOrdersListener() {
